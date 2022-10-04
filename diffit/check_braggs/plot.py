@@ -6,7 +6,7 @@ import psf.m_io as m_io
 
 
 
-shape = [200,120]
+shape = [400,240]
 sq = np.zeros(shape)
 
 n_reps = 11
