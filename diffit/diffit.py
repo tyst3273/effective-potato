@@ -2,7 +2,24 @@
 import numpy as np
 
 from PSF import c_PSF
-import mods.m_crystals as m_crystals
+from mods.m_crystals import c_rutile
+
+
+
+reps = [1,1,1]
+rutile = c_rutile()
+rutile.make_supercell(reps)
+#rutile.write_poscar()
+
+rutile._get_neighbors()
+print(rutile.nn_dist)
+
+exit()
+
+
+
+
+
 
 # list 'c_rutile' objects that model instances of rutile
 supercells = []
@@ -12,14 +29,12 @@ num_reps_target = [20,20,20]
 d_reps = 5
 
 
-
-
 # set up supercells from 'c_rutile' objects
 for rr in range(-d_reps,d_reps+1):
     
     reps = np.array(num_reps_target)+rr
 
-    rutile = m_crystals.c_rutile()
+    rutile = c_rutile(basis=basis)
     rutile.make_supercell(reps=reps)
 
     supercells.append(rutile)

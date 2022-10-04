@@ -57,9 +57,6 @@ class c_rutile:
         along the ii^th direction 
         """
 
-        # DEV
-        self.basis += 0.0
-
         self.reps = np.array(reps)
         self.num_reps = np.prod(self.reps)
 
@@ -136,6 +133,60 @@ class c_rutile:
             f_out.write(f'   {num_ti:g}  {num_o:g}\nCartesian\n')
             for ii in range(self.num_atoms):
                 f_out.write(f' {pos[ii,0]:10.9f}  {pos[ii,1]:10.9f}  {pos[ii,2]:10.9f}\n')
+
+    # ----------------------------------------------------------------------------------------------
+
+    def get_neighbors(self):
+
+        """
+        get 'neighbor' lists and distances using minimum image convention
+        """
+
+        _num_atoms = self.num_atoms
+        _lat_vecs = self.sc_lattice_vectors
+        _l0 = np.tile(_lat_vecs[0,:].reshape(1,3),reps=(_num_atoms,1))
+        _l1 = np.tile(_lat_vecs[1,:].reshape(1,3),reps=(_num_atoms,1))
+        _l2 = np.tile(_lat_vecs[2,:].reshape(1,3),reps=(_num_atoms,1))
+
+        self.nn_list = np.zeros((_num_atoms,_num_atoms),dtype=int)
+        self.nn_vecs = np.zeros((_num_atoms,_num_atoms,3),dtype=float)
+        self.nn_cart = np.zeros((_num_atoms,_num_atoms,3),dtype=float)
+        self.nn_dist = np.zeros((_num_atoms,_num_atoms),dtype=float)
+
+        for ii in range(_num_atoms):
+
+            # position of atom 'ii' in reduced coords
+            _rii = self.sc_pos[ii,:].reshape(1,3)
+            _rii = np.tile(_rii,reps=(_num_atoms,1))
+
+            # ... in cartesian coords
+            _cii = self.sc_cart[ii,:].reshape(1,3)
+            _cii = np.tile(_cii,reps=(_num_atoms,1))
+
+            # vector from atom 'ii' to all others in reduced coords
+            _rrel = self.sc_pos-_rii
+
+            # find atoms to shift in reduced coords
+            _rshift = -(_rrel > 1/2).astype(int)
+            _rshift += (_rrel <= -1/2).astype(int)
+
+            # shift in both reduced and cartesian coords
+            _cshift = np.tile(_rshift[:,0].reshape(_num_atoms,1),reps=(1,3))*_l0 + \
+                      np.tile(_rshift[:,1].reshape(_num_atoms,1),reps=(1,3))*_l1 + \
+                      np.tile(_rshift[:,2].reshape(_num_atoms,1),reps=(1,3))*_l2
+
+            # relative vector in cartesian coords
+            _crel = (self.sc_cart+_cshift)-_cii
+            _rrel += _rshift
+            
+            # get sorted distance
+            _d = np.sqrt(np.sum(_crel**2,axis=1))
+            _inds = np.argsort(_d)
+
+            self.nn_dist[ii,:] = _d[_inds]
+            self.nn_list[ii,:] = _inds
+            self.nn_vecs[ii,:,:] = _rrel[_inds,:]
+            self.nn_cart[ii,:,:] = _crel[_inds,:]
 
     # ----------------------------------------------------------------------------------------------
 
