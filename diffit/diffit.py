@@ -6,27 +6,16 @@ from mods.m_crystals import c_rutile
 
 
 
-reps = [1,1,1]
-rutile = c_rutile()
-rutile.make_supercell(reps)
-#rutile.write_poscar()
-
-rutile._get_neighbors()
-print(rutile.nn_dist)
-
-exit()
-
-
-
-
-
-
 # list 'c_rutile' objects that model instances of rutile
 supercells = []
 
 # target supercell size and steps around it to remove finite size effects
-num_reps_target = [20,20,20]
+num_reps_target = [10,10,10]
 d_reps = 5
+
+# defect concentration (fraction or unitcells in sc)
+concentration = 0.01
+
 
 
 # set up supercells from 'c_rutile' objects
@@ -34,8 +23,10 @@ for rr in range(-d_reps,d_reps+1):
     
     reps = np.array(num_reps_target)+rr
 
-    rutile = c_rutile(basis=basis)
+    rutile = c_rutile()
     rutile.make_supercell(reps=reps)
+
+    rutile.make_oxygen_frenkels(concentration=concentration)
 
     supercells.append(rutile)
 

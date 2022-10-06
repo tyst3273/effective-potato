@@ -15,7 +15,7 @@ class c_rutile:
         WARNING: nothing is really error checked here
         """
 
-        # types of atoms
+        # types of atoms; 0 is Ti, 1 is oxygen
         if types is None:
             self.types = np.array([0,0,1,1,1,1])
         else:
@@ -38,9 +38,10 @@ class c_rutile:
         if lattice_vectors is None:
             self.lattice_vectors = np.array([[4.593,0.000,0.000],
                                              [0.000,4.593,0.000],
-                                             [0.000,0.000,2.959]])
+                                             [0.000,0.000,2.981]])
         else:
             self.lattice_vectors = np.array(lattice_vectors)
+        self.inv_lattice_vectors = np.linalg.inv(self.lattice_vectors)
 
         # charges for MD potential
         if charges is None:
@@ -58,12 +59,13 @@ class c_rutile:
         """
 
         self.reps = np.array(reps)
-        self.num_reps = np.prod(self.reps)
+        self.num_reps = np.prod(self.reps) # i.e. number of unitcells in supercell
 
         self.sc_lattice_vectors = np.copy(self.lattice_vectors)
         self.sc_lattice_vectors[0,:] *= self.reps[0]
         self.sc_lattice_vectors[1,:] *= self.reps[1]
         self.sc_lattice_vectors[2,:] *= self.reps[2]
+        self.sc_inv_lattice_vectors = np.linalg.inv(self.sc_lattice_vectors)
 
         self.num_atoms = self.num_basis*self.num_reps
         self.sc_pos = np.tile(self.basis.reshape(1,self.num_basis,3),reps=(self.num_reps,1,1))
@@ -85,19 +87,34 @@ class c_rutile:
         self.sc_pos[:,:,1] /= self.reps[1]
         self.sc_pos[:,:,2] /= self.reps[2]
 
-        # probably should call this externally
+        # flatten into num_atoms x ... arrays
+        self.sc_pos.shape = [self.num_atoms,3]
+        self.sc_types.shape = [self.num_atoms]
+
+        # probably should call this externally ...
         self.get_cartesian_coords()
+
+    # ----------------------------------------------------------------------------------------------
+
+    def get_reduced_coords(self):
+
+        """
+        get in reduced coords 
+        """
+
+        self.sc_pos = np.zeros(self.sc_cart.shape)
+        for ii in range(self.num_atoms):
+            self.sc_pos[ii,:] = self.sc_inv_lattice_vectors[0,:]*self.sc_cart[ii,0]+ \
+                                self.sc_inv_lattice_vectors[1,:]*self.sc_cart[ii,1]+ \
+                                self.sc_inv_lattice_vectors[2,:]*self.sc_cart[ii,2]
 
     # ----------------------------------------------------------------------------------------------
 
     def get_cartesian_coords(self):
 
         """
-        flatten supercell positions into num_atoms x 3 array and get in cartesian coords
+        get in cart coords
         """
-
-        self.sc_pos.shape = [self.num_atoms,3]
-        self.sc_types.shape = [self.num_atoms]
 
         self.sc_cart = np.zeros(self.sc_pos.shape)
         for ii in range(self.num_atoms):
@@ -107,19 +124,25 @@ class c_rutile:
 
     # ----------------------------------------------------------------------------------------------
 
-    def write_poscar(self,file_name='POSCAR'):
+    def write_poscar(self,file_name='POSCAR',cartesian=False):
 
         """
         write a VASP 'POSCAR' file for calculating/visualizing with VESTA
         """
 
-        pos = self.sc_cart
+        if cartesian:
+            pos = self.sc_cart
+            _str = 'Cartesian'
+        else:
+            pos = self.sc_pos
+            _str = 'Direct'
+
         types = self.sc_types+1
         inds = np.argsort(types)
 
         num_ti = np.count_nonzero(types == 1)
         num_o = np.count_nonzero(types == 2)
-
+        
         types = types[inds]
         pos = pos[inds]
 
@@ -130,7 +153,7 @@ class c_rutile:
             f_out.write(f'  {_:10.7f}  {self.sc_lattice_vectors[1,1]:10.7f}  {_:10.7f}\n')
             f_out.write(f'  {_:10.7f}  {_:10.7f}  {self.sc_lattice_vectors[2,2]:10.7f}\n')
             f_out.write(f' Ti O \n')
-            f_out.write(f'   {num_ti:g}  {num_o:g}\nCartesian\n')
+            f_out.write(f'   {num_ti:g}  {num_o:g}\n{_str}\n')
             for ii in range(self.num_atoms):
                 f_out.write(f' {pos[ii,0]:10.9f}  {pos[ii,1]:10.9f}  {pos[ii,2]:10.9f}\n')
 
@@ -142,16 +165,20 @@ class c_rutile:
         get 'neighbor' lists and distances using minimum image convention
         """
 
+        _nn_cut = 10
+
         _num_atoms = self.num_atoms
         _lat_vecs = self.sc_lattice_vectors
         _l0 = np.tile(_lat_vecs[0,:].reshape(1,3),reps=(_num_atoms,1))
         _l1 = np.tile(_lat_vecs[1,:].reshape(1,3),reps=(_num_atoms,1))
         _l2 = np.tile(_lat_vecs[2,:].reshape(1,3),reps=(_num_atoms,1))
 
-        self.nn_list = np.zeros((_num_atoms,_num_atoms),dtype=int)
-        self.nn_vecs = np.zeros((_num_atoms,_num_atoms,3),dtype=float)
-        self.nn_cart = np.zeros((_num_atoms,_num_atoms,3),dtype=float)
-        self.nn_dist = np.zeros((_num_atoms,_num_atoms),dtype=float)
+        # running out of memory with NxN matrix ... only store up to nn_cut number of neighbors
+        self.nn_list = np.zeros((_num_atoms,_nn_cut),dtype=int)
+        self.nn_vecs = np.zeros((_num_atoms,_nn_cut,3),dtype=float)
+        self.nn_cart = np.zeros((_num_atoms,_nn_cut,3),dtype=float)
+        self.nn_dist = np.zeros((_num_atoms,_nn_cut),dtype=float)
+        self.nn_types =  np.zeros((_num_atoms,_nn_cut),dtype=int)
 
         for ii in range(_num_atoms):
 
@@ -181,14 +208,132 @@ class c_rutile:
             
             # get sorted distance
             _d = np.sqrt(np.sum(_crel**2,axis=1))
-            _inds = np.argsort(_d)
+            _inds = np.argsort(_d)[:_nn_cut]
 
             self.nn_dist[ii,:] = _d[_inds]
             self.nn_list[ii,:] = _inds
             self.nn_vecs[ii,:,:] = _rrel[_inds,:]
             self.nn_cart[ii,:,:] = _crel[_inds,:]
+            self.nn_types[ii,:] = self.sc_types[_inds]
 
     # ----------------------------------------------------------------------------------------------
+
+    def make_oxygen_frenkels(self,concentration=None,num_defects=None):
+
+        """
+        seed frenkel defects in supercells for relaxation and/or diffuse calculation
+
+        NOTE: concentration is given as the FRACTION of UNITCELLS that have defects
+        """
+
+        from random import shuffle
+
+        if not concentration is None and num_defects is None:
+            num_defects = self.num_reps*concentration
+        if num_defects is None and concentration is None:
+            exit('\nmust give concentration or num_defects!\n')    
+
+        num_defects = int(num_defects)
+        if num_defects > self.num_reps:
+            exit('\nnum_defects must not be greater than number of unitcells in supercell!\n')
+        if num_defects <= 0:
+            exit('\nnum_defects must not be 0!\n')
+
+        print('num_reps',self.num_reps)
+        print('num_defects',num_defects)
+
+        # get neighbor lists 
+        self.get_neighbors()
+
+        # get 'pairs' of neibors for creating frenkels
+        self._get_oxy_pairs(num_defects)
+
+        # get coords of dimer centered on 'neighbor' site; its done in cartesian coords
+        self._set_oxy_dimer_coords()
+
+        # now get reduced coords for the defected sc
+        self.get_reduced_coords()
+
+    # ----------------------------------------------------------------------------------------------
+
+    def _set_oxy_dimer_coords(self):
+
+        """
+        get coords for vacancy, neighbor pair as frenkel defect. move vacancy atom to 
+        dimerize with neigboring oxy atom; dimer is centered on original site of neigbor
+        but shifted perpendicular to Ti-O bond
+        """
+
+        _dimer_len = 1.3189666409731529 # bond length of oxy dimer in Angstrom
+        _eps = 1e-3
+
+        _num = self.vn_pairs.shape[0]
+
+        for ii in range(_num):
+            _v = self.vn_pairs[ii,0]
+            _n = self.vn_pairs[ii,1]
+
+            # need nearest Ti ** in-plane ** neighbor of neighbor O atom
+            _ti = np.flatnonzero(self.nn_types[_n] == 0)
+
+            # use neighbor vectors to find in-plane Ti neighbors
+            _c = self.nn_cart[_n,:,:]
+            _c = _c[_ti,:]
+            _in_plane = np.flatnonzero(np.abs(_c[:,2]) < _eps)
+
+            # they are sorted by dist. so lowest index is closest neighbor; 
+            _nn_vec = _c[_in_plane[0]]
+
+            # dimer vector is perpendicular to Ti-O bond and in the XY plane
+            _dimer_vec = np.array([-1/(_nn_vec[1]+(_nn_vec[0]**2/_nn_vec[1])),
+                                    1/(_nn_vec[0]+(_nn_vec[1]**2/_nn_vec[0])),
+                                    0])
+
+            # normalize it to be the 'known' dimer bond length (known from MD relaxation)
+            _dimer_vec = _dimer_vec/np.sqrt(np.sum(_dimer_vec**2))
+
+            # reset coords of vacancy atom and neighbor to make dimer
+            self.sc_cart[_v] = self.sc_cart[_n]+_dimer_vec/2
+            self.sc_cart[_n] = self.sc_cart[_n]-_dimer_vec/2
+
+    # ----------------------------------------------------------------------------------------------
+
+    def _get_oxy_pairs(self,num_defects):
+
+        """
+        defect 'site' is really one oxygen atom moved to dimerize with a neighbor
+        so we need indices of vacancy site and neighbor to dimerize with, i.e. pairs of indices
+        """
+
+        from random import shuffle
+
+        # vacancy, neighbor pairs
+        self.vn_pairs = np.zeros((num_defects,2),dtype=int)
+
+        # indices of O atoms
+        _o_inds = list(np.flatnonzero(self.sc_types == 1))
+
+        for ii in range(num_defects):
+
+            shuffle(_o_inds)
+
+            # vacancy index
+            _vac = _o_inds[0]
+
+            # neighboring O atoms
+            _o = np.flatnonzero(self.nn_types[_vac,:] == 1)
+            _nn = self.nn_list[_vac,:]
+            _nn = _nn[_o]
+
+            # neighbors already sorted by distance; get 1st nn
+            _nn = _nn[1] # 0th ind is the vacancy atom, dist == 0
+
+            self.vn_pairs[ii,:] = [_vac,_nn]
+
+    # ----------------------------------------------------------------------------------------------
+
+
+
 
     
 
