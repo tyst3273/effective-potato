@@ -331,6 +331,20 @@ class c_rutile:
             self.vn_pairs[ii,:] = [_vac,_nn]
 
     # ----------------------------------------------------------------------------------------------
+    
+    def free_memory(self):
+
+        """
+        delete refs to huge neighbor lists that we dont want to keep anymore
+        """
+
+        import gc
+
+        del self.nn_vecs, self.nn_dist, self.nn_cart, self.nn_types, self.nn_list
+
+        gc.collect()
+
+    # ----------------------------------------------------------------------------------------------
 
 
 

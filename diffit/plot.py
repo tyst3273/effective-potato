@@ -24,7 +24,7 @@ sq /= n_reps
 
 
 vmin = 0
-vmax = 1e2
+vmax = 5e4
 cmap = 'magma'
 interp = 'none'
 

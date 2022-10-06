@@ -27,6 +27,7 @@ for rr in range(-d_reps,d_reps+1):
     rutile.make_supercell(reps=reps)
 
     rutile.make_oxygen_frenkels(concentration=concentration)
+    rutile.free_memory()
 
     supercells.append(rutile)
 
