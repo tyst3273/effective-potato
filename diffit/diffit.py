@@ -13,20 +13,6 @@ lammps_in = 'lammps_inputs/relax.in'
 force_field = 'lammps_inputs/ffield.comb3'
 
 
-# get the lammps directories to do
-_ = [os.path.join(lammps_top_dir,d) for d in os.listdir(lammps_top_dir)]
-dirs = []
-for d in _:
-    if os.path.isdir(d):
-        dirs.append(d)
-
-lammps = c_lammps(dirs)
-lammps.setup_jobs(lammps_in,force_field)
-lammps.setup_lammps(log_file='log.lammps')
-lammps.run_lammps()
-exit()
-
-
 # list 'c_rutile' objects that model instances of rutile
 supercells = []
 
@@ -60,10 +46,18 @@ for rr in range(-d_reps,d_reps+1):
 # --------------------------------------------------------------------------------------------------
 # go run the lammps calcs
 
-dirs = [os.path.join(lammps_top_dir,d) for d in os.listdir(lammps_top_dir)]
+# get the lammps directories to do
+_ = [os.path.join(lammps_top_dir,d) for d in os.listdir(lammps_top_dir)]
+dirs = []
+for d in _:
+    if os.path.isdir(d):
+        dirs.append(d)
+
 lammps = c_lammps(dirs)
 lammps.setup_jobs(lammps_in,force_field)
-
+lammps.setup_lammps(log_file='log.lammps')
+lammps.run_lammps()
+exit()
 
 # --------------------------------------------------------------------------------------------------
 # go and calc scattering intensity from each supercell

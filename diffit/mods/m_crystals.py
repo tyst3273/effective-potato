@@ -131,6 +131,7 @@ class c_rutile:
         """
 
         if directory is not None:
+            
             if not os.path.exists(directory):
                 os.mkdir(directory)
 
