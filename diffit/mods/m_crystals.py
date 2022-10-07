@@ -163,6 +163,10 @@ class c_rutile:
 
         """
         get 'neighbor' lists and distances using minimum image convention
+
+        NOTE: it will take some reworking elsewhere, but only getting the neighbor lists 
+        for the randomly selected vacancy sites will be WAY faster than doing it for the 
+        whole crystal
         """
 
         _nn_cut = 10
@@ -340,7 +344,15 @@ class c_rutile:
 
         import gc
 
-        del self.nn_vecs, self.nn_dist, self.nn_cart, self.nn_types, self.nn_list
+        try:
+            del self.nn_vecs, self.nn_dist, self.nn_cart, self.nn_types, self.nn_list
+        except Exception as _ex:
+            _msg = '\n*** WARNING ***\n' \
+                   'tried deleting nn_vecs, nn_dist, nn_cart, nn_types, and nn_list but it\n' \
+                   'didnt work! do they exist? here is the exception:'
+            print(_msg)
+            print(_ex)
+            print('')
 
         gc.collect()
 
