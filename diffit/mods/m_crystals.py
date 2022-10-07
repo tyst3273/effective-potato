@@ -1,5 +1,5 @@
 
-
+import os
 import numpy as np
 
 
@@ -45,7 +45,7 @@ class c_rutile:
 
         # charges for MD potential
         if charges is None:
-            self.charges = np.array([2.196,-1.098])
+            self.charges = np.array([1.9,-0.95])
         else:
             self.charges = np.array(charges,dtype=float)
 
@@ -124,6 +124,48 @@ class c_rutile:
 
     # ----------------------------------------------------------------------------------------------
 
+    def write_lammps(self,file_name='pos.lammps',directory=None):
+
+        """
+        write a lammps 'data' file
+        """
+
+        if directory is not None:
+            if not os.path.exists(directory):
+                os.mkdir(directory)
+
+        file_name = os.path.join(directory,file_name)
+
+        types = self.sc_types+1
+        inds = np.argsort(types)
+
+        num_ti = np.count_nonzero(types == 1)
+        num_o = np.count_nonzero(types == 2)
+
+        _l0 = self.sc_lattice_vectors[0,0]
+        _l1 = self.sc_lattice_vectors[1,1]
+        _l2 = self.sc_lattice_vectors[2,2]
+
+        types = types[inds]
+        pos = self.sc_cart[inds]
+
+        num_atoms = pos.shape[0]
+
+        with open(file_name,'w') as f_out:
+            _= 0.0
+            f_out.write(f'# auto generated\n\n')
+            f_out.write(f'{num_atoms} atoms\n')
+            f_out.write('2 atom types\n\n')
+            f_out.write(f'{_:10.7f}  {_l0:10.7f} xlo xhi\n')
+            f_out.write(f'{_:10.7f}  {_l1:10.7f} ylo yhi\n')
+            f_out.write(f'{_:10.7f}  {_l2:10.7f} zlo zhi\n')
+            f_out.write('\nAtoms \n')
+            for ii in range(num_atoms):
+                f_out.write(f'\n {ii+1:5g} {types[ii]:2g} {self.charges[types[ii]-1]: 6.4f}' \
+                    f' {pos[ii,0]:12.9f} {pos[ii,1]:12.9f} {pos[ii,2]:12.9f}')
+
+    # ----------------------------------------------------------------------------------------------
+
     def write_poscar(self,file_name='POSCAR',cartesian=False):
 
         """
@@ -159,39 +201,40 @@ class c_rutile:
 
     # ----------------------------------------------------------------------------------------------
 
-    def get_neighbors(self):
+    def get_neighbors(self,inds):
 
         """
         get 'neighbor' lists and distances using minimum image convention
 
-        NOTE: it will take some reworking elsewhere, but only getting the neighbor lists 
-        for the randomly selected vacancy sites will be WAY faster than doing it for the 
-        whole crystal
+        only do it for subset of atoms given by list of indices in 'inds'
         """
 
-        _nn_cut = 10
+        # number of atoms to do
+        _num_calc = len(inds)
 
+        # number of atoms in the crystal
         _num_atoms = self.num_atoms
+
         _lat_vecs = self.sc_lattice_vectors
         _l0 = np.tile(_lat_vecs[0,:].reshape(1,3),reps=(_num_atoms,1))
         _l1 = np.tile(_lat_vecs[1,:].reshape(1,3),reps=(_num_atoms,1))
         _l2 = np.tile(_lat_vecs[2,:].reshape(1,3),reps=(_num_atoms,1))
 
         # running out of memory with NxN matrix ... only store up to nn_cut number of neighbors
-        self.nn_list = np.zeros((_num_atoms,_nn_cut),dtype=int)
-        self.nn_vecs = np.zeros((_num_atoms,_nn_cut,3),dtype=float)
-        self.nn_cart = np.zeros((_num_atoms,_nn_cut,3),dtype=float)
-        self.nn_dist = np.zeros((_num_atoms,_nn_cut),dtype=float)
-        self.nn_types =  np.zeros((_num_atoms,_nn_cut),dtype=int)
+        nn_list = np.zeros((_num_calc,_num_atoms),dtype=int)
+        nn_vecs = np.zeros((_num_calc,_num_atoms,3),dtype=float)
+        nn_cart = np.zeros((_num_calc,_num_atoms,3),dtype=float)
+        nn_dist = np.zeros((_num_calc,_num_atoms),dtype=float)
+        nn_types =  np.zeros((_num_calc,_num_atoms),dtype=int)
 
-        for ii in range(_num_atoms):
+        for ii, ind in enumerate(inds):
 
             # position of atom 'ii' in reduced coords
-            _rii = self.sc_pos[ii,:].reshape(1,3)
+            _rii = self.sc_pos[ind,:].reshape(1,3)
             _rii = np.tile(_rii,reps=(_num_atoms,1))
 
             # ... in cartesian coords
-            _cii = self.sc_cart[ii,:].reshape(1,3)
+            _cii = self.sc_cart[ind,:].reshape(1,3)
             _cii = np.tile(_cii,reps=(_num_atoms,1))
 
             # vector from atom 'ii' to all others in reduced coords
@@ -209,16 +252,51 @@ class c_rutile:
             # relative vector in cartesian coords
             _crel = (self.sc_cart+_cshift)-_cii
             _rrel += _rshift
-            
+
             # get sorted distance
             _d = np.sqrt(np.sum(_crel**2,axis=1))
-            _inds = np.argsort(_d)[:_nn_cut]
+            _inds = np.argsort(_d)
 
-            self.nn_dist[ii,:] = _d[_inds]
-            self.nn_list[ii,:] = _inds
-            self.nn_vecs[ii,:,:] = _rrel[_inds,:]
-            self.nn_cart[ii,:,:] = _crel[_inds,:]
-            self.nn_types[ii,:] = self.sc_types[_inds]
+            nn_dist[ii,:] = _d[_inds]
+            nn_list[ii,:] = _inds
+            nn_vecs[ii,:,:] = _rrel[_inds,:]
+            nn_cart[ii,:,:] = _crel[_inds,:]
+            nn_types[ii,:] = self.sc_types[_inds]
+
+            return nn_dist, nn_list, nn_vecs, nn_cart, nn_types
+
+    # ----------------------------------------------------------------------------------------------
+
+    def get_neighbors_for_all_atoms(self):
+
+        """
+        get 'neighbor' lists and distances using minimum image convention
+
+        NOTE: it will take some reworking elsewhere, but only getting the neighbor lists 
+        for the randomly selected vacancy sites will be WAY faster than doing it for the 
+        whole crystal
+        """
+
+        _nn_cut = 10
+
+        _num_atoms = self.num_atoms
+
+        # running out of memory with NxN matrix ... only store up to nn_cut number of neighbors
+        self.nn_list = np.zeros((_num_atoms,_nn_cut),dtype=int)
+        self.nn_vecs = np.zeros((_num_atoms,_nn_cut,3),dtype=float)
+        self.nn_cart = np.zeros((_num_atoms,_nn_cut,3),dtype=float)
+        self.nn_dist = np.zeros((_num_atoms,_nn_cut),dtype=float)
+        self.nn_types =  np.zeros((_num_atoms,_nn_cut),dtype=int)
+
+        for ii in range(_num_atoms):
+
+            _nn_dist, _nn_list, _nn_vecs, _nn_cart, _nn_types = self.get_neighbors([ii])
+
+            self.nn_dist[ii,:] = _nn_dist[0,:_nn_cut]
+            self.nn_list[ii,:] = _nn_list[0,:_nn_cut]
+            self.nn_vecs[ii,:,:] = _nn_vecs[0,:_nn_cut,:]
+            self.nn_cart[ii,:,:] = _nn_cart[0,:_nn_cut,:]
+            self.nn_types[ii,:] = _nn_types[0,:_nn_cut]
 
     # ----------------------------------------------------------------------------------------------
 
@@ -245,9 +323,6 @@ class c_rutile:
 
         print('num_reps',self.num_reps)
         print('num_defects',num_defects)
-
-        # get neighbor lists 
-        self.get_neighbors()
 
         # get 'pairs' of neibors for creating frenkels
         self._get_oxy_pairs(num_defects)
@@ -277,11 +352,13 @@ class c_rutile:
             _v = self.vn_pairs[ii,0]
             _n = self.vn_pairs[ii,1]
 
+            nn_dist, nn_list, nn_vecs, nn_cart, nn_types = self.get_neighbors([_n])
+
             # need nearest Ti ** in-plane ** neighbor of neighbor O atom
-            _ti = np.flatnonzero(self.nn_types[_n] == 0)
+            _ti = np.flatnonzero(nn_types[0,:] == 0)
 
             # use neighbor vectors to find in-plane Ti neighbors
-            _c = self.nn_cart[_n,:,:]
+            _c = nn_cart[0,:,:]
             _c = _c[_ti,:]
             _in_plane = np.flatnonzero(np.abs(_c[:,2]) < _eps)
 
@@ -324,15 +401,24 @@ class c_rutile:
             # vacancy index
             _vac = _o_inds[0]
 
+            # get nn data for the vacancy site
+            nn_dist, nn_list, nn_vecs, nn_cart, nn_types = self.get_neighbors([_vac])
+
             # neighboring O atoms
-            _o = np.flatnonzero(self.nn_types[_vac,:] == 1)
-            _nn = self.nn_list[_vac,:]
+            _o = np.flatnonzero(nn_types[0,:] == 1)
+            _nn = nn_list[0,:]
             _nn = _nn[_o]
 
             # neighbors already sorted by distance; get 1st nn
             _nn = _nn[1] # 0th ind is the vacancy atom, dist == 0
 
             self.vn_pairs[ii,:] = [_vac,_nn]
+
+            # now need to 'pop' out vac and neigh inds so we dont put more defects there
+            _ = _o_inds.index(_vac)
+            _o_inds.pop(_)
+            _ = _o_inds.index(_nn)
+            _o_inds.pop(_)
 
     # ----------------------------------------------------------------------------------------------
     
