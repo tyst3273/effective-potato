@@ -9,8 +9,8 @@ from mods.m_lammps import c_lammps
 
 # where to write/run the lammps calcs
 lammps_top_dir = 'lammps_relax'
-lammps_in = os.path.join(lammps_top_dir,'relax.in')
-force_field = os.path.join(lammps_top_dir,'ffield.comb3')
+lammps_in = 'lammps_inputs/relax.in'
+force_field = 'lammps_inputs/ffield.comb3'
 
 
 # get the lammps directories to do
