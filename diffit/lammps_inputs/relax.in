@@ -22,20 +22,21 @@ neigh_modify    every 100 delay 100 check yes
 # --------------------------------------------------------------------------------------------------
 
 variable        dt equal    0.001         # timestep
-variable	t_start     equal 600       
+variable	t_start     equal 1000       
 variable        t_stop      equal 1e-6
 
 variable        seed equal 864215
 
-variable        therm_run equal 1000    # thermalize at T
-variable        quench_run equal 1000   # equilibrate at T
-variable        damp_run equal 1000
+variable        therm_run equal 500    # thermalize at T
+variable        quench_run equal 500   # equilibrate at T
+variable        init_damp_run equal 100
+variable        final_damp_run equal 500
 
 variable        trj_dump equal 10
 variable        thermo_dump equal 10
 
-variable        charge_min equal 10
-variable        charge_dump equal 100
+variable        charge_min_damp equal 10
+variable        charge_min equal 100
 
 # --------------------------------------------------------------------------------------------------
 # define crystal
@@ -69,28 +70,31 @@ dump            TRJ all custom ${trj_dump} sim.lammpstrj id type x y z
 dump_modify     TRJ sort id
 
 # --------------------------------------------------------------------------------------------------
-# charge equilibralizer :)
+# charge equilibralizer and efield
 # --------------------------------------------------------------------------------------------------
 
-fix             QEQ all qeq/comb ${charge_min} 1e-3 file qeq.out
+fix             QEQ all qeq/comb ${charge_min_damp} 0.01 file qeq.out
 
-dump            CHARGES all custom ${charge_dump} charges id type q
-dump_modify     CHARGES format float "%6.4f"
-dump_modify     CHARGES sort id
+fix             EFIELD all efield 0.0 0.1 0.0
+
 
 # --------------------------------------------------------------------------------------------------
 # large damping coeff; keep system from 'blowing up' if bad initial config
 # --------------------------------------------------------------------------------------------------
 
 fix             NVE all nve
-fix             VISCOUS all viscous 1
-run             ${damp_run}
+fix             VISCOUS all viscous 0.75
+run             ${init_damp_run}
 unfix           VISCOUS
 unfix           NVE
 
 # --------------------------------------------------------------------------------------------------
 # thermalize
 # --------------------------------------------------------------------------------------------------
+
+# reset how often minimization is done to save time
+unfix           QEQ
+fix             QEQ all qeq/comb ${charge_min} 1e-3 file qeq.out
 
 velocity        all create ${t_start} ${seed} mom yes rot yes dist gaussian
 
@@ -106,9 +110,13 @@ fix             QUENCH all npt temp ${t_start} ${t_stop} $(100.0*dt) iso 0.0 0.0
 run             ${quench_run}
 unfix           QUENCH
 
+# refix it to find correct minimum
+unfix           QEQ
+fix             QEQ all qeq/comb ${charge_min_damp} 1e-3 file qeq.out
+
 fix             NVE all nve
 fix             VISCOUS all viscous 0.1
-run             ${damp_run}
+run             ${final_damp_run}
 unfix           VISCOUS
 unfix           NVE
 
@@ -124,8 +132,7 @@ dump            POSITIONS all custom 1 positions.final id type xs ys zs
 dump_modify     POSITIONS format float "%20.15f"
 dump_modify     POSITIONS sort id
 
-undump          CHARGES 
-dump            CHARGES all custom ${charge_dump} charges.final id type q
+dump            CHARGES all custom 1 charges.final id type q
 dump_modify     CHARGES format float "%10.6f"
 dump_modify     CHARGES sort id
 
@@ -135,15 +142,11 @@ unfix           WRITE
 
 undump          FORCES
 undump          POSITIONS
+undump          TRJ
+undump          CHARGES
 
 write_data      relaxed.pos
 
-# --------------------------------------------------------------------------------------------------
-# undump everything else
-# --------------------------------------------------------------------------------------------------
-
-undump          TRJ
-undump          CHARGES
 
 
 

@@ -19,9 +19,12 @@ calc_sqw = False
 md_num_steps = 1
 
 # unit cell/ crystal info
-lattice_vectors = [[4.593,0.000,0.000], # angstroms
-                   [0.000,4.593,0.000],
-                   [0.000,0.000,2.959]]
+#lattice_vectors = [[4.593,0.000,0.000],
+#                   [0.000,4.593,0.000],
+#                   [0.000,0.000,2.981]]
+lattice_vectors = [[4.586,0.000,0.000], 
+                   [0.000,4.586,0.000],
+                   [0.000,0.000,2.976]]
 atom_types = ['Ti','O']
 
 # experiment info
@@ -31,9 +34,9 @@ experiment_type = 'neutrons' # 'neutrons' or 'xrays'
 Qpoints_option = 'mesh' # mesh, mesh_file, write_mesh, text_file, or path
 
 # for 'Qpoints_option' == 'mesh' ; 
-Q_mesh_H = [0,5.5,200]
+Q_mesh_H = [-5,5,100] #[0,5.5,200]
 Q_mesh_K = 2
-Q_mesh_L = [0,3.25,120]
+Q_mesh_L = [-3,3,60] #[0,3.25,120]
 
 # number of processes to split Q-point parallelization over
 num_Qpoint_procs = 16

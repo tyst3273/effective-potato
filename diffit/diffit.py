@@ -17,30 +17,26 @@ force_field = 'lammps_inputs/ffield.comb3'
 supercells = []
 
 # target supercell size and steps around it to remove finite size effects
-num_reps_target = [10,10,10]
-d_reps = 5
+reps = [10,10,10]
+num_sc = 5
 
 # defect concentration (fraction or unitcells in sc)
-concentration = 0.01
+num_defects = 10
 
 
 # --------------------------------------------------------------------------------------------------
 # set up supercells 
 
-_ = 0
-for rr in range(-d_reps,d_reps+1):
+for ii in range(num_sc):
     
-    reps = np.array(num_reps_target)+rr
-
     rutile = c_rutile()
     rutile.make_supercell(reps=reps)
 
-    rutile.make_oxygen_frenkels(concentration=concentration)
-    rutile.write_lammps('lammps.pos',directory=f'{lammps_top_dir}/{_:g}')
-    _ += 1
+    rutile.make_oxygen_frenkels(num_defects=num_defects)
+    rutile.write_lammps('lammps.pos',directory=f'{lammps_top_dir}/{ii:g}')
 
     supercells.append(rutile)
-    print('')
+    print(f'{ii}\n')
 
 
 # --------------------------------------------------------------------------------------------------
@@ -57,7 +53,21 @@ lammps = c_lammps(dirs)
 lammps.setup_jobs(lammps_in,force_field)
 lammps.setup_lammps(log_file='log.lammps')
 lammps.run_lammps()
-exit()
+
+
+# --------------------------------------------------------------------------------------------------
+# get the positions from the lammps calcs
+
+for ii, sc in enumerate(supercells):
+    
+    d = os.path.join(lammps_top_dir,f'{ii:g}')
+    pos_file = os.path.join(d,'positions.final')
+    sc.get_pos_from_txt_file(pos_file)
+
+    print(sc.sc_lattice_vectors[0,0]/sc.reps[0])
+    print(sc.sc_lattice_vectors[1,1]/sc.reps[1])
+    print(sc.sc_lattice_vectors[2,2]/sc.reps[2])
+
 
 # --------------------------------------------------------------------------------------------------
 # go and calc scattering intensity from each supercell
@@ -65,7 +75,6 @@ exit()
 for ind, sc in enumerate(supercells):
 
     prefix = f'o{ind:g}'
-    print(prefix)
     
     # object to calculate scattering intensity each time
     PSF = c_PSF(input_file='batch_config.py')

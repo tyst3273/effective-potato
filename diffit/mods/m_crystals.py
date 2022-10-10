@@ -422,6 +422,35 @@ class c_rutile:
             _o_inds.pop(_)
 
     # ----------------------------------------------------------------------------------------------
+
+    def get_pos_from_txt_file(self,pos_file='positions.final',scaled=True):
+
+        """
+        read positions from txt file and store in cartesian/reduced positions arrays
+        """
+
+        with open(pos_file,'r') as _f:
+            for ii in range(3):
+                _f.readline()
+            self.num_atoms = int(_f.readline().strip())
+            _f.readline()
+            self.sc_lattice_vectors = np.zeros((3,3),dtype=float)
+            _ = _f.readline().strip().split()
+            self.sc_lattice_vectors[0,0] = float(_[1])-float(_[0])
+            _ = _f.readline().strip().split()
+            self.sc_lattice_vectors[1,1] = float(_[1])-float(_[0])
+            _ = _f.readline().strip().split()
+            self.sc_lattice_vectors[2,2] = float(_[1])-float(_[0])
+        
+        _dat = np.loadtxt(pos_file,skiprows=9)
+        self.sc_types = _dat[:,1]-1 # they start at 1 in the file, we want from 0
+        self.sc_types = self.sc_types.astype(int)
+        self.sc_pos = _dat[:,2:]
+
+        if scaled:
+            self.get_cartesian_coords()
+
+    # ----------------------------------------------------------------------------------------------
     
     def free_memory(self):
 
