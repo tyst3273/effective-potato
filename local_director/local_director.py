@@ -1,18 +1,24 @@
 
 import numpy as np
 import h5py
-
+import os
 
 
 
 class c_local_director:
 
 
-    def __init__(self,sc_size=[16,16,16],temp=250):
+    def __init__(self,sc_size=[16,16,16],temp=250,top_dir=None):
 
         """
         lattice vectors are calculated from sc size and box vector
         """
+
+        if top_dir is None:
+            self.top_dir = os.getcwd()
+        else:
+            self.top_dir = os.path.normpath(top_dir)
+        print(self.top_dir)
 
         self.temp = temp
         self.sc_size = sc_size
@@ -65,8 +71,8 @@ class c_local_director:
         map octahedral vertex atoms onto thier 'sites', i.e. their neighboring metal atoms
         """
 
-        self.input_file = f'mapi_{self.temp:g}K.hdf5'
-        self.output_file = f'vertex_map_{self.temp:g}K.hdf5'
+        self.input_file = os.path.join(self.top_dir,f'mapi_{self.temp:g}K.hdf5')
+        self.output_file = os.path.join(self.top_dir,f'vertex_map_{self.temp:g}K.hdf5')
 
         with h5py.File(self.input_file,'r') as _db:
         
@@ -99,7 +105,8 @@ class c_local_director:
 if __name__ == '__main__':
 
     
-    local_director = c_local_director()
+    local_director = c_local_director(
+            top_dir='/home/ty/research/projects/materials/MAPI/Rappe_MD/traj')
 
     # need to figure out where stuff is
     local_director.get_vertex_site_map()
