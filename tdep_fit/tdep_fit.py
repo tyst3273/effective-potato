@@ -6,12 +6,17 @@ import os
 class c_data_sets:
 
 
-    def __init__(self,temps):
+    def __init__(self,temps,top_dir=None):
 
         self.temps = temps
         self.num_temps = len(temps)
 
-        self._get_file_names()
+        if top_dir is None:
+            top_dir = os.getcwd()
+        else:
+            top_dir = os.path.abspath(top_dir)
+
+        self._get_file_names(top_dir)
 
         for _f in self.files:
             if not os.path.exists(_f):
@@ -29,12 +34,14 @@ class c_data_sets:
         self.L = np.round(self.L,self.Q_precision)
 
 
-    def _get_file_names(self):
+    def _get_file_names(self,top_dir):
 
         self.files = []
         for T in self.temps:
             _f = f'symm_symm_hMAPB_{T}K.nxs'
+            _f = os.path.join(top_dir,_f)
             self.files.append(_f)
+            print(_f)
 
 
     def _get_data(self,Qpts):
@@ -88,12 +95,12 @@ if __name__ == '__main__':
 
 
     temps = [200,300]
-    dsets = c_data_sets(temps)
+    dsets = c_data_sets(temps,top_dir='/media/ty/hitachi/MAPB/tdep')
 
     Qpts = np.array([[-10,-10,-10],
                      [  0,  0,  0],
                      [  1,  2,  3]],dtype=float)
-    dsets._get_data(Qpts)
+#    dsets._get_data(Qpts)
 
 
 
