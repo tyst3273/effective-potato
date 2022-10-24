@@ -171,13 +171,14 @@ class c_defect_positions:
                     
     # ----------------------------------------------------------------------------------------------
 
-    def move_defects(self,_coords):
+    def move_defects(self,_coords,dx=8):
 
         """
         randomly displace a random number of defects to neighboring unitcells
         """
 
-        _d = np.array([-1,0,1])
+        #_d = np.array([-1,0,1])
+        _d = np.arange(-dx,dx+1)
 
         _i = np.arange(_coords.shape[0])
         np.random.shuffle(_i)
