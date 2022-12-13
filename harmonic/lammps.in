@@ -1,0 +1,84 @@
+
+# --------------------------------------------------------------------------------------------------
+# rutile TiO2 WITHOUT electric field
+# NOTE: according to wikipedia, rutile melts at ~2200 K
+
+
+# --------------------------------------------------------------------------------------------------
+# define simulation domain
+# --------------------------------------------------------------------------------------------------
+
+units           metal
+atom_style      bond
+
+dimension       2
+newton          on
+boundary        p p p 
+
+comm_modify     cutoff 10.0
+neigh_modify    once yes
+
+atom_modify     map array sort 100 10.0
+
+
+# --------------------------------------------------------------------------------------------------
+# define simulation paramters
+# --------------------------------------------------------------------------------------------------
+
+variable        dt equal   0.0001    # timestep in ps
+variable	temp equal 10
+
+variable        seed equal 864215
+
+variable        therm_run equal 10000
+
+variable        trj_dump equal 100
+variable        thermo_dump equal 100
+
+# --------------------------------------------------------------------------------------------------
+# define crystal
+# -------------------------------------------------------------------------------------------------- 
+
+bond_style      harmonic
+read_data       unitcell.prim
+
+mass            1 10
+mass            2 1
+
+bond_coeff      1 10 0.5
+
+# --------------------------------------------------------------------------------------------------
+# set some more params
+# --------------------------------------------------------------------------------------------------
+
+timestep        ${dt}
+reset_timestep  0
+
+thermo          ${thermo_dump}
+thermo_style    custom step etotal pe temp press pxx pyy pzz lx ly lz 
+
+dump            glob all custom ${trj_dump} total.lammpstrj id type x y z
+dump_modify     glob sort id
+
+# --------------------------------------------------------------------------------------------------
+# thermalize
+# --------------------------------------------------------------------------------------------------
+
+
+velocity        all create ${temp} ${seed} mom yes rot yes dist gaussian
+
+fix             THERM all nvt temp ${temp} ${temp} $(100.0*dt) 
+
+fix             2D all enforce2d
+
+run             ${therm_run}
+unfix           THERM
+
+# --------------------------------------------------------------------------------------------------
+# finalize stuff
+# --------------------------------------------------------------------------------------------------
+
+undump          glob
+write_data      supercell.thermalized
+
+
