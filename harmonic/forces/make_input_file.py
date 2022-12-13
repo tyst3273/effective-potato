@@ -1,6 +1,6 @@
 
 import numpy as np
-
+import os
 
 def write_file(f,natoms,nbonds,nx,ny,a,types,pos,inds):
 
@@ -91,24 +91,28 @@ write_file('unitcell.prim',natoms,nbonds,nx,ny,a,types,pos,inds)
 
 
 # now do displacements
-d = 0.1
+d = 0.01
 for ii in range(3): # atoms 0, 1, and 2 are the basis
 
     tmp = np.copy(pos)
 
     tmp[ii,0] += d
-    f = f'{ii}+x.structure'
+    folder = f'{ii}+x'
+    f = os.path.join(folder,'unitcell.structure')
     write_file(f,natoms,nbonds,nx,ny,a,types,tmp,inds)
     tmp[ii,0] += -2*d
-    f = f'{ii}-x.structure'
+    folder = f'{ii}-x'
+    f = os.path.join(folder,'unitcell.structure')
     write_file(f,natoms,nbonds,nx,ny,a,types,tmp,inds)
     tmp[ii,0] += d
 
     tmp[ii,1] += d
-    f = f'{ii}+y.structure'
+    folder = f'{ii}+y'
+    f = os.path.join(folder,'unitcell.structure')
     write_file(f,natoms,nbonds,nx,ny,a,types,tmp,inds)
     tmp[ii,1] += -2*d
-    f = f'{ii}-y.structure'
+    folder = f'{ii}-y'
+    f = os.path.join(folder,'unitcell.structure')
     write_file(f,natoms,nbonds,nx,ny,a,types,tmp,inds)
     tmp[ii,1] += d
 

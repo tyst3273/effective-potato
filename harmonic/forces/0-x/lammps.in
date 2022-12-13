@@ -25,7 +25,7 @@ atom_modify     map array sort 100 1.0
 # -------------------------------------------------------------------------------------------------- 
 
 bond_style      harmonic
-read_data       unitcell.prim
+read_data       unitcell.structure
 
 # m_Cu = 64, m_O = 16, m_Ni = 60
 # m_Ni/m_O \approx m_Cu/m_O = 4.
@@ -47,15 +47,6 @@ bond_coeff      1 10 0.5 # [K]=E/A^2, [r_0]=A
 # w = \sqrt{K/(m+M)}
 
 variable        dt equal   0.0001    # timestep in ps
-variable        temp equal 10        # Kelvin
-
-variable        seed equal 864215
-
-variable        therm_run equal 10000
-variable        nve_run equal 100000
-
-variable        trj_dump equal 100
-variable        thermo_dump equal 100
 
 # --------------------------------------------------------------------------------------------------
 # set some more params
@@ -64,39 +55,20 @@ variable        thermo_dump equal 100
 timestep        ${dt}
 reset_timestep  0
 
-thermo          ${thermo_dump}
-thermo_style    custom step etotal temp ke pe  
+dump            POS all custom 1 pos.dat id type xu yu zu
+dump_modify     POS sort id
+dump_modify     POS format line "%4d %4d %12.9f %12.9f %12.9f"
 
-dump            glob all custom ${trj_dump} total.lammpstrj id type x y z
-dump_modify     glob sort id
+dump            FORCE all custom 1 force.dat id type fx fy fz  
+dump_modify     FORCE sort id
+dump_modify     FORCE format line "%4d %4d %12.9f %12.9f %12.9f"
 
-# --------------------------------------------------------------------------------------------------
-# thermalize
-# --------------------------------------------------------------------------------------------------
+run             0
 
-velocity        all create ${temp} ${seed} mom yes rot yes dist gaussian
+undump          FORCE
+undump          POS
 
-fix             THERM all nvt temp ${temp} ${temp} $(100.0*dt) 
-fix             2D all enforce2d
-run             ${therm_run}
-unfix           THERM
-unfix           2D
 
-# --------------------------------------------------------------------------------------------------
-# do nve run
-# --------------------------------------------------------------------------------------------------
 
-fix             NVE all nve
-fix             2D all enforce2d
-run             ${nve_run}
-unfix           NVE
-unfix           2D
-
-# --------------------------------------------------------------------------------------------------
-# finalize stuff
-# --------------------------------------------------------------------------------------------------
-
-undump          glob
-write_data      unitcell.thermalized
 
 
