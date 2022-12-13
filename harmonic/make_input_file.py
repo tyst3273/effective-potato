@@ -2,6 +2,28 @@
 import numpy as np
 
 
+def write_file(f,natoms,nbonds,nx,ny,a,types,pos,inds):
+
+    with open(f,'w') as fout:
+        fout.write('# harmonic 2d perovskite\n\n')
+        fout.write(f'{natoms:g} atoms\n{nbonds} bonds\n\n')
+        fout.write('2 atom types\n1 bond types\n\n')
+        fout.write(f'0 {nx*a:5.3f} xlo xhi\n')
+        fout.write(f'0 {ny*a:5.3f} ylo yhi\n')
+        fout.write(f'-1 1 zlo zhi\n\n')
+        fout.write('Atoms\n\n')
+        for ii in range(natoms):
+            fout.write(f'{ii+1:3g} 0  {types[ii]:3g}  {pos[ii,0]:5.3f} {pos[ii,1]:5.3f} 0.0\n')
+        fout.write('\nBonds\n\n')
+        shift = 1
+        for ii in range(n1):
+            _i = inds[ii]+1
+            for jj in range(4):
+                _j = nn[ii,jj]+1
+                fout.write(f'{shift+jj:3g}  1 {_i:3g}  {_j:3g}\n')
+            shift += 4
+
+
 def get_nn(ii,pos):
 
     pii = pos[ii,:]
@@ -25,14 +47,10 @@ def get_nn(ii,pos):
 
 # lattice constant
 a = 1.0
-#r0 = a/2
-#K = 10
-#m1 = 10
-#m2 = 1
 
 # number of reps in each direction
-nx = 40
-ny = 40
+nx = 5
+ny = 5
 
 ncells = nx*ny
 
@@ -68,29 +86,28 @@ nbonds = nn.size
 pos[:,0] *= nx*a
 pos[:,1] *= ny*a
 
-with open('unitcell.prim','w') as fout:
-    fout.write('# harmonic 2d perovskite\n\n')
-    fout.write(f'{natoms:g} atoms\n{nbonds} bonds\n\n')
-    fout.write('2 atom types\n1 bond types\n\n')
-    fout.write(f'0 {nx*a:5.3f} xlo xhi\n')
-    fout.write(f'0 {ny*a:5.3f} ylo yhi\n')
-    fout.write(f'-1 1 zlo zhi\n\n')
-#    fout.write(f'Masses\n\n1 {m1:4.3f}\n2 {m2:4.3f}\n\n')
-#    fout.write(f'Bond Coeffs\n\n1 {K:5.3f} {r0:5.3f}\n\n')
-    fout.write('Atoms\n\n')
-    for ii in range(natoms):
-        fout.write(f'{ii+1:3g} 0  {types[ii]:3g}  {pos[ii,0]:5.3f} {pos[ii,1]:5.3f} 0.0\n')
-    fout.write('\nBonds\n\n')
-    shift = 1
-    for ii in range(n1):
-        _i = inds[ii]+1
-        for jj in range(4):
-            _j = nn[ii,jj]+1
-            fout.write(f'{shift+jj:3g}  1 {_i:3g}  {_j:3g}\n')
-        shift += 4
+
+write_file('unitcell.prim',natoms,nbonds,nx,ny,a,types,pos,inds)
 
 
 
+
+exit()
+
+# now do displacements
+d = 0.1
+for ii in range(3): # atoms 0, 1, and 2 are the basis
+    for jj in range(3):
+        for ix in [0,1]:
+            for jx in [0,1]:
+
+                print('ii,jj,ix,jx=',ii,jj,ix,jx)
+                tmp = np.copy(pos)
+                tmp[ii,ix] += d
+                tmp[jj,jx] += d
+                f = f'ii.jj.ix.jx_{ii:g}.{jj:g}.{ix:g}.{jx:g}.structure'
+
+                write_file(f,natoms,nbonds,nx,ny,a,types,tmp,inds)
 
 
 
