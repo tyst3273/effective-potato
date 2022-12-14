@@ -1,0 +1,123 @@
+LAMMPS (20 Nov 2019)
+
+# --------------------------------------------------------------------------------------------------
+# rutile TiO2 WITHOUT electric field
+# NOTE: according to wikipedia, rutile melts at ~2200 K
+
+
+# --------------------------------------------------------------------------------------------------
+# define simulation domain
+# --------------------------------------------------------------------------------------------------
+
+units           metal
+atom_style      bond
+
+dimension       2
+newton          on
+boundary        p p p
+
+comm_modify     cutoff 10.0
+neigh_modify    once yes
+
+atom_modify     map array sort 100 1.0
+
+# --------------------------------------------------------------------------------------------------
+# define crystal
+# --------------------------------------------------------------------------------------------------
+
+bond_style      harmonic
+read_data       unitcell.structure
+  orthogonal box = (0 0 -1) to (5 5 1)
+  1 by 1 by 1 MPI processor grid
+  reading atoms ...
+  75 atoms
+  scanning bonds ...
+  4 = max bonds/atom
+  reading bonds ...
+  100 bonds
+  4 = max # of 1-2 neighbors
+  6 = max # of 1-3 neighbors
+  16 = max # of 1-4 neighbors
+  20 = max # of special neighbors
+  special bonds CPU = 0.000310978 secs
+  read_data CPU = 0.00862892 secs
+
+# m_Cu = 64, m_O = 16, m_Ni = 60
+# m_Ni/m_O \approx m_Cu/m_O = 4.
+
+mass            1 4 # [m]=amu
+mass            2 1
+
+bond_coeff      1 10 0.5 # [K]=E/A^2, [r_0]=A
+
+
+# --------------------------------------------------------------------------------------------------
+# define simulation paramters
+# --------------------------------------------------------------------------------------------------
+
+# highest freq. of optical modes in diatomic chain is w = \sqrt{(G+g)(m+M)/(mM)}
+# in our simulation G==g but M!=m
+# also note that LAMMPS K=G/2 so that G=2K
+
+# w = \sqrt{K/(m+M)}
+
+variable        dt equal   0.0001    # timestep in ps
+
+# --------------------------------------------------------------------------------------------------
+# set some more params
+# --------------------------------------------------------------------------------------------------
+
+timestep        ${dt}
+timestep        0.0001
+reset_timestep  0
+
+dump            POS all custom 1 pos.dat id type xu yu zu
+dump_modify     POS sort id
+dump_modify     POS format line "%4d %4d %12.9f %12.9f %12.9f"
+
+dump            FORCE all custom 1 force.dat id type fx fy fz
+dump_modify     FORCE sort id
+dump_modify     FORCE format line "%4d %4d %12.9f %12.9f %12.9f"
+
+run             0
+WARNING: No fixes defined, atoms won't move (src/verlet.cpp:52)
+WARNING: Inconsistent image flags (src/domain.cpp:785)
+Per MPI rank memory allocation (min/avg/max) = 7.455 | 7.455 | 7.455 Mbytes
+Step Temp E_pair E_mol TotEng Press 
+       0            0            0 1.9996001e-07 1.9996001e-07   -64.093467 
+Loop time of 4.009e-06 on 1 procs for 0 steps with 75 atoms
+
+124.7% CPU use with 1 MPI tasks x no OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0          | 0          | 0          |   0.0 |  0.00
+Bond    | 0          | 0          | 0          |   0.0 |  0.00
+Neigh   | 0          | 0          | 0          |   0.0 |  0.00
+Comm    | 0          | 0          | 0          |   0.0 |  0.00
+Output  | 0          | 0          | 0          |   0.0 |  0.00
+Modify  | 0          | 0          | 0          |   0.0 |  0.00
+Other   |            | 4.009e-06  |            |       |100.00
+
+Nlocal:    75 ave 75 max 75 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:    1896 ave 1896 max 1896 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:    0 ave 0 max 0 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 0
+Ave neighs/atom = 0
+Ave special neighs/atom = 16
+Neighbor list builds = 0
+Dangerous builds = 0
+
+undump          FORCE
+undump          POS
+
+
+
+
+
+Total wall time: 0:00:00
