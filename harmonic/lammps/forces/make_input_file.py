@@ -13,7 +13,7 @@ def write_file(f,natoms,nbonds,nx,ny,a,types,pos,inds):
         fout.write(f'-1 1 zlo zhi\n\n')
         fout.write('Atoms\n\n')
         for ii in range(natoms):
-            fout.write(f'{ii+1:3g} 0  {types[ii]:3g}  {pos[ii,0]:5.3f} {pos[ii,1]:5.3f} 0.0\n')
+            fout.write(f'{ii+1:3g} 0  {types[ii]:3g}  {pos[ii,0]:9.6f} {pos[ii,1]:9.6f} 0.0\n')
         fout.write('\nBonds\n\n')
         shift = 1
         for ii in range(n1):
@@ -91,7 +91,7 @@ write_file('unitcell.prim',natoms,nbonds,nx,ny,a,types,pos,inds)
 
 
 # now do displacements
-d = 0.01
+d = 0.0001
 for ii in range(3): # atoms 0, 1, and 2 are the basis
 
     tmp = np.copy(pos)
