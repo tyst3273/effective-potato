@@ -3,7 +3,7 @@
 Author: Tyler C. Sterling
 Email: ty.sterling@colorado.edu
 Affil: University of Colorado Boulder, Raman Spectroscopy and Neutron Scattering Lab
-Date: 01/11/2022
+Date: 01/04/2022
 Description:
     tools to programatically get data from mantid MDE files (in nexus format) using mantid
 """
@@ -578,11 +578,17 @@ class c_MDE_tools:
         H_bins = np.array(H_bins)
         K_bins = np.array(K_bins)
         L_bins = np.array(L_bins)
+        _H_str = 'H_bins: '+self.get_bin_str(H_bins)
+        _K_str = 'K_bins: '+self.get_bin_str(K_bins)
+        _L_str = 'L_bins: '+self.get_bin_str(L_bins)
+        _E_str = ''
         if H_bins.size != 3 or K_bins.size != 3 or L_bins.size != 3:
             msg = 'bin_MDE_chunks does not support explicitly integrating out Q-dimensions\n'
             self.crash(msg)     
         if E_bins is not None:
             E_bins = np.array(E_bins)
+            _E_str = 'E_bins: '+self.get_bin_str(E_bins)
+        self.bin_str = ', '.join([_H_str,_K_str,_L_str,_E_str])
 
         # arrays of grid edges
         H = np.linspace(H_bins[0],H_bins[2],nH+1)
@@ -591,9 +597,10 @@ class c_MDE_tools:
 
         # print what is planned
         msg = '\nbinning MDE in chunks...'
-        msg += '\nH_bins: '+self.get_bin_str(H_bins)
-        msg += '\nK_bins: '+self.get_bin_str(K_bins)
-        msg += '\nL_bins: '+self.get_bin_str(L_bins)
+        msg += '\n'+_H_str
+        msg += '\n'+_K_str
+        msg += '\n'+_L_str
+        msg += '\n'+_E_str
         msg += f'\n\nsplitting into a {nH:d}x{nK:d}x{nL:d} grid'
         msg += f'\nthere are {num_grid} grid voxels to do'
         msg += '\ngrid edges:'
@@ -620,7 +627,8 @@ class c_MDE_tools:
         """
 
         _t = c_timer('loop_over_voxels')
-    
+
+        count = 0
         # loop over grid voxels
         for ii in range(H.size-1):
             for jj in range(K.size-1):
@@ -631,10 +639,10 @@ class c_MDE_tools:
                     L_bins = [L[kk],dL,L[kk+1]]
                     
                     msg = '\n-----------------------------------------------------------------'
-                    msg += '\nnow on grid voxel spanning '
-                    msg +=  f'\n H: {H_bins[0]:4.2f} => {H_bins[2]:4.2f},'
-                    msg +=  f'  K: {K_bins[0]:4.2f} => {K_bins[2]:4.2f},'
-                    msg +=  f'  L: {L_bins[0]:4.2f} => {L_bins[2]:4.2f}'
+                    msg += f'\nnow on grid voxel {count} spanning '
+                    msg += f'\n H: {H_bins[0]:4.2f} => {H_bins[2]:4.2f},'
+                    msg += f'  K: {K_bins[0]:4.2f} => {K_bins[2]:4.2f},'
+                    msg += f'  L: {L_bins[0]:4.2f} => {L_bins[2]:4.2f}'
                     print(msg)
 
                     # now go and get the data for this voxel
@@ -642,6 +650,8 @@ class c_MDE_tools:
                     
                     # now go and append all the non-empty bins to the file
                     self.append_sparse_to_txt(merged_file_name)
+                    
+                    count += 1 
         
         _t.stop()
 
@@ -667,12 +677,13 @@ class c_MDE_tools:
 
         # create a file header if file doesnt exist yet
         if not os.path.exists(output_file_name):               
-            header = b'# H[1/A] K[1/A] L[1/A] '
+            header = '#'+self.bin_str+'\n'
+            header += '# H[1/A] K[1/A] L[1/A] '
             if _has_E:
-                header += b'dE[meV] '
-            header += b'intensity error num_events\n'
+                header += 'dE[meV] '
+            header += 'intensity error num_events\n'
         else:
-            header = b''
+            header = ''
 
         # append all the data into a single arr to make it faster to write in the loop
         fmt = '%.6f %.6f %.6f '
@@ -684,7 +695,7 @@ class c_MDE_tools:
         _data = np.c_[_data,signal,err,num_events]
        
         with open(output_file_name,'ab') as fout:
-            fout.write(header)
+            fout.write(bytes(header,encoding='utf-8'))
             np.savetxt(fout,_data,fmt=fmt)
             
         _t.stop()
@@ -700,12 +711,14 @@ if __name__ == '__main__':
     # which file to do
     MDE_file_name = '../LSNO25_Ei_120meV_300K.nxs'
 
+    # good data range is H=-5,15; K=-12,7.5; L=-7.5,7.5
+
     # start, step size, end
-    H_bins = [0,0.05,5]
-    K_bins = [0,0.05,5]
-    L_bins = [0,0.05,5]
-    E_bins = [0,0.1,100]
-    num_Q_mesh = [5,5,5]
+    H_bins = [0,0.1,7.5]
+    K_bins = [0,0.1,7.5]
+    L_bins = [-5,0.1,5]
+    E_bins = [0,0.25,100]
+    num_Q_mesh = [8,8,8]
 
     # which macro to run
     task = 'bin_multi_sparse'
@@ -727,7 +740,7 @@ if __name__ == '__main__':
     # divide binning over large range into 'chunks'
     elif task == 'bin_multi_sparse':
         MDE_tools.bin_MDE_chunks(H_bins,K_bins,L_bins,E_bins,num_Q_mesh,
-                            merged_file_name='sparse.txt')
+                            merged_file_name='LSNO25_300K.txt')
 
 
 
