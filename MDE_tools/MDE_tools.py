@@ -803,7 +803,7 @@ class c_MDE_tools:
         #db['error'][_nfile:] = self.err[...]
         db['num_events'].resize(_nbins+_nfile,axis=0)
         db['num_events'][_nfile:] = self.num_events[...]
-    
+
     # ----------------------------------------------------------------------------------------------
     
     def append_sparse_to_hdf5(self,output_file_name='sparse_data.h5'):
@@ -820,15 +820,15 @@ class c_MDE_tools:
         print(msg)
 
         _exists = os.path.exists(output_file_name)
-        with h5py.File(output_file_name,'a') as _db:
+        with h5py.File(output_file_name,'a') as db:
 
             # create datasets if file doesnt exist
             if not _exists:
-                self._create_datasets(_db)
+                self._create_datasets(db)
 
             # if file already exists, resize and add data to datasets
             else:
-                self._append_datasets(_db)
+                self._append_datasets(db)
 
         _t.stop()
 
@@ -848,11 +848,17 @@ if __name__ == '__main__':
 
     # good data range is H=-5,15; K=-12,7.5; L=-7.5,7.5
     # start, step size, end
-    H_bins = [  -5, 0.025,  15]
-    K_bins = [ -12, 0.025, 7.5]
-    L_bins = [-7.5, 0.025, 7.5]
-    E_bins = [   2, 0.100, 100]
-    num_Q_mesh = [6,6,6]
+    H_bins = [  -5, 0.1,  15]
+    K_bins = [ -12, 0.1, 7.5]
+    L_bins = [-7.5, 0.25, 7.5]
+    E_bins = [  10, 0.5, 100]
+    num_Q_mesh = [8,8,8]
+    
+    #H_bins = [  4,  0.1,  8]
+    #K_bins = [ -2,  0.1,  2]
+    #L_bins = [ -3,  0.1,  3]
+    #E_bins = [ 50,  0.25, 100]
+    #num_Q_mesh = [6,6,6]
 
     # class to do the stuff
     MDE_tools = c_MDE_tools()
@@ -876,7 +882,7 @@ if __name__ == '__main__':
     # diving binning over large range into 'chunks' and write to hdf5 file
     elif task == 'create_sparse_hdf5':
         MDE_tools.bin_MDE_chunks(H_bins,K_bins,L_bins,E_bins,num_Q_mesh,
-                    merged_file_name='LSNO25_300K_full.hdf5',merged_file_format='hdf5')
+                    merged_file_name='LSNO25_300K.hdf5',merged_file_format='hdf5')
 
     # do nothing
     else:
