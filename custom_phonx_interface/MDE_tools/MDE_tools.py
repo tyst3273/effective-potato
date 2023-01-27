@@ -14,6 +14,37 @@ import h5py
 import shutil
 import os
 
+
+# --------------------------------------------------------------------------------------------------
+
+def crash(err_msg=None,exception=None):
+    """
+    stop execution in a safe way
+    """
+    msg = '\n*** error ***\n'
+    if err_msg is not None:
+        msg += err_msg+'\n'
+    if exception is not None:
+        msg += '\nException:\n'+str(exception)+'\n'
+    print(msg)
+    raise KeyboardInterrupt
+
+# --------------------------------------------------------------------------------------------------
+
+def check_file(file_name):
+    """
+    check if the specified file exists
+    """
+    if not os.path.exists(file_name):
+        msg = f'the file:\n  \'{file_name}\' \nwas not found!'
+        crash(msg)
+
+
+
+# --------------------------------------------------------------------------------------------------
+
+
+
 # --------------------------------------------------------------------------------------------------
 
 class c_timer:
@@ -82,7 +113,7 @@ class c_MDE_tools:
             import mantid.simpleapi as msi
         except Exception as _ex:
             err_msg = 'couldnt import mantid! see exception below...'
-            self.crash(err_msg,_ex)
+            crash(err_msg,_ex)
         self.msi = msi
 
     # ----------------------------------------------------------------------------------------------
@@ -92,7 +123,7 @@ class c_MDE_tools:
         load the MDE workspace
         """
         _t = c_timer('load_MDE',units='m')
-        self.check_file(file_name)
+        check_file(file_name)
         self.load_ws(file_name=file_name,ws_name=self.MDE_ws_name)
         self.print_dimensions(self.MDE_ws_name)
         self.get_lattice(self.MDE_ws_name)
@@ -113,7 +144,7 @@ class c_MDE_tools:
             msg = f'the workspace \'{ws_name}\' isnt loaded!\n'
             if bonus_msg is not None:
                 msg += bonus_msg+'\n'
-            self.crash(msg)
+            crash(msg)
 
     # ----------------------------------------------------------------------------------------------
 
@@ -139,30 +170,6 @@ class c_MDE_tools:
             msg = f'\nworkspace \'{ws_name}\' is already loaded! continuing...\n'
             print(msg)
 
-    # ----------------------------------------------------------------------------------------------
-
-    def crash(self,err_msg=None,exception=None):
-        """
-        stop execution in a safe way
-        """
-        msg = '\n*** error ***\n'
-        if err_msg is not None:
-            msg += err_msg+'\n'
-        if exception is not None:
-            msg += '\nException:\n'+str(exception)+'\n'
-        print(msg)
-        raise KeyboardInterrupt
-
-    # ----------------------------------------------------------------------------------------------
-
-    def check_file(self,file_name):
-        """
-        check if the specified file exists
-        """     
-        if not os.path.exists(file_name):
-            msg = f'the file:\n  \'{file_name}\' \nwas not found!'
-            self.crash(msg)
-    
     # ----------------------------------------------------------------------------------------------
 
     def print_dimensions(self,ws_name=None):
@@ -215,7 +222,7 @@ class c_MDE_tools:
 
         if not _.hasOrientedLattice():
             msg = f'couldnt find OrientedLattice object in workspace \'{ws_name}\'\n'
-            self.crash(msg)
+            crash(msg)
 
         _uc = _.getOrientedLattice()
 
@@ -594,7 +601,7 @@ class c_MDE_tools:
         if n >= edges.size:
             msg = 'you are trying to split binning into more chunks than there are bins.\n' \
                   'pick a bigger range to bin or use fewer chunks.\n'
-            self.crash(msg)
+            crash(msg)
         _split = np.array_split(edges,n)
         chunk_bins = []
         for ii in range(n):             
@@ -612,7 +619,7 @@ class c_MDE_tools:
         if len(bins) != 3:
             msg = 'intergrating out dimensions is not supported.\n' \
                   'all binning args must be given as [lo, d, hi]\n'
-            self.crash(msg)
+            crash(msg)
 
         bin_range = [bins[0],bins[2]]
         d = bins[1]

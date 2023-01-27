@@ -1,2 +1,5 @@
 __pycache__
 *.pyc
+*.hdf5
+*.h5
+*.txt
