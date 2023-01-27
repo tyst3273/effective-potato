@@ -192,7 +192,7 @@ class access_data_in_hdf5:
         """
         _t = c_timer('get_signal_and_error')
 
-        _cutoff = 0.05; _prec = 4; _eps = 0.01
+        _cutoff = 0.05; _prec = 4; _eps = 0.005
         
         msg = f'\n-------------------------------------------------------------------------\n'
         msg += f'attempting to get data at Q = ({Q[0]: .3f},{Q[1]: .3f},{Q[2]: .3f})\n'
@@ -217,7 +217,7 @@ class access_data_in_hdf5:
             _t.stop()
 
             # return signal and err arrays filled with nans
-            return np.full(self.num_E_in_file,np.nan), np.full(self.num_E_in_file,np.nan)
+            return self.E, np.full(self.num_E_in_file,np.nan), np.full(self.num_E_in_file,np.nan)
 
         # print a warning if this Q-point isnt exaclty the same as requested by user
         _Q = _Qpts[Q_ind]
@@ -235,25 +235,24 @@ class access_data_in_hdf5:
 
         _t.stop()
 
-        return sig, err
+        return self.E, sig, err
 
     # ----------------------------------------------------------------------------------------------
 
-    def _get_cut_from_hdf5(self):
+    def _get_cut_from_hdf5(self,Q_ind):
         """
         attempt to get the data from hdf5 file. if fails, return nans
         """
         try:
             with h5py.File(self.file_name,'r') as db:
-                print(db.keys())
                 sig = db['signal'][Q_ind,...]
                 err = db['error'][Q_ind,...]
         except Exception as ex:
             msg = '\n*** WARNING ***\n'
-            msg += f'couldnt signal/error from hdf5 file \'{self.file_name}\'.\n' \
+            msg += f'couldnt get signal/error from hdf5 file \'{self.file_name}\'.\n' \
                   'see the exception below for what went wrong.\n\n' \
                   'continuing, but this is bad! I hope you know what you are doing ...\n' 
-            msg += '\nException:\n'+str(exception)+'\n'
+            msg += '\nException:\n'+str(ex)+'\n\n'
             print(msg)
             sig = np.full(self.num_E_in_file,np.nan); err = np.full(self.num_E_in_file,np.nan)
 
@@ -267,16 +266,21 @@ class access_data_in_hdf5:
 # --------------------------------------------------------------------------------------------------
 
 if __name__ == '__main__':
+
+    import matplotlib.pyplot as plt
     
     hdf5_file_name = 'LSNO25_300K_parallel.hdf5'
     access_tools = access_data_in_hdf5(hdf5_file_name)
 
-    Q = [[ 6.0, 0.2,  0.0],
-         [-5.0, 0.2,  0.0],
-         [ 6.0, 0.21, 6.25]]
+    Q = [[ 6.0, 2.0,  0.0],
+         [ 6.0, 2.21, 0.0]]
 
     for QQ in Q:
-        access_tools.get_signal_and_error(QQ)
+        E, sig, err = access_tools.get_signal_and_error(QQ)
+        
+        plt.errorbar(E,sig,yerr=err,barsabove=True,marker='o',ms=5,lw=2,ls='-',c='b')
+        plt.show()
+        plt.close()
 
 
 
