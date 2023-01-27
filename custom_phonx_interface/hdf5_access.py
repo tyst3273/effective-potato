@@ -32,6 +32,7 @@ def check_file(file_name):
 
 
 
+
 # --------------------------------------------------------------------------------------------------
 
 class c_timer:
@@ -82,6 +83,10 @@ class access_data_in_hdf5:
 
         self._check_proj(u,v,w)
         self._load_Q_and_E()
+
+        # vector from Q (user) to Q points in file. allocate now to avoid redoing for every cut
+        self.Q_to_Qp = np.zeros(self.Q_points.shape)
+        self.dist_to_Qp = np.zeros(self.Q_points.shape[0])
 
     # ----------------------------------------------------------------------------------------------
 
@@ -180,6 +185,41 @@ class access_data_in_hdf5:
 
     # ----------------------------------------------------------------------------------------------
 
+    def get_signal_and_error(self,Q):
+        """
+        take Q in rlu, find nearest Qpt in file, and return signal and error arrays
+        """
+        _t = c_timer('get_signal_and_error')
+
+        _n = 10; _eps = 1e-3
+
+        _Qpts = self.Q_points
+        _Q2Qp = self.Q_to_Qp
+        _d = self.dist_to_Qp
+
+        _Q2Qp[...] = 0.0
+        _d[...] = 0.0
+
+        # get distance from Q(user) to all Qpts in file
+        _Q2Qp[:,0] = _Qpts[:,0]-Q[0]
+        _Q2Qp[:,1] = _Qpts[:,1]-Q[1]
+        _Q2Qp[:,2] = _Qpts[:,2]-Q[2]
+        _d[...] = np.sqrt(np.sum(_Q2Qp**2,axis=1))
+
+        # find the closest ones
+        _inds = np.argsort(_d)[:_n]
+
+        print(_inds)
+        print(_Qpts[_inds])
+        print(Q)
+        print(_d[_inds])
+
+        print('')
+        _t.stop()
+        print('')
+
+    # ----------------------------------------------------------------------------------------------
+
 
 
 
@@ -189,6 +229,8 @@ if __name__ == '__main__':
     
     hdf5_file_name = 'LSNO25_300K_parallel.hdf5'
     access_tools = access_data_in_hdf5(hdf5_file_name)
+
+    access_tools.get_signal_and_error([0.1,0.1,0.1])
 
 
 
