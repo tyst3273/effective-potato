@@ -6,8 +6,6 @@ Affil: University of Colorado Boulder, Raman Spectroscopy and Neutron Scattering
 Date: 01/24/2022
 Description:
     tools to programatically get data from mantid MDE files (in nexus format) using mantid
-    note, this version is not for rebinning. it just cuts the entire file into const Q 
-    cuts (and discards the empty Qpoints), writing them to and hdf5 database.
 """
 
 from timeit import default_timer
@@ -345,10 +343,6 @@ class c_MDE_tools:
             for ii, K_bins in enumerate(self.K_chunk_bins):
                 for ii, L_bins in enumerate(self.L_chunk_bins):
 
-                    # --- DEV ---
-                    self.count = count
-                    # -----------
-
                     _vt = c_timer(f'chunk[{count}]')
 
                     # bining per chunk 
@@ -494,7 +488,7 @@ class c_MDE_tools:
 
     # ----------------------------------------------------------------------------------------------
 
-    def get_sparse_arrays_from_histo_ws(self):
+    def get_sparse_arrays_from_histo_ws(self,zero_nans=False):
         """
         remove all (Q-point) bins with 0 events
         """
@@ -507,7 +501,7 @@ class c_MDE_tools:
         self.get_arrays_from_histo_ws()
 
         _shape = self.signal.shape
-        _nQ = self.Q_mesh[0].size
+        _nQ = np.prod(_shape[:-1])
         _nE = _shape[-1]
 
         self.signal = np.reshape(self.signal,(_nQ,_nE))
@@ -517,16 +511,17 @@ class c_MDE_tools:
         # find Q-pts where whole array (along E) is nans
         _nans = np.isnan(self.signal) # where nans are
         _infs = np.isinf(self.signal) # where +/- infs are
-        _inds = np.prod(~_nans*~_infs,axis=1) # True for Q-points that are all nans or infs
-        _inds = np.flatnonzero(_inds)  
-
+        _inds = ~(~_nans * ~_infs) # True for Q,E that are either nan or inf
+        _inds = ~np.all(_inds,axis=1) # True for Q-pts that are all nans or infs
+    
         # replace infs/nans with 0s ?
-        self.signal[(_nans)] = 0.0
-        self.signal[(_infs)] = 0.0
-        self.err[(_nans)] = 0.0
-        self.err[(_infs)] = 0.0
-        self.num_events[(_nans)] = 0.0
-        self.num_events[(_infs)] = 0.0
+        if zero_nans:
+            self.signal[(_nans)] = 0.0
+            self.signal[(_infs)] = 0.0
+            self.err[(_nans)] = 0.0
+            self.err[(_infs)] = 0.0
+            self.num_events[(_nans)] = 0.0
+            self.num_events[(_infs)] = 0.0
 
         # strip emptys
         self.signal = self.signal[_inds,:]
@@ -589,7 +584,7 @@ class c_MDE_tools:
         self.H_chunk_bins = self._get_chunk_bins(self.H_edges,self.dH,self.nH)
         self.K_chunk_bins = self._get_chunk_bins(self.K_edges,self.dK,self.nK)
         self.L_chunk_bins = self._get_chunk_bins(self.L_edges,self.dL,self.nL)
-        
+
     # ----------------------------------------------------------------------------------------------
 
     def _get_chunk_bins(self,edges,d,n):
@@ -604,10 +599,8 @@ class c_MDE_tools:
         chunk_bins = []
         for ii in range(n):             
             _s = _split[ii]
-            if ii == n-1:
-                chunk_bins.append([_s[0],d,_s[-1]])  
-            else:
-                chunk_bins.append([_s[0],d,_s[-1]+d])
+            # pad by d; upper bin is too big, but will never be empty (will crash if empty)
+            chunk_bins.append([_s[0],d,_s[-1]+d])  
         return chunk_bins
 
     # ----------------------------------------------------------------------------------------------
@@ -720,13 +713,15 @@ if __name__ == '__main__':
     K_bins = [  -12,   0.1,  7.5]
     L_bins = [ -7.5,  0.25,  7.5]
     E_bins = [   10,   0.5,  100]
+    num_Q_mesh = [4,4,4]
+
+    # class to do the stuff
+    MDE_tools = c_MDE_tools(MDE_file_name)
+
     u = [1,0,0]
     v = [0,1,0]
     w = [0,0,1]
-    num_Q_mesh = [4,4,4]
     
-    # class to do the stuff
-    MDE_tools = c_MDE_tools(MDE_file_name)
     MDE_tools.bin_MDE_chunks(H_bins,K_bins,L_bins,E_bins,num_Q_mesh,
                 'LSNO25_300K_parallel.hdf5',u,v,w)
 
