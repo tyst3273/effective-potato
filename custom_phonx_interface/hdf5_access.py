@@ -198,7 +198,7 @@ class access_data_in_hdf5:
         msg += f'attempting to get data at Q = ({Q[0]: .3f},{Q[1]: .3f},{Q[2]: .3f})\n'
         print(msg)
 
-        # get distance from Q(user) to all Qpts in file
+        # get distance from user Q to all Qpts in file
         _Qpts = self.Q_points
         _Q2Qp = self.Q_to_Qp
         _d = self.dist_to_Qp
@@ -267,20 +267,16 @@ class access_data_in_hdf5:
 
 if __name__ == '__main__':
 
-    import matplotlib.pyplot as plt
     
     hdf5_file_name = 'LSNO25_300K_parallel.hdf5'
     access_tools = access_data_in_hdf5(hdf5_file_name)
 
-    Q = [[ 6.0, 2.0,  0.0],
-         [ 6.0, 2.21, 0.0]]
+    Q = [[ 6.0, 2.0, 0.0] for _ in range(100)]
 
+    _t = c_timer('100_cuts')
     for QQ in Q:
         E, sig, err = access_tools.get_signal_and_error(QQ)
-        
-        plt.errorbar(E,sig,yerr=err,barsabove=True,marker='o',ms=5,lw=2,ls='-',c='b')
-        plt.show()
-        plt.close()
+    _t.stop()
 
 
 
