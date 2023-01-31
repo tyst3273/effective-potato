@@ -14,7 +14,6 @@ import h5py
 import shutil
 import os
 
-
 # --------------------------------------------------------------------------------------------------
 
 def crash(err_msg=None,exception=None):
@@ -94,9 +93,15 @@ class c_MDE_tools:
         """
 
         self.import_mantid()
+        
+        if MDE_file_name.endswith('.nxs'):
+            self.MDE_ws_name = MDE_file_name[:-len('.nxs')].strip('./')
+        else:
+            _type = MDE_file_name.split('.')[-1].strip()
+            msg = f'unknown filetype \'{_type}\'. use a *.nxs file!\n'
+            crash(msg) 
 
         self.V_ws_name = 'V_ws'
-        self.MDE_ws_name = 'MDE_ws' 
         self.histo_ws_name = 'histo_ws'
 
         if MDE_file_name is not None:
@@ -163,7 +168,7 @@ class c_MDE_tools:
         """
         load = not(self.check_ws(ws_name,crash=False))
         if force_load or load:
-            msg = f'\nloading workspace \'{ws_name}\'\n'
+            msg = f'\nloading workspace \'{ws_name}\' from file \'{file_name}\'\n'
             print(msg)
             self.msi.Load(Filename=file_name,OutputWorkspace=ws_name)       
         else:
@@ -709,28 +714,38 @@ class c_MDE_tools:
 
 if __name__ == '__main__':
 
-    # which file to do
-    MDE_file_name = '../LSNO25_Ei_120meV_300K.nxs'
+    # temp and projection
+    T = 300  
+    proj = 'parallel'
+
+    MDE_file_name = f'../LSNO25_Ei_120meV_{T}K.nxs'
+    out_file_name = f'LSNO25_{T}K_{proj}.hdf5'
 
     _t = c_timer('MDE_tools',units='m')
+    
+    if proj == 'parallel':
+        u = [ 1, 0, 0]
+        v = [ 0, 1, 0]
+        w = [ 0, 0, 1]
+        H_bins = [   -5,   0.1,   15]
+        K_bins = [  -12,   0.1,  7.5]
+        L_bins = [ -7.5,  0.25,  7.5]
+        E_bins = [   10,   0.5,  100]
+        num_Q_mesh = [4,4,4]
 
-    # good data range is H=-5,15; K=-12,7.5; L=-7.5,7.5
-    # start, step size, end
-    H_bins = [   -5,   0.1,   15]
-    K_bins = [  -12,   0.1,  7.5]
-    L_bins = [ -7.5,  0.25,  7.5]
-    E_bins = [   10,   0.5,  100]
-    num_Q_mesh = [4,4,4]
+    elif proj == 'perp':
+        u = [ 1, 1, 0]
+        v = [ 1,-1, 0]
+        w = [ 0, 0, 1]
+        H_bins = [ -8.5,   0.1,  11.5]
+        K_bins = [ -6.5,   0.1,  13.5]
+        L_bins = [ -7.5,  0.25,   7.5]
+        E_bins = [   10,   0.5,   100]
+        num_Q_mesh = [4,4,4]
 
     # class to do the stuff
     MDE_tools = c_MDE_tools(MDE_file_name)
-
-    u = [1,0,0]
-    v = [0,1,0]
-    w = [0,0,1]
-    
-    MDE_tools.bin_MDE_chunks(H_bins,K_bins,L_bins,E_bins,num_Q_mesh,
-                'LSNO25_300K_parallel.hdf5',u,v,w)
+    MDE_tools.bin_MDE_chunks(H_bins,K_bins,L_bins,E_bins,num_Q_mesh,out_file_name,u,v,w)
 
     _t.stop()
 

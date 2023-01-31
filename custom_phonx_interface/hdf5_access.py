@@ -267,16 +267,24 @@ class access_data_in_hdf5:
 
 if __name__ == '__main__':
 
+    import matplotlib.pyplot as plt
     
-    hdf5_file_name = 'LSNO25_300K_parallel.hdf5'
+    hdf5_file_name = 'LSNO25_300K_perp_test.hdf5'
     access_tools = access_data_in_hdf5(hdf5_file_name)
 
+    E, sig, err = access_tools.get_signal_and_error([4,2,0])
+
+    plt.errorbar(E,sig,yerr=err,barsabove=True,ls='-',lw=2,marker='o',ms=5,c='b')
+    plt.show()
+
+    """
     Q = [[ 6.0, 2.0, 0.0] for _ in range(100)]
 
     _t = c_timer('100_cuts')
     for QQ in Q:
         E, sig, err = access_tools.get_signal_and_error(QQ)
     _t.stop()
+    """
 
 
 
