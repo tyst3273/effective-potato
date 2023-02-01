@@ -268,27 +268,36 @@ class access_data_in_hdf5:
 if __name__ == '__main__':
 
     import matplotlib.pyplot as plt
-    
-    hdf5_file_name = 'LSNO25_300K_perp_test.hdf5'
-    access_tools = access_data_in_hdf5(hdf5_file_name)
 
-    E, sig, err = access_tools.get_signal_and_error([4,2,0])
+    Q = [8,-2,0]
 
-    plt.errorbar(E,sig,yerr=err,barsabove=True,ls='-',lw=2,marker='o',ms=5,c='b')
+    lw = 1
+    ms = 7
+
+    hdf5_file_name = 'LSNO25_300K_parallel.hdf5'
+    access_300K = access_data_in_hdf5(hdf5_file_name)
+    E, sig, err = access_300K.get_signal_and_error(Q)
+    sig[np.flatnonzero(sig == 0.0)] = np.nan
+    sig = sig/(1+1/(np.exp(E/(0.08617*300))-1))
+    #plt.errorbar(E,sig,yerr=err,barsabove=True,ls='-',lw=lw,marker='o',ms=ms,c='b',label='300K')
+    plt.plot(E,sig,ls='-',lw=lw,marker='o',ms=ms,c='b',label='300K')
+
+    hdf5_file_name = 'LSNO25_220K_parallel.hdf5'
+    access_220K = access_data_in_hdf5(hdf5_file_name)
+    E, sig, err = access_220K.get_signal_and_error(Q)
+    sig[np.flatnonzero(sig == 0.0)] = np.nan
+    sig = sig/(1+1/(np.exp(E/(0.08617*220))-1))
+    #plt.errorbar(E,sig,yerr=err,barsabove=True,ls='-',lw=lw,marker='o',ms=ms,c='r',label='220K')
+    plt.plot(E,sig,ls='-',lw=lw,marker='o',ms=ms,c='r',label='220K')
+
+    hdf5_file_name = 'LSNO25_5K_parallel.hdf5'
+    access_5K = access_data_in_hdf5(hdf5_file_name)
+    E, sig, err = access_5K.get_signal_and_error(Q)
+    sig[np.flatnonzero(sig == 0.0)] = np.nan
+    sig = sig/(1+1/(np.exp(E/(0.08617*5))-1))
+    #plt.errorbar(E,sig,yerr=err,barsabove=True,ls='-',lw=lw,marker='o',ms=ms,c='m',label='5K')
+    plt.plot(E,sig,ls='-',lw=lw,marker='o',ms=ms,c='m',label='5K')
+
+    plt.legend()
     plt.show()
-
-    """
-    Q = [[ 6.0, 2.0, 0.0] for _ in range(100)]
-
-    _t = c_timer('100_cuts')
-    for QQ in Q:
-        E, sig, err = access_tools.get_signal_and_error(QQ)
-    _t.stop()
-    """
-
-
-
-
-
-
 
