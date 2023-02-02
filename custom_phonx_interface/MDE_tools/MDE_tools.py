@@ -265,7 +265,7 @@ class c_MDE_tools:
         msg += f'{_z[0]: 9.5f} {_z[1]: 9.5f} {_z[2]: 9.5f}\n'
         print(msg)
 
-     # ----------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
 
     def get_lattice_vectors_from_params(self):
         """
@@ -325,6 +325,10 @@ class c_MDE_tools:
         self.L_bins = L_bins
         self.L_edges, self.L_range, self.dL = self._get_bin_edges(L_bins)
 
+        print(self.H_edges)
+        print(self.K_edges)
+        print(self.L_edges)
+
         self.E_bins = E_bins
         self.E_edges, self.E_range, self.dE = self._get_bin_edges(E_bins)
         self.E_bins[0] -= self.E_bins[1]/2
@@ -333,6 +337,10 @@ class c_MDE_tools:
         # split bin edges (well actually bin list args) into chunks
         self.num_Q_mesh = num_Q_mesh        
         self._split_bins_on_chunks()
+
+        # --- DEV ---
+        crash()
+        # -----------
 
         # get the data for each voxel
         self._loop_over_chunks()
@@ -715,11 +723,10 @@ class c_MDE_tools:
 if __name__ == '__main__':
 
     # temp and projection
-    T = 300  
     proj = 'parallel'
 
-    MDE_file_name = f'../LSNO25_Ei_120meV_{T}K.nxs'
-    out_file_name = f'LSNO25_{T}K_{proj}.hdf5'
+    MDE_file_name = f'../LSNO25_Ei_120meV_300K.nxs'
+    out_file_name = f'LSNO25_test.hdf5'
 
     _t = c_timer('MDE_tools',units='m')
     
@@ -727,11 +734,16 @@ if __name__ == '__main__':
         u = [ 1, 0, 0]
         v = [ 0, 1, 0]
         w = [ 0, 0, 1]
-        H_bins = [   -5,   0.1,   15]
-        K_bins = [  -12,   0.1,  7.5]
-        L_bins = [ -7.5,  0.25,  7.5]
+        H_bins = [    4,   0.1,    6]
+        K_bins = [    1,   0.1,    2]
+        L_bins = [   -1,  0.25,    1]
         E_bins = [   10,   0.5,  100]
         num_Q_mesh = [4,4,4]
+        #H_bins = [   -5,   0.1,   15]
+        #K_bins = [  -12,   0.1,  7.5]
+        #L_bins = [ -7.5,  0.25,  7.5]
+        #E_bins = [   10,   0.5,  100]
+        #num_Q_mesh = [4,4,4]
 
     elif proj == 'perp':
         u = [ 1, 1, 0]
