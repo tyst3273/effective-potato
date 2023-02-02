@@ -26,7 +26,11 @@ def crash(err_msg=None,exception=None):
     if exception is not None:
         msg += '\nException:\n'+str(exception)+'\n'
     print(msg)
+
+    # one of these should kill execution...
     raise KeyboardInterrupt
+    raise Exception
+    exit()
 
 # --------------------------------------------------------------------------------------------------
 
