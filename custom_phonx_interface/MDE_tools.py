@@ -26,11 +26,7 @@ def crash(err_msg=None,exception=None):
     if exception is not None:
         msg += '\nException:\n'+str(exception)+'\n'
     print(msg)
-
-    # one of these should kill execution...
     raise KeyboardInterrupt
-    raise Exception
-    exit()
 
 # --------------------------------------------------------------------------------------------------
 
@@ -341,10 +337,6 @@ class c_MDE_tools:
         # split bin edges (well actually bin list args) into chunks
         self.num_Q_mesh = num_Q_mesh        
         self._split_bins_on_chunks()
-
-        # --- DEV ---
-        crash()
-        # -----------
 
         # get the data for each voxel
         self._loop_over_chunks()
@@ -728,9 +720,10 @@ if __name__ == '__main__':
 
     # temp and projection
     proj = 'parallel'
+    T = 5
 
-    MDE_file_name = f'../LSNO25_Ei_120meV_300K.nxs'
-    out_file_name = f'LSNO25_test.hdf5'
+    MDE_file_name = f'../LSNO25_Ei_120meV_{T}K.nxs'
+    out_file_name = f'LSNO25_{T}K_{proj}_more_coarse.hdf5'
 
     _t = c_timer('MDE_tools',units='m')
     
@@ -738,16 +731,11 @@ if __name__ == '__main__':
         u = [ 1, 0, 0]
         v = [ 0, 1, 0]
         w = [ 0, 0, 1]
-        H_bins = [    4,   0.1,    6]
-        K_bins = [    1,   0.1,    2]
-        L_bins = [   -1,  0.25,    1]
-        E_bins = [   10,   0.5,  100]
+        H_bins = [   -5,   0.1,   15]
+        K_bins = [  -12,   0.1,  7.5]
+        L_bins = [   -8,   1.0,    8]
+        E_bins = [  -20,   0.5,  100]
         num_Q_mesh = [4,4,4]
-        #H_bins = [   -5,   0.1,   15]
-        #K_bins = [  -12,   0.1,  7.5]
-        #L_bins = [ -7.5,  0.25,  7.5]
-        #E_bins = [   10,   0.5,  100]
-        #num_Q_mesh = [4,4,4]
 
     elif proj == 'perp':
         u = [ 1, 1, 0]
