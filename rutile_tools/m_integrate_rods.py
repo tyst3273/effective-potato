@@ -75,7 +75,7 @@ class c_integrate_rods:
 
     # ----------------------------------------------------------------------------------------------
 
-    def __init__(self,file_name,u,v,w):
+    def __init__(self,file_name,u,v,w,subtracted=False):
         """
         rotate coords to be aligned with rod and calculate intersection of bins in aligned
         coords with hkl coords
@@ -85,6 +85,9 @@ class c_integrate_rods:
        
         check_file(file_name)
         self.file_name = file_name
+
+        # whether or not to cut BG subtracted data
+        self.subtracted = subtracted 
 
         # RECIPROCAL lattice constants
         self.a = 2*np.pi/4.611; self.c = 2*np.pi/2.977
@@ -144,7 +147,11 @@ class c_integrate_rods:
             Qz_inds = self._get_inds(Qz,Q[2],delta)
 
             Qx = Qx[Qx_inds]; Qy = Qy[Qy_inds]; Qz = Qz[Qz_inds]
-            signal = db['bg_subtracted_signal'][Qx_inds,...]
+
+            if self.subtracted:
+                signal = db['bg_subtracted_signal'][Qx_inds,...]
+            else:
+                signal = db['signal'][Qx_inds,...]
             error = db['error'][Qx_inds,...]
 
         signal = signal[:,Qy_inds,:]
