@@ -509,6 +509,9 @@ class c_integrate_rods:
             print('all bins:',all_bins)
             print('non empty bins:',non_empty)
 
+        if non_empty == 0:
+            return np.nan, np.nan
+
         weights = weights[inds]
         weights /= weights.sum()
 
