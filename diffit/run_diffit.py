@@ -4,55 +4,59 @@ import matplotlib.pyplot as plt
 
 from diffit.m_crystal import c_crystal
 from diffit.m_code_utils import c_timer
-from diffit.m_domains import c_domains
 from diffit.m_point_defects import c_point_defects
 from diffit.m_structure_io import write_xyz, write_lammpstrj
 
 
 _t = c_timer('run_diffit',units='m')
 
-# define silicon 
-basis_vectors = [[5.431,0.000,0.000],
-                 [0.000,5.431,0.000],
-                 [0.000,0.000,5.431]]
-basis_positions = [[ 0.00, 0.00, 0.00],
-                   [ 0.50, 0.50, 0.00],
-                   [ 0.50, 0.00, 0.50],
-                   [ 0.00, 0.50, 0.50],
-                   [ 0.25, 0.25, 0.25],
-                   [ 0.75, 0.75, 0.25],
-                   [ 0.75, 0.25, 0.75],
-                   [ 0.25, 0.75, 0.75]]
+# define rutile 
+basis_vectors = [[4.593,0.000,0.000],
+                 [0.000,4.593,0.000],
+                 [0.000,0.000,2.981]]
+basis_positions = [[0.0000000000000000,  0.0000000000000000,  0.0000000000000000],
+                   [0.5000000000000000,  0.5000000000000000,  0.5000000000000000],
+                   [0.1953400114833092,  0.8046599885166907,  0.5000000000000000],
+                   [0.8046599885166907,  0.1953400114833092,  0.5000000000000000],
+                   [0.3046599885166907,  0.3046599885166907,  0.0000000000000000],
+                   [0.6953400114833093,  0.6953400114833093,  0.0000000000000000]]
+basis_types = ['Ti','Ti','O','O','O','O']
 
-basis_types = ['Si','Si','Si','Si', 'Si','Si','Si','Si']
-silicon = c_crystal(basis_vectors,basis_positions,basis_types)
+rutile = c_crystal(basis_vectors,basis_positions,basis_types)
 
 
 # setup supercell
-supercell_reps = [10,10,10]
-silicon.build_supercell(supercell_reps)
+supercell_reps = [10,10,20]
+#supercell_reps = [2,2,4]
+rutile.build_supercell(supercell_reps)
 
+# number of defects
+num_sc_atoms = rutile.num_sc_atoms 
+defect_concentration = 0.1
+num_defects = int(num_sc_atoms*defect_concentration)
 
-# create random distribution of vacancies
-defects = c_point_defects(silicon)
+num_defects = 1
 
-defect_concentration = 0.2
-num_defects = int(silicon.num_sc_atoms*defect_concentration)
+vacancies = c_point_defects(rutile)
+vacancies.place_random_defects(num_defects)
 
-defects.place_random_defects(num_defects,defect_type='Ge')
+#write_xyz('vacancies.xyz',rutile.sc_positions_cart,
+#                          rutile.sc_type_nums,
+#                          rutile.basis_type_strings)
 
+for ii in range(1000):
 
-for ii in range(100):
+    _step_timer = c_timer(f'step[{ii}]')
 
-    print(ii)
+    vacancies.move_defect()
+    rutile = vacancies.get_crystal()
+    write_lammpstrj('vacancies.lammpstrj',rutile.sc_positions_cart,
+                                          rutile.sc_type_nums,
+                                          rutile.sc_vectors,
+                                          append=True,sort_by_type=True)
 
-    defects.move_defect()
-    silicon = defects.get_crystal()
-    write_lammpstrj('Ge_subs.lammpstrj',
-                        silicon.sc_positions_cart,
-                        silicon.sc_type_nums,
-                        silicon.sc_vectors,
-                        append=True,sort_by_type=True)
+    _step_timer.stop()
+
 
 
 _t.stop()

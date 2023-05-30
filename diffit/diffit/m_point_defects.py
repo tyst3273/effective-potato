@@ -78,7 +78,7 @@ class c_point_defects:
         """
 
         if defect_ind is None:
-            defect_ind = self.get_random_inds(self.defect_sc_inds)[0]
+            defect_ind = self.get_random_inds(np.copy(self.defect_sc_inds))[0]
 
         # need neighbor vectors in cartesian coordinates
         pristine_reduced_pos = self.crystal.sc_positions_reduced[self.pristine_sc_inds]
@@ -91,7 +91,7 @@ class c_point_defects:
         shell = np.flatnonzero(neighbor_dist <= neighbor_dist[0]+0.1)
         np.random.shuffle(shell)
         neighbor_ind = neighbors[shell[0]]
-        
+
         self.swap_pristine_and_defect_atoms(neighbor_ind,defect_ind)
 
         return neighbor_ind, defect_ind
