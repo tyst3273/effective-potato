@@ -3,3 +3,5 @@ __pycache__
 *.hdf5
 *.h5
 *.txt
+*.xyz
+*.lammpstrj
