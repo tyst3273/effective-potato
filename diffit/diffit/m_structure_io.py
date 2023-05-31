@@ -27,7 +27,6 @@ def write_xyz(file_name,pos,types,type_strings=None,append=False):
         for ii in range(pos.shape[0]):
             _f.write(f'{types[ii]:4} {pos[ii,0]: 14.9f} {pos[ii,1]: 14.9f} {pos[ii,2]: 14.9f}\n')
 
-
 # --------------------------------------------------------------------------------------------------
 
 def write_lammpstrj(file_name,pos,types,vecs,append=True,sort_by_type=False):

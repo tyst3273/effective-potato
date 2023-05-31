@@ -9,13 +9,8 @@ from diffit.m_structure_io import write_xyz, write_lammpstrj
 from diffit.m_PSF_interface import run_PSF
 from diffit.m_rmc import c_rmc
 
-### --- get model exp intensity ---
-from psf.m_io import c_reader
-reader = c_reader('diffit_STRUFACS.hdf5')
-reader.read_elastic()
-exp_intensity = reader.sq_elastic
-exp_H = reader.H; exp_K = reader.K; exp_L = reader.L
-### -------------------------------
+
+def get_exp_data()
 
 
 _t = c_timer('run_diffit',units='m')
@@ -35,11 +30,11 @@ rutile = c_crystal(basis_vectors,basis_positions,basis_types)
 
 
 # setup supercell
-supercell_reps = [20,20,20]
+supercell_reps = [20,20,32]
 rutile.build_supercell(supercell_reps)
 
 # number of defects
-defect_concentration = 0.05
+defect_concentration = 0.01
 num_defects = int(rutile.num_sc_atoms*defect_concentration)
 
 
@@ -48,9 +43,17 @@ vacancies = c_point_defects(rutile)
 vacancies.place_random_defects(num_defects) # seed random defects
 
 
+psf_kwargs = {'Q_mesh_H':[ 3.5, 4.5, 11],
+              'Q_mesh_K':[ 0.5, 1.5, 11],
+              'Q_mesh_L':[-0.5, 0.5, 17]}
+_, calc_H, calc_K, calc_L = run_PSF(rutile,**psf_kwargs)
+
+exp_intensity = get_exp_intensity(calc_H,calc_K,calc_L)
+
+
 # RMC loop
 max_iter = 100
-rmc = c_rmc(beta=0.00001,exit_tol=1e-3)
+rmc = c_rmc(beta=0.001,exit_tol=1e-3)
 
 for ii in range(max_iter):
 
@@ -61,7 +64,7 @@ for ii in range(max_iter):
     defect_ind, neighbor_ind = vacancies.move_defect()
 
     # run the PSF calculation
-    calc_intensity, calc_H, calc_K, calc_L = run_PSF(rutile)
+    calc_intensity, calc_H, calc_K, calc_L = run_PSF(rutile,**psf_kwargs)
 
     # check agreement with exp. data for RMC
     keep, converged = rmc.check_move(exp_intensity,calc_intensity)
@@ -74,15 +77,17 @@ for ii in range(max_iter):
     if converged:
         print(f'rmc loop converged after {ii+1} steps!')
         print('final delta**2:',rmc.delta_error_squared)
-    
+
     # unmove the defect
     if not keep:
         vacancies.move_defect(neighbor_ind,defect_ind)
 
-    write_lammpstrj('vacancies.lammpstrj',rutile.sc_positions_cart,
-                                          rutile.sc_type_nums,
-                                          rutile.sc_vectors,
-                                          append=True,sort_by_type=True)
+    # optionally write atom coords each step
+    if False:
+        write_lammpstrj('vacancies.lammpstrj',rutile.sc_positions_cart,
+                                              rutile.sc_type_nums,
+                                              rutile.sc_vectors,
+                                              append=True,sort_by_type=True)
 
     _step_timer.stop()
 

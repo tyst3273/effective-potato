@@ -30,7 +30,7 @@ class c_rmc:
         accept or reject move according to whether or not random number in interval [0,1] is 
         less than:
 
-            weight = exp( -error_sq / beta**2 / 2) 
+            weight = exp( -delta_error_squared / beta**2 / 2) 
         
         """
 
