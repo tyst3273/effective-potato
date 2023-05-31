@@ -26,13 +26,13 @@ rutile = c_crystal(basis_vectors,basis_positions,basis_types)
 
 
 # setup supercell
-supercell_reps = [10,10,20]
-#supercell_reps = [2,2,4]
+#supercell_reps = [10,10,16]
+supercell_reps = [4,4,6]
 rutile.build_supercell(supercell_reps)
 
 # number of defects
 num_sc_atoms = rutile.num_sc_atoms 
-defect_concentration = 0.1
+defect_concentration = 0.05
 num_defects = int(num_sc_atoms*defect_concentration)
 
 num_defects = 1
@@ -40,20 +40,31 @@ num_defects = 1
 vacancies = c_point_defects(rutile)
 vacancies.place_random_defects(num_defects)
 
-#write_xyz('vacancies.xyz',rutile.sc_positions_cart,
-#                          rutile.sc_type_nums,
-#                          rutile.basis_type_strings)
 
-for ii in range(1000):
+max_iter = 100
+exit_flag = False
+
+for ii in range(max_iter):
 
     _step_timer = c_timer(f'step[{ii}]')
 
-    vacancies.move_defect()
-    rutile = vacancies.get_crystal()
+    if exit_flag:
+        break
+
+    # randomly move a defect
+    defect_ind, neighbor_ind = vacancies.move_defect()
+
+    print(defect_ind,neighbor_ind)
+
+    # write the file
+    #rutile = vacancies.get_crystal()
     write_lammpstrj('vacancies.lammpstrj',rutile.sc_positions_cart,
                                           rutile.sc_type_nums,
                                           rutile.sc_vectors,
                                           append=True,sort_by_type=True)
+
+    # unmove the defect
+    vacancies.move_defect(neighbor_ind,defect_ind)
 
     _step_timer.stop()
 

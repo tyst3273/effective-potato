@@ -71,30 +71,32 @@ class c_point_defects:
 
     # ----------------------------------------------------------------------------------------------
 
-    def move_defect(self,defect_ind=None):
+    def move_defect(self,defect_ind=None,neighbor_ind=None):
 
         """
-        swap position of a randomly chosen defect atom with nearby pristine one
+        swap position of a defect atom with a pristine atom. if None, atoms are chosen at random
         """
 
         if defect_ind is None:
             defect_ind = self.get_random_inds(np.copy(self.defect_sc_inds))[0]
 
-        # need neighbor vectors in cartesian coordinates
-        pristine_reduced_pos = self.crystal.sc_positions_reduced[self.pristine_sc_inds]
-        defect_reduced_pos = self.crystal.sc_positions_reduced[defect_ind]
-        neighbors, neighbor_dist, neighbor_vectors = get_neighbors(defect_reduced_pos,
-                                                pristine_reduced_pos,self.crystal.sc_vectors)
-        neighbors = self.pristine_sc_inds[neighbors]
+        if neighbor_ind is None:
 
-        # randomly pick a neighbor
-        shell = np.flatnonzero(neighbor_dist <= neighbor_dist[0]+0.1)
-        np.random.shuffle(shell)
-        neighbor_ind = neighbors[shell[0]]
+            # need neighbor vectors in cartesian coordinates
+            pristine_reduced_pos = self.crystal.sc_positions_reduced[self.pristine_sc_inds]
+            defect_reduced_pos = self.crystal.sc_positions_reduced[defect_ind]
+            neighbors, neighbor_dist, neighbor_vectors = get_neighbors(defect_reduced_pos,
+                                                pristine_reduced_pos,self.crystal.sc_vectors)
+            neighbors = self.pristine_sc_inds[neighbors]
+
+            # randomly pick a neighbor
+            shell = np.flatnonzero(neighbor_dist <= neighbor_dist[0]+0.1)
+            np.random.shuffle(shell)
+            neighbor_ind = neighbors[shell[0]]
 
         self.swap_pristine_and_defect_atoms(neighbor_ind,defect_ind)
 
-        return neighbor_ind, defect_ind
+        return defect_ind, neighbor_ind
 
     # ----------------------------------------------------------------------------------------------
 
