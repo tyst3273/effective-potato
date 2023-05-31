@@ -28,6 +28,9 @@ class model:
 
     def do_rmc(self,beta=0.5,tol=1e-3,max_iter=1000,step_size=0.5):
 
+        self.error_sq = np.zeros(max_iter)
+        self.delta_sq = np.zeros(max_iter)
+
         self.beta = beta
         self.step_size = step_size
         self.chi_sq = 0 # have to initialize this to 0
@@ -57,6 +60,9 @@ class model:
             else: 
                 #print('reject!')
                 self._unmove()
+
+            self.error_sq[ii] = self.chi_sq
+            self.delta_sq[ii] = self.delta_chi_sq
 
         if converged:
             print(f'converged after {ii+1} steps!')
@@ -97,6 +103,11 @@ class model:
 
         plt.clf()
 
+        plt.plot(np.arange(self.error_sq.size),self.error_sq,marker='o',c='r')
+        plt.plot(np.arange(self.delta_sq.size),self.delta_sq,marker='^',c='b')
+
+        plt.clf()
+
         plt.scatter(self.pos,self.disp)
         plt.show()
 
@@ -124,7 +135,6 @@ if __name__ == '__main__':
     #model.set_gaussian_corr()
 
     model.do_rmc(beta=10,tol=1e-6,max_iter=25000,step_size=0.005)
-
     model.plot()
 
 

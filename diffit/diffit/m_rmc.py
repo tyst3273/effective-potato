@@ -30,7 +30,7 @@ class c_rmc:
         accept or reject move according to whether or not random number in interval [0,1] is 
         less than:
 
-            weight = exp( -error_sq * beta / 2) 
+            weight = exp( -error_sq / beta**2 / 2) 
         
         """
 
@@ -44,12 +44,15 @@ class c_rmc:
             return keep, converged
 
         # boltzmann weight
-        arg = new_error_squared*self.beta/2
-        print(arg)
-        weight = np.exp(-new_error_squared*self.beta/2)
+        arg = -self.delta_error_squared*self.beta/2
+        weight = np.exp(arg)
+        print('arg:',arg)
+        print('weight:',weight)
 
         # compare random number to boltzmann weight
-        if np.random.uniform() < weight:
+        rand = np.random.uniform()
+        print('rand:',rand)
+        if rand < weight:
             keep = True
             self.error_squared = new_error_squared
         else:
