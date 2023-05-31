@@ -28,11 +28,6 @@ def get_exp_data(file_name,H,K,L):
 
     exp_intensity.shape = shape
 
-    with h5py.File('tmp.hdf5','w') as db:
-        db.create_dataset('signal',data=exp_intensity)
-    
-    exit()
-
     return exp_intensity
 
 # --------------------------------------------------------------------------------------------------
