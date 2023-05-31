@@ -1,4 +1,5 @@
 
+from diffit.m_code_utils import c_timer
 from psf.m_PSF import c_PSF
 
 # --------------------------------------------------------------------------------------------------
@@ -9,9 +10,9 @@ def run_PSF(crystal,input_file='psf_input_params.py'):
     setup and run PSF
     """
 
-    print('\n\nentering PSF calculation!\n\n')
+    timer = c_timer('PSF')
     
-    PSF = c_PSF(input_file)
+    PSF = c_PSF(input_file,silent=True)
 
     # setup PSF calculation
     PSF.setup_calculation(pos=crystal.sc_positions_cart,
@@ -29,6 +30,8 @@ def run_PSF(crystal,input_file='psf_input_params.py'):
 
     calculated_intensity = PSF.comm.strufacs.sq_elastic
     H = PSF.comm.Qpoints.H; K = PSF.comm.Qpoints.K; L = PSF.comm.Qpoints.L
+
+    timer.stop()
 
     return calculated_intensity, H, K, L
 

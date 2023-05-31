@@ -18,7 +18,6 @@ class c_rmc:
         self.exit_tol = exit_tol
 
         # initialize these
-        self.converged = False
         self.error_squared = 0
         self.delta_error_squared = 0
         
@@ -35,21 +34,28 @@ class c_rmc:
         
         """
 
-        new_error_sq = np.sum((exp_data-calc_data)**2)
+        new_error_squared = np.sum((exp_data-calc_data)**2)
+        self.delta_error_squared = new_error_squared-self.error_squared
 
-        weight = np.exp(-new_error_sq*self.beta/2)
+        # compare change in error to tolerance
+        if np.abs(self.delta_error_squared) <= self.exit_tol:
+            converged = True
+            keep = True
+            return keep, converged
 
+        # boltzmann weight
+        arg = new_error_squared*self.beta/2
+        print(arg)
+        weight = np.exp(-new_error_squared*self.beta/2)
+
+        # compare random number to boltzmann weight
         if np.random.uniform() < weight:
             keep = True
-
-            self.delta_error_squared = new_error_squared-self.error_squared
-            if np.abs(self.delta_error_squared) <= self.exit_tol:
-                converged = True
-                self.converged = converged
-
+            self.error_squared = new_error_squared
         else:
             keep = False
-
+        
+        converged = False
         return keep, converged
 
     # ----------------------------------------------------------------------------------------------

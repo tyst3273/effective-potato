@@ -49,8 +49,8 @@ vacancies.place_random_defects(num_defects) # seed random defects
 
 
 # RMC loop
-max_iter = 5
-rmc = c_rmc(beta=0.5,exit_tol=1e-3)
+max_iter = 100
+rmc = c_rmc(beta=0.0001,exit_tol=1e-3)
 
 for ii in range(max_iter):
 
@@ -66,20 +66,30 @@ for ii in range(max_iter):
     # check agreement with exp. data for RMC
     keep, converged = rmc.check_move(exp_intensity,calc_intensity)
     
+    print('\nkeep move:',keep)
+    print('error**2:',rmc.error_squared)
+    print('delta:',rmc.delta_error_squared)
+
     # check if converged
     if converged:
-        print('rmc loop converged after {ii+1} steps!')
+        print(f'rmc loop converged after {ii+1} steps!')
         print('final delta:',rmc.delta_error_squared)
     
     # unmove the defect
     if not keep:
         vacancies.move_defect(neighbor_ind,defect_ind)
 
+    write_lammpstrj('vacancies.lammpstrj',rutile.sc_positions_cart,
+                                          rutile.sc_type_nums,
+                                          rutile.sc_vectors,
+                                          append=True,sort_by_type=True)
+
     _step_timer.stop()
 
 # check if converged
 if not converged:
-    print('rmc loop failed to converge after {ii+1} steps!')
+    print(f'rmc loop failed to converge after {ii+1} steps!')
+    print('final delta:',rmc.delta_error_squared)
 
 _t.stop()
 
