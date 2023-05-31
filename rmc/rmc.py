@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 class model:
     
     def __init__(self,n_sites=1000,a=1):
+
         self.n_sites = n_sites 
         self.a = a
         self.pos = np.arange(-n_sites//2,n_sites//2)*self.a
@@ -58,10 +59,10 @@ class model:
             self.delta_sq[ii] = self.delta_chi_sq
 
             if keep:
-                #print('keep!')
+                print('keep!')
                 continue
             else: 
-                #print('reject!')
+                print('reject!')
                 self._unmove()
 
         if converged:
@@ -128,9 +129,6 @@ class model:
         plt.show()
 
 
-
-
-
 if __name__ == '__main__':
 
     model = model()
@@ -138,7 +136,7 @@ if __name__ == '__main__':
     model.set_exponential_corr(corr_len=15,amplitude=10)
     #model.set_gaussian_corr()
 
-    model.do_rmc(beta=10,tol=1e-4,max_iter=25000,step_size=0.005)
+    model.do_rmc(beta=100,tol=1e-4,max_iter=50000,step_size=0.05)
     model.plot()
 
 
