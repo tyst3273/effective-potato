@@ -11,7 +11,7 @@ from diffit.m_structure_io import write_xyz, write_lammpstrj
 from diffit.m_PSF_interface import run_PSF
 from diffit.m_rmc import c_rmc
 
-from diffit.m_experiment import get_exp_data
+from diffit.m_custom import put_into_bins, get_inds_and_weights
 
 
 _t = c_timer('run_diffit',units='m')
@@ -44,21 +44,20 @@ vacancies = c_point_defects(rutile)
 vacancies.place_random_defects(num_defects) # seed random defects
 
 
-psf_kwargs = {'Q_mesh_H':[-0.5, 0.5, 25],
-              'Q_mesh_K':[-0.5, 0.5, 25],
-              'Q_mesh_L':[-0.5, 0.5, 37]}
-_, calc_H, calc_K, calc_L = run_PSF(rutile,**psf_kwargs)
+psf_kwargs = {'Q_file':'Q_H3.00_K1.00_L0.00'}
 
 
-exp_file_path = '/home/ty/research/projects/materials/rutile/background/get_raw_data_for_diffit'
-exp_file_name = '293K_quenched_H2.00_K0.00_L2.00.hdf5'
-exp_file_name = os.path.join(exp_file_path,exp_file_name)
-exp_intensity = get_exp_data(exp_file_name,calc_H,calc_K,calc_L)
+inds_file = 'k1_u_binning.hdf5'
+inds, weights, bin_centers = get_inds_and_weights(inds_file)
+exp_intensity = np.loadtxt('quenched_310_signal')
+
+scale = 1e3
+exp_intensity *= scale/exp_intensity.max()
 
 
 # RMC loop
 max_iter = 100
-rmc = c_rmc(beta=1e-11,exit_tol=1e-3)
+rmc = c_rmc(beta=1e-6,exit_tol=1e-9)
 
 for ii in range(max_iter):
 
@@ -69,11 +68,21 @@ for ii in range(max_iter):
     defect_ind, neighbor_ind = vacancies.move_defect()
 
     # run the PSF calculation
-    calc_intensity, calc_H, calc_K, calc_L = run_PSF(rutile,**psf_kwargs)
+    calc_intensity = run_PSF(rutile,**psf_kwargs)
+
+    # need to put intensity into bins
+    calc_intensity = put_into_bins(calc_intensity,inds,weights)
+    calc_intensity *= scale/calc_intensity.max()
+
+    #plt.plot(bin_centers,calc_intensity,c='r',marker='o',lw=1,ls='-')
+    #plt.plot(bin_centers,exp_intensity,c='b',marker='o',lw=1,ls='-')
+    #plt.show()
+    #plt.clf()
+    #plt.close()
 
     # check agreement with exp. data for RMC
     keep, converged = rmc.check_move(exp_intensity,calc_intensity)
-    
+
     print('keep move:',keep)
     print('error**2:',rmc.error_squared)
     print('delta**2:',rmc.delta_error_squared)
@@ -82,6 +91,7 @@ for ii in range(max_iter):
     if converged:
         print(f'rmc loop converged after {ii+1} steps!')
         print('final delta**2:',rmc.delta_error_squared)
+        break
 
     # unmove the defect
     if not keep:

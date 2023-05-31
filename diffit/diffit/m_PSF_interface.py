@@ -30,11 +30,10 @@ def run_PSF(crystal,input_file='psf_input_params.py',silent=True,**kwargs):
     PSF.run()
 
     calculated_intensity = PSF.comm.strufacs.sq_elastic
-    H = PSF.comm.Qpoints.H; K = PSF.comm.Qpoints.K; L = PSF.comm.Qpoints.L
 
     timer.stop()
 
-    return calculated_intensity, H, K, L
+    return calculated_intensity
 
 # --------------------------------------------------------------------------------------------------
 

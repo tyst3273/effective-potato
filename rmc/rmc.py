@@ -138,7 +138,7 @@ if __name__ == '__main__':
     model.set_exponential_corr(corr_len=15,amplitude=10)
     #model.set_gaussian_corr()
 
-    model.do_rmc(beta=10,tol=1e-6,max_iter=25000,step_size=0.005)
+    model.do_rmc(beta=10,tol=1e-4,max_iter=25000,step_size=0.005)
     model.plot()
 
 
