@@ -54,15 +54,15 @@ class model:
 
             keep = self._check_move()
 
+            self.error_sq[ii] = self.chi_sq
+            self.delta_sq[ii] = self.delta_chi_sq
+
             if keep:
                 #print('keep!')
                 continue
             else: 
                 #print('reject!')
                 self._unmove()
-
-            self.error_sq[ii] = self.chi_sq
-            self.delta_sq[ii] = self.delta_chi_sq
 
         if converged:
             print(f'converged after {ii+1} steps!')
@@ -103,8 +103,12 @@ class model:
 
         plt.clf()
 
-        plt.plot(np.arange(self.error_sq.size),self.error_sq,marker='o',c='r')
-        plt.plot(np.arange(self.delta_sq.size),self.delta_sq,marker='^',c='b')
+        plt.plot(np.arange(self.error_sq.size),self.error_sq,lw=0,
+            marker='o',c='r',label='error_sq')
+        plt.plot(np.arange(self.delta_sq.size),self.delta_sq,lw=0,
+            marker='^',c='b',label='delta_sq')
+        plt.legend()
+        plt.show()
 
         plt.clf()
 
