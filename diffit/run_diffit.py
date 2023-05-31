@@ -50,7 +50,7 @@ vacancies.place_random_defects(num_defects) # seed random defects
 
 # RMC loop
 max_iter = 100
-rmc = c_rmc(beta=0.00005,exit_tol=1e-3)
+rmc = c_rmc(beta=0.00001,exit_tol=1e-3)
 
 for ii in range(max_iter):
 
