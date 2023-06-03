@@ -26,14 +26,12 @@ basis_positions = [[0.0000000000000000,  0.0000000000000000,  0.0000000000000000
                    [0.8046599885166907,  0.1953400114833092,  0.5000000000000000],
                    [0.3046599885166907,  0.3046599885166907,  0.0000000000000000],
                    [0.6953400114833093,  0.6953400114833093,  0.0000000000000000]]
-basis_types = ['Ti','Zr','O','O','O','O']
+basis_types = ['Ti','Ti','O','O','O','O']
 rutile = c_crystal(basis_vectors,basis_positions,basis_types)
 
 rutile.build_supercell()
 
-write_poscar('POSCAR',rutile)
 
-exit()
 
 # setup supercell
 supercell_reps = [24,24,36]

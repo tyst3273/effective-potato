@@ -4,7 +4,7 @@ from psf.m_PSF import c_PSF
 
 # --------------------------------------------------------------------------------------------------
 
-def run_PSF(crystal,input_file='psf_input_params.py',silent=True,**kwargs):
+def run_PSF(crystal,input_file='psf_input_params.py',**kwargs):
 
     """
     setup and run PSF
@@ -12,7 +12,7 @@ def run_PSF(crystal,input_file='psf_input_params.py',silent=True,**kwargs):
 
     timer = c_timer('PSF')
     
-    PSF = c_PSF(input_file,silent)
+    PSF = c_PSF(input_file)
 
     # setup PSF calculation
     PSF.setup_calculation(pos=crystal.sc_positions_cart,

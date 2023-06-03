@@ -67,13 +67,45 @@ def write_lammpstrj(file_name,pos,types,vecs,append=True,sort_by_type=False):
         
 # --------------------------------------------------------------------------------------------------
 
-def write_poscar(file_name,pos,types,type_strings=None):
+def write_poscar(file_name,crystal):
 
     """
     write a poscar file 
     """
-    
-    pass
+
+    latvecs = crystal.sc_vectors
+    type_str = crystal.basis_type_strings 
+    type_nums = crystal.sc_type_nums
+    unique_nums, type_counts = np.unique(type_nums,return_counts=True)
+    num_types = type_str.size
+
+    pos = crystal.sc_positions_reduced
+
+
+    with open(file_name,'w') as _f:
+        _f.write('written by diffit!\n')
+        _f.write('1.0\n')
+
+        msg = ''
+        for ii in range(3):
+            for jj in range(3):
+                msg += f' {latvecs[ii,jj]: 12.6f}'
+            msg += '\n'
+        _f.write(msg)
+
+        for ii in range(num_types):
+            _f.write(f' {type_str[ii]}')
+        _f.write('\n')
+        for ii in range(num_types):
+            _f.write(f' {type_counts[ii]}')
+        _f.write('\nDirect\n')
+
+        for ii in range(num_types):
+            inds = np.flatnonzero(type_nums == ii)
+            for jj in range(inds.size):
+                ind = inds[jj]
+                _f.write(f' {pos[ind,0]: 12.6f} {pos[ind,1]: 12.6f} {pos[ind,2]: 12.6f}\n')
+
             
 # --------------------------------------------------------------------------------------------------
 
