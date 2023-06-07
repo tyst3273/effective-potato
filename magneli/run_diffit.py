@@ -13,10 +13,10 @@ from diffit.m_structure_io import write_xyz, write_lammpstrj, write_poscar
 
 _t = c_timer('run_diffit',units='m')
 
-rutile = c_crystal(poscar='POSCAR_TiO2')
-magneli = c_crystal(poscar='POSCAR_Ti5O9')
+rutile = c_crystal(poscar='TiO2/POSCAR_TiO2')
+magneli = c_crystal(poscar='Ti5O9/POSCAR_Ti5O9')
 
-magneli.build_supercell([5,5,5])
+magneli.build_supercell([4,4,1])
 write_poscar('POSCAR_mangeli_supercell',magneli)
 
 #ruile.build_supercell()
