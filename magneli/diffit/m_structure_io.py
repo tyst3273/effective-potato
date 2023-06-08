@@ -5,17 +5,20 @@ from diffit.m_code_utils import crash
       
 # --------------------------------------------------------------------------------------------------
 
-def write_xyz(file_name,pos,types,type_strings=None,append=False):
+def write_xyz(file_name,crystal,append=False):
 
     """
     write an xyz file 
     """
+
+    pos = crystal.sc_positions_cart
+    type_strings = crystal.basis_type_strings
+    types = crystal.sc_type_nums
     
-    if type_strings is not None:
-        types = types.astype(object)
-        for ii, _s in enumerate(type_strings):
-            _inds = np.flatnonzero(types == ii)
-            types[_inds] = _s
+    types = types.astype(object)
+    for ii, _s in enumerate(type_strings):
+        _inds = np.flatnonzero(types == ii)
+        types[_inds] = _s
     
     if append:
         mode = 'a'

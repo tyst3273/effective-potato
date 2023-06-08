@@ -4,6 +4,7 @@ from diffit.m_code_utils import crash, c_timer
 from diffit.m_crystal_utils import change_coordinate_basis, do_minimum_image
 
 
+# --------------------------------------------------------------------------------------------------
 
 class c_domains:
     
@@ -19,7 +20,27 @@ class c_domains:
         
     # ----------------------------------------------------------------------------------------------
 
-    def find_slab(self,origin,vector,thickness,periodic=True):
+    def merge_slab_inds(self,set_of_inds):
+
+        """
+        merge together sets of indices to form a new slab. useful to e.g. form a domain bounded 
+        by a parelleliped or smth
+        """
+
+        if not isinstance(set_of_inds,list):
+            set_of_inds = [set_of_inds]
+
+        inds = np.array(set_of_inds[0],dtype=int)
+        for ii in range(1,len(set_of_inds)):
+            inds = np.intersect1d(inds,np.array(set_of_inds[ii],dtype=int))
+        
+        self.inds_in_slab = inds
+
+        return self.inds_in_slab
+
+    # ----------------------------------------------------------------------------------------------
+
+    def find_slab(self,origin,vector,thickness,periodic=False):
 
         """
         find atoms within a 'slab'. origin is any point (in CARTESIAN COORDS) on the 'lower' 
@@ -80,9 +101,14 @@ class c_domains:
         _c = self.crystal
         
         if old_types is None:
-            old_types = np.arange(_c.num_basis_types)
+            old_types = list(_c.basis_type_strings)
         if not isinstance(old_types,list):
             old_types = [old_types]
+
+        for t in old_types:
+            if t not in _c.basis_type_strings:
+                msg = 'type {t} is unknown!'
+                crash(msg)
         
         _new_num = _c.add_new_basis_type(new_type)
         
@@ -122,6 +148,99 @@ class c_domains:
     # ----------------------------------------------------------------------------------------------
 
  
+# --------------------------------------------------------------------------------------------------
+
+class c_embedded:
+
+    # ----------------------------------------------------------------------------------------------
+
+    def __init__(self,bulk,defect):
+
+        """
+        'embed' defect crystal into bulk crystal.
+        """
+
+        self.bulk = bulk
+        self.defect = defect
+
+    # ----------------------------------------------------------------------------------------------
+
+    def transform_defect(self,translation=None,matrix=None):
+
+        """
+        transform the defect before embedding
+
+        x' = Rx + t 
+
+        """
+
+        # rotate THEN translate; i.e dont apply rotation to the translation
+        if matrix is not None:
+            matrix = np.array(matrix,dtype=float)
+            matrix.shape = [3,3]
+            self.defect.transform_coords(matrix)
+
+        # now translate
+        if translation is not None:
+            translation = np.array(translation,dtype=float)
+            translation.shape = [3]
+            self.defect.shift_coords(translation)
+
+    # ----------------------------------------------------------------------------------------------
+
+    def embed(self,origin=[0,0,0]):
+
+        """
+        embed defect structure with origin of defect structure translated to 'origin' arg in bulk
+        crystal
+        """
+
+        domains = c_domains(self.bulk)
+
+        # get indices of atom in bulk crystal bounded by the unitcell of the defect structure
+        vecs = self.defect.sc_vectors
+        vec = vecs[0,:]; thickness = np.sqrt(np.sum(vec**2))
+        inds_0 = domains.find_slab(origin,vec,thickness,periodic=False)
+        vec = vecs[1,:]; thickness = np.sqrt(np.sum(vec**2))
+        inds_1 = domains.find_slab(origin,vec,thickness,periodic=False)
+        vec = vecs[2,:]; thickness = np.sqrt(np.sum(vec**2))
+        inds_2 = domains.find_slab(origin,vec,thickness,periodic=False)
+
+        # merge all the inds into a single slab
+        inds = domains.merge_slab_inds([inds_0])#,inds_1,inds_2])
+
+        # DEV
+        domains.replace_slab_types('C')
+
+        self.bulk = domains.get_crystal()
+        #self.bulk.delete_atoms(inds)
+
+        # shift defect structure to new origin
+        self.defect.shift_coords(origin)
+
+        # add atoms in defect structure to bulk
+        cart = self.defect.sc_positions_cart
+        type_strings = self.defect.basis_type_strings
+        type_nums = self.defect.sc_type_nums
+
+        print('\n!!! DEV !!!\nresetting type in defect struct to Zr\n')
+        type_strings[1] = 'Zr'
+
+        self.bulk.add_atoms(cart,type_strings,type_nums)
+
+    # ----------------------------------------------------------------------------------------------
+
+    def get_crystal(self):
+
+        """
+        self explanatory
+        """
+
+        return self.bulk
+
+    # ----------------------------------------------------------------------------------------------
+
+
 
 
 

@@ -183,20 +183,85 @@ class c_crystal:
 
     # ----------------------------------------------------------------------------------------------
 
-    def rotate_coords(self,mat):
+    def transform_coords(self,mat):
 
         """
-        rotate coordinates in cartesian basis ...
+        transform coordinates in cartesian basis ...
         """
 
         mat = np.array(mat)
-        
+
         cart = self.sc_positions_cart
+        vecs = self.sc_vectors
 
         for ii in range(self.num_sc_atoms):
             cart[ii,:] = mat@cart[ii,:]
+
+        for ii in range(3):
+            vecs[ii,:] = mat@vecs[ii,:]
+
+        self.sc_vectors_inv = np.linalg.inv(vecs)
+        self.sc_positions_reduced = change_coordinate_basis(self.sc_vectors_inv,cart)
+
+    # ----------------------------------------------------------------------------------------------
+
+    def shift_coords(self,vec):
+
+        """
+        shift coordinates in cartesian basis ...
+        """
+
+        vec = np.array(vec)
+        self.sc_positions_cart[:,0] += vec[0]
+        self.sc_positions_cart[:,1] += vec[1]
+        self.sc_positions_cart[:,2] += vec[2]
+
+        self.sc_positions_reduced = change_coordinate_basis(self.sc_vectors_inv,
+            self.sc_positions_cart)
+
+    # ----------------------------------------------------------------------------------------------
+
+    def delete_atoms(self,inds):
         
-    
+        """
+        delete these atoms from the crystal
+        """
+
+        self.sc_positions_reduced = np.delete(self.sc_positions_reduced,inds,axis=0)
+        self.sc_positions_cart = np.delete(self.sc_positions_cart,inds,axis=0)
+        self.sc_type_nums  = np.delete(self.sc_type_nums,inds,axis=0)
+        self.num_sc_atoms = self.sc_type_nums.size
+
+    # ----------------------------------------------------------------------------------------------
+
+    def add_atoms(self,cart,type_strings,type_nums):
+
+        """
+        add atoms to the bulk crystal
+        """
+
+        # add any unknown types to type str arr
+        for _s in type_strings:
+            if _s in self.basis_type_strings:
+                continue
+            else:
+                _ = self.add_new_basis_type(_s)
+
+        # need to get nums for types in new atoms
+        _types = self.basis_type_strings
+        new_type_nums = np.zeros(type_nums.size,dtype=int)
+        for ii in range(type_nums.size):
+            _s = type_strings[type_nums[ii]]
+            num = np.flatnonzero(_s == _types)[0]
+            new_type_nums[ii] = num
+        
+        # now append coords and type nums extant arrs
+        self.sc_positions_cart = np.r_[self.sc_positions_cart,cart]
+        self.sc_positions_reduced = \
+            change_coordinate_basis(self.sc_vectors_inv,self.sc_positions_cart)
+        self.sc_type_nums = np.r_[self.sc_type_nums,new_type_nums]
+        self.num_sc_atoms = self.sc_type_nums.size
+
     # ----------------------------------------------------------------------------------------------
     
 
