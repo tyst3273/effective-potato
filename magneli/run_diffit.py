@@ -16,8 +16,15 @@ _t = c_timer('run_diffit',units='m')
 rutile = c_crystal(poscar='TiO2/POSCAR_TiO2')
 magneli = c_crystal(poscar='Ti5O9/POSCAR_Ti5O9')
 
-magneli.build_supercell([4,4,1])
-write_poscar('POSCAR_mangeli_supercell',magneli)
+rutile.build_supercell()
+write_poscar('POSCAR_rutile',rutile,cartesian=True)
+
+magneli.build_supercell()
+R = [[ 0.47638749,  0.76836498, -0.23168947],
+     [-0.8200697,   0.6218852,  -0.30209542],
+     [-0.11005654,  0.3689185,   0.92889442]]
+magneli.rotate_coords(R)
+write_poscar('POSCAR_mangeli_supercell',magneli,cartesian=True)
 
 #ruile.build_supercell()
 #write_poscar('POSCAR_rutile,rutile)

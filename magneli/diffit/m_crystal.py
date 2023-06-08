@@ -180,6 +180,22 @@ class c_crystal:
             change_coordinate_basis(self.sc_vectors,self.sc_positions_reduced)
 
         _t.stop()
+
+    # ----------------------------------------------------------------------------------------------
+
+    def rotate_coords(self,mat):
+
+        """
+        rotate coordinates in cartesian basis ...
+        """
+
+        mat = np.array(mat)
+        
+        cart = self.sc_positions_cart
+
+        for ii in range(self.num_sc_atoms):
+            cart[ii,:] = mat@cart[ii,:]
+        
     
     # ----------------------------------------------------------------------------------------------
     

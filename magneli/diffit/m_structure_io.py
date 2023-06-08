@@ -107,7 +107,7 @@ def read_poscar(file_name):
         
 # --------------------------------------------------------------------------------------------------
 
-def write_poscar(file_name,crystal):
+def write_poscar(file_name,crystal,cartesian=False):
 
     """
     write a poscar file 
@@ -119,8 +119,12 @@ def write_poscar(file_name,crystal):
     unique_nums, type_counts = np.unique(type_nums,return_counts=True)
     num_types = type_str.size
 
-    pos = crystal.sc_positions_reduced
-
+    if cartesian:
+        pos = crystal.sc_positions_cart
+        label = 'Cartesian'
+    else:
+        pos = crystal.sc_positions_reduced
+        label = 'Direct'
 
     with open(file_name,'w') as _f:
         _f.write('written by diffit!\n')
@@ -138,7 +142,7 @@ def write_poscar(file_name,crystal):
         _f.write('\n')
         for ii in range(num_types):
             _f.write(f' {type_counts[ii]}')
-        _f.write('\nDirect\n')
+        _f.write(f'\n{label}\n')
 
         for ii in range(num_types):
             inds = np.flatnonzero(type_nums == ii)
