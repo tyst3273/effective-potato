@@ -237,7 +237,8 @@ class c_crystal:
     def add_atoms(self,cart,type_strings,type_nums):
 
         """
-        add atoms to the bulk crystal
+        add atoms to the bulk crystal; NOTE: it is currently required that atom coords are given
+        in cartesian coords. this is important since cartesian coords are independent of basis
         """
 
         # add any unknown types to type str arr

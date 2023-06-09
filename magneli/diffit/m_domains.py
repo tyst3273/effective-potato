@@ -61,19 +61,18 @@ class c_domains:
         print('orientation vector of slab:',vector)
         print('thickness of slab:',thickness)
         
-        # need origin in reduced coords since minimum image is done in reduced coords
-        origin_reduced = change_coordinate_basis(self.crystal.sc_vectors_inv,origin)
-        reduced_pos = np.copy(self.crystal.sc_positions_reduced)
-        
         if periodic:
+            # need origin in reduced coords since minimum image is done in reduced coords
+            origin_reduced = change_coordinate_basis(self.crystal.sc_vectors_inv,origin)
+            reduced_pos = np.copy(self.crystal.sc_positions_reduced)
             reduced_pos = do_minimum_image(origin_reduced,reduced_pos)
+            cart_pos = change_coordinate_basis(self.crystal.sc_vectors,reduced_pos)
         else:
-            reduced_pos[:,0] += -origin_reduced[0]
-            reduced_pos[:,1] += -origin_reduced[1]
-            reduced_pos[:,2] += -origin_reduced[2]
+            cart_pos = np.copy(self.crystal.sc_positions_cart)
+            cart_pos[:,0] += -origin[0]
+            cart_pos[:,1] += -origin[1]
+            cart_pos[:,2] += -origin[2]
 
-        cart_pos = change_coordinate_basis(self.crystal.sc_vectors,reduced_pos)
-                
         # get dot product of pos with vector
         vector = np.tile(vector.reshape(1,3),reps=(self.crystal.num_sc_atoms,1))
         _dot = np.sum(cart_pos*vector,axis=1)
@@ -169,9 +168,7 @@ class c_embedded:
 
         """
         transform the defect before embedding
-
-        x' = Rx + t 
-
+            x' = Rx + t 
         """
 
         # rotate THEN translate; i.e dont apply rotation to the translation
@@ -195,8 +192,11 @@ class c_embedded:
         crystal
         """
 
+        origin = np.array(origin,dtype=float)
+
         domains = c_domains(self.bulk)
 
+        """
         # get indices of atom in bulk crystal bounded by the unitcell of the defect structure
         vecs = self.defect.sc_vectors
         vec = vecs[0,:]; thickness = np.sqrt(np.sum(vec**2))
@@ -207,14 +207,20 @@ class c_embedded:
         inds_2 = domains.find_slab(origin,vec,thickness,periodic=False)
 
         # merge all the inds into a single slab
-        inds = domains.merge_slab_inds([inds_0])#,inds_1,inds_2])
+        inds = domains.merge_slab_inds([inds_0,inds_1,inds_2])
+        """
+
+        vec = np.array([1, 3, 2])
+        thickness = 10
+        origin = np.array([10,10,0])
+        domains.find_slab(origin,vec,thickness,periodic=False)
 
         # DEV
         domains.replace_slab_types('C')
 
         self.bulk = domains.get_crystal()
         #self.bulk.delete_atoms(inds)
-
+        
         # shift defect structure to new origin
         self.defect.shift_coords(origin)
 
@@ -227,6 +233,9 @@ class c_embedded:
         type_strings[1] = 'Zr'
 
         self.bulk.add_atoms(cart,type_strings,type_nums)
+
+        # unshift the defect coords to original positions
+        self.defect.shift_coords(-origin)
 
     # ----------------------------------------------------------------------------------------------
 
