@@ -50,6 +50,8 @@ class c_domains:
         """
         
         _t = c_timer('find_slab')
+
+        print(vector)
         
         origin = np.array(origin,dtype=float)
         vector = np.array(vector,dtype=float)
@@ -196,7 +198,6 @@ class c_embedded:
 
         domains = c_domains(self.bulk)
 
-        """
         # get indices of atom in bulk crystal bounded by the unitcell of the defect structure
         vecs = self.defect.sc_vectors
         vec = vecs[0,:]; thickness = np.sqrt(np.sum(vec**2))
@@ -207,8 +208,7 @@ class c_embedded:
         inds_2 = domains.find_slab(origin,vec,thickness,periodic=False)
 
         # merge all the inds into a single slab
-        inds = domains.merge_slab_inds([inds_0,inds_1,inds_2])
-        """
+        #inds = domains.merge_slab_inds([inds_0,inds_1,inds_2])
 
         vec = np.array([1, 3, 2])
         thickness = 10
@@ -263,4 +263,4 @@ class c_embedded:
 
 
 
-
+ 

@@ -32,15 +32,16 @@ magneli.build_supercell([1,8,8])
 embedded = c_embedded(rutile,magneli)
 
 # embed defect with no transformations
-#embedded.embed([0,0,0])
+embedded.embed([0,0,0])
 
+"""
 # rotate defect by 90 and embed rotated version
 matrix = [[ 0, 1, 0],
           [-1, 0, 0],
           [ 0, 0, 1]]
 embedded.transform_defect(matrix=matrix)
 embedded.embed([10,10,10])
-
+"""
 
 """
 # rotate defect by 90 and embed rotated version
