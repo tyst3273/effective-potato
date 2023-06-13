@@ -74,7 +74,6 @@ class c_crystal:
         if self.basis_types.size != self.num_basis_atoms:
             crash(err)
             
-        self.basis_inds = np.arange(self.num_basis_atoms)
         self.basis_type_strings, self.basis_type_nums = \
                 np.unique(self.basis_types,return_inverse=True)
         self.num_basis_types = self.basis_type_strings.size
@@ -264,7 +263,30 @@ class c_crystal:
         self.num_sc_atoms = self.sc_type_nums.size
 
     # ----------------------------------------------------------------------------------------------
+
+    def update_reduced_coords(self):
+
+        """
+        assuming modifications were made to cartesian coordinates, upodate the reduced coords.
+        """
+
+         # get sc positions in cartesian coords
+        self.sc_positions_reduced = \
+            change_coordinate_basis(self.sc_vectors_inv,self.sc_positions_cart)
+
+    # ----------------------------------------------------------------------------------------------
     
+    def update_cartesian_coords(self):
+
+        """
+        assuming modifications were made to reduced coordinates, upodate the cartesian coords.
+        """
+
+         # get sc positions in cartesian coords
+        self.sc_positions_cart = \
+            change_coordinate_basis(self.sc_vectors,self.sc_positions_reduced)
+
+    # ----------------------------------------------------------------------------------------------
 
 
 

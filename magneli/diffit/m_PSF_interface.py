@@ -4,13 +4,19 @@ from psf.m_PSF import c_PSF
 
 # --------------------------------------------------------------------------------------------------
 
-def run_PSF(crystal,input_file='psf_input_params.py',**kwargs):
+def run_PSF(crystal,input_file=None,**kwargs):
 
     """
     setup and run PSF
     """
 
     timer = c_timer('PSF')
+
+    # default kwargs 
+    default_kwargs = {'output_prefix':None,'calc_sqw':False,'box_vectors':None,'unwrap_trajectory':False}
+
+    # overwrite defaults
+    default_kwargs.update(kwargs)
     
     PSF = c_PSF(input_file)
 
@@ -21,11 +27,8 @@ def run_PSF(crystal,input_file='psf_input_params.py',**kwargs):
                           lattice_vectors=crystal.basis_vectors,
                           md_num_steps=1,
                           md_time_step=1,
-                          output_prefix=None,
-                          calc_sqw=False,
-                          unwrap_trajectory=False,
                           trajectory_format='external',
-                          **kwargs)
+                          **default_kwargs)
 
     PSF.run()
 

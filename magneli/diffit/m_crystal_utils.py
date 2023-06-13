@@ -37,8 +37,6 @@ def do_minimum_image(origin,reduced_pos):
     way to do it for non-orthorhombic cells
     """
     
-    _timer = c_timer('do_minimum_image')
-    
     rel_pos = np.copy(reduced_pos)
     rel_pos[:,0] += -origin[0]; rel_pos[:,1] += -origin[1]; rel_pos[:,2] += -origin[2]
     
@@ -46,8 +44,6 @@ def do_minimum_image(origin,reduced_pos):
     _shift += (rel_pos <= -1/2).astype(int)
     
     rel_pos = rel_pos+_shift
-
-    _timer.stop()
     
     return rel_pos
             
@@ -73,6 +69,38 @@ def get_neighbors(atom_pos,reduced_pos,lattice_vectors):
 
 # --------------------------------------------------------------------------------------------------
  
+def get_neighbors_for_all_atoms_no_minimum_image(crystal,max_neighbors=10):
+
+    """
+    return neighbor vectors and distances between all atoms ignoring minimum image convention!
+    i.e. this only works if the atoms are NOT wrapped.
+    """
+
+    num_atoms = crystal.num_sc_atoms
+    neighbor_lists = np.zeros((num_atoms,max_neighbors),dtype=int)
+    neighbor_dists = np.zeros((num_atoms,max_neighbors),dtype=float)
+
+    pos = crystal.sc_positions_cart
+    
+    print(f'\ngetting neighbor distances... there are {num_atoms} atoms!\n')
+    
+    for ii in range(num_atoms):
+        
+        if ii % 1000 == 0:
+            print(f'now on atom {ii}')
+
+        _p = np.tile(pos[ii,:].reshape(1,3),reps=(num_atoms,1))
+        _v = pos-_p
+        _d = np.sqrt(np.sum(_v**2,axis=1))
+
+        _sort = np.argsort(_d)
+
+        neighbor_lists[ii,:] = _sort[:max_neighbors]
+        neighbor_dists[ii,:] = _d[_sort][:max_neighbors]
+
+    return neighbor_lists, neighbor_dists
+
+# --------------------------------------------------------------------------------------------------
 
 
 

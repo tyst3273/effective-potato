@@ -29,7 +29,8 @@ write_poscar('POSCAR_rutile_supercell',rutile)
 
 # ascending distances between O planes (note, shear moves a
 interplanar_distance = 1.22753088
-origin_offsets = np.arange(3,8)*interplanar_distance 
+origin_coords = np.arange(10)*interplanar_distance 
+
 
 domains = c_domains(rutile)
 
@@ -43,28 +44,32 @@ orientation_vector = np.array([1/a,-3/a,2/c],dtype=float)
 orientation_vector *= 1/np.sqrt(orientation_vector@orientation_vector) 
 
 # a coordinate on the shear plane
+#origin = [24.11325, 1.14825, 0.00000]
 origin = [ 1.14825, 1.14825, 0.00000]
 
-# displace slab near origin
-domains.find_slab(origin,orientation_vector)
+slab_thickness = 5
+
+domains.find_slab(origin,orientation_vector,slab_thickness)
 domains.displace_slab(displacement_vector)
-
-offset = np.array(origin)
-for ii in range(20):
-
-    np.random.shuffle(origin_offsets)
-    _d = origin_offsets[0]
-
-    offset += orientation_vector*_d
-
-    inds = domains.find_slab(offset,orientation_vector)
-    if inds.size == 0:
-        print('\nwhole slab covered!\n')
-        break
-
-    domains.displace_slab(displacement_vector)
-
 domains.delete_overlapping_atoms(cutoff=1e-3)
+
+
+
+#rutile = domains.get_crystal()
+#d, v = get_neighbors_for_all_atoms_no_minimum_image(rutile)
+
+# print(d[:,1].max(),d[:,1].min())
+
+#domains.find_slab(origin+orientation_vector*slab_thickness,orientation_vector)
+#domains.replace_slab_types('Si')
+
+#domains.find_slab(origin,orientation_vector)
+#domains.replace_slab_types('C')
+#domains.displace_slab(displacement_vector)
+
+#domains.find_slab(origin+orientation_vector*slab_thickness,orientation_vector,slab_thickness)
+#domains.replace_slab_types('Si')
+#domains.displace_slab(displacement_vector)
 
 # --------------------------------------------------------------------------------------------------
 

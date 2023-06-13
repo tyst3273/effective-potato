@@ -98,12 +98,16 @@ def read_poscar(file_name):
         _c = type_counts[ii]
         type_strs.extend([_t]*_c)
 
-    coords = lines[8:]
-    for ii in range(len(coords)):
-        _l = coords[ii].strip().split()
+    _coords = lines[8:]
+    coords = []
+    for ii in range(len(_coords)):
+        _l = _coords[ii].strip().split()
         if len(_l) > 3:
             _l = _l[:3]
-        coords[ii] = _l
+        if len(_l) == 0:
+            continue 
+        coords.append(_l)
+
     coords = np.array(coords,dtype=float)
 
     return lat_vecs, coords, type_strs
@@ -120,7 +124,7 @@ def write_poscar(file_name,crystal,cartesian=False):
     type_str = crystal.basis_type_strings 
     type_nums = crystal.sc_type_nums
     unique_nums, type_counts = np.unique(type_nums,return_counts=True)
-    num_types = type_str.size
+    num_types = unique_nums.size
 
     if cartesian:
         pos = crystal.sc_positions_cart

@@ -1,8 +1,9 @@
 
 import numpy as np
 from diffit.m_code_utils import crash, c_timer
-from diffit.m_crystal_utils import change_coordinate_basis, do_minimum_image
-
+from diffit.m_crystal_utils import change_coordinate_basis, do_minimum_image, \
+            get_neighbors_for_all_atoms_no_minimum_image
+            
 
 # --------------------------------------------------------------------------------------------------
 
@@ -40,7 +41,7 @@ class c_domains:
 
     # ----------------------------------------------------------------------------------------------
 
-    def find_slab(self,origin,vector,thickness,periodic=False):
+    def find_slab(self,origin,vector,thickness=1e6,periodic=False):
 
         """
         find atoms within a 'slab'. origin is any point (in CARTESIAN COORDS) on the 'lower' 
@@ -51,8 +52,6 @@ class c_domains:
         
         _t = c_timer('find_slab')
 
-        print(vector)
-        
         origin = np.array(origin,dtype=float)
         vector = np.array(vector,dtype=float)
         vector = vector/np.sqrt(np.sum(vector**2))
@@ -64,6 +63,9 @@ class c_domains:
         print('thickness of slab:',thickness)
         
         if periodic:
+            msg = 'find_slab(periodic=True) is no longer implemented!'
+            crash(msg)
+            
             # need origin in reduced coords since minimum image is done in reduced coords
             origin_reduced = change_coordinate_basis(self.crystal.sc_vectors_inv,origin)
             reduced_pos = np.copy(self.crystal.sc_positions_reduced)
@@ -123,6 +125,20 @@ class c_domains:
             
     # ----------------------------------------------------------------------------------------------
 
+    def delete_overlapping_atoms(self,cutoff=1e-3):
+
+        """
+        delete one of a pair of atoms that are closer together than 'cutoff' to eachother
+        """
+        
+        _n, _d = get_neighbors_for_all_atoms_no_minimum_image(self.crystal)
+        _n = _n[:,1]; _d = _d[:,1]
+
+        _ovlp = np.flatnonzero(_d <= cutoff)
+        self.crystal.delete_atoms(_ovlp)
+
+    # ----------------------------------------------------------------------------------------------
+    
     def displace_slab(self,vector):
 
         """
@@ -135,6 +151,8 @@ class c_domains:
         _c.sc_positions_cart[_inds,0] += vector[0]
         _c.sc_positions_cart[_inds,1] += vector[1]
         _c.sc_positions_cart[_inds,2] += vector[2]
+
+        _c.update_reduced_coords()
             
     # ----------------------------------------------------------------------------------------------
 
