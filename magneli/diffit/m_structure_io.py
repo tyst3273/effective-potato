@@ -170,6 +170,56 @@ def write_psf_hdf5(file_name,pos,types):
             
 # --------------------------------------------------------------------------------------------------
 
+def write_lammps_data_file(file_name,crystal,atom_masses=None,atom_charges=None,tilted=True):
+
+    """
+    write a lammps input data file
+    """
+    
+    vecs = crystal.sc_vectors
+    lens = np.diag(np.sqrt(vecs.T@vecs))
+
+    cart_pos = crystal.sc_positions_cart
+    cart_pos[:,0] -= cart_pos[:,0].min()
+    cart_pos[:,1] -= cart_pos[:,1].min()
+    cart_pos[:,2] -= cart_pos[:,2].min()
+
+    nums = crystal.sc_type_nums
+    num_atoms = cart_pos.shape[0]
+
+    num_types = crystal.num_basis_types
+
+    with open(file_name,'w') as f:
+        f.write('# written by diffit!\n\n')
+        f.write(f'{num_atoms} atoms\n')
+        f.write(f'{num_types} atom types\n\n')
+        _ = 0.0
+        f.write(f'{_: .9f} {lens[0]: .9f} xlo xhi\n')
+        f.write(f'{_: .9f} {lens[1]: .9f} ylo yhi\n')
+        f.write(f'{_: .9f} {lens[2]: .9f} zlo zhi\n')
+
+        if tilted:
+            print('\nwarning! tilted not implemented yet. using \'0.0 0.0 0.0 xy xz yz\'\n')
+            f.write(' 0.0 0.0 0.0 xy xz yz\n')
+
+        if atom_masses is not None:
+            f.write('\nMasses\n\n')
+            for ii, m in enumerate(atom_masses):
+                f.write(f'{ii+1} {atom_masses[ii]:.5}\n')
+
+        f.write('\nAtoms\n\n')
+
+        for ii in range(num_atoms):
+            n = nums[ii]
+            p = cart_pos[ii,:] 
+            if atom_charges is not None:
+                c = atom_charges[n]
+                f.write(f'{ii+1} {n+1} {c: .6f} {p[0]: 15.9f} {p[1]: 15.9f} {p[2]: 15.9f}\n')
+            else:
+                f.write(f'{ii+1} {n+1} {p[0]: 15.9f} {p[1]: 15.9f} {p[2]: 15.9f}\n')
+        
+# --------------------------------------------------------------------------------------------------
+
  
 
 

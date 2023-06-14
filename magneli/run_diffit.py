@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from diffit.m_crystal import c_crystal
 from diffit.m_crystal_utils import get_neighbors_for_all_atoms_no_minimum_image
 from diffit.m_code_utils import c_timer
-from diffit.m_structure_io import write_xyz, write_poscar
+from diffit.m_structure_io import write_xyz, write_poscar, write_lammps_data_file
 from diffit.m_domains import c_embedded, c_domains
 
 from diffit.m_PSF_interface import run_PSF
@@ -25,7 +25,7 @@ a = rutile.basis_vectors[0,0]; c = rutile.basis_vectors[2,2]
 
 rutile.build_supercell([20,20,30])
 
-write_poscar('POSCAR_rutile_supercell',rutile)
+#write_poscar('POSCAR_rutile_supercell',rutile)
 
 # --------------------------------------------------------------------------------------------------
 
@@ -82,7 +82,8 @@ for ii in [0]:
             break
 
         domains.merge_slab_inds(inds)
-        domains.replace_slab_types('C')
+        domains.crystal.delete_atoms(inds)
+        #domains.replace_slab_types('C')
 
         np.random.shuffle(origin_offsets)
         d = origin_offsets[0]
@@ -111,11 +112,14 @@ for ii in [0]:
             break
 
         domains.merge_slab_inds(inds)
-        domains.replace_slab_types('C')
+        domains.crystal.delete_atoms(inds)
+        #domains.replace_slab_types('C')
 
 
 # --------------------------------------------------------------------------------------------------        
 
+write_lammps_data_file('lammps.in',rutile,atom_masses=[15.999,47.867],
+        atom_charges=[-0.950,1.900],tilted=True)
 write_xyz('out.xyz',rutile)
 
 _t.stop()
