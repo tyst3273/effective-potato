@@ -75,7 +75,7 @@ domains.delete_overlapping_atoms(cutoff=1e-3)
 
 rutile = domains.get_crystal()
 
-psf_kwargs = {'atom_types':['O','Ti'],
+psf_kwargs = {'atom_types':['Ti','O'],
               'experiment_type':'neutrons',
               'num_Qpoint_procs':16,
               'Qpoints_option':'mesh',

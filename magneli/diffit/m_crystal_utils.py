@@ -2,7 +2,29 @@
 import numpy as np
 from diffit.m_code_utils import crash, c_timer
 
-      
+# --------------------------------------------------------------------------------------------------
+
+def unsorted_unique(arr):
+
+    """
+    get unique elements of array and then 'unsort'
+    """
+
+    unique, inds, nums, counts = np.unique(arr,
+        return_index=True,return_inverse=True,return_counts=True)
+
+    _sort = np.argsort(inds)
+
+    # unique in order of 1st appearance in arr
+    unique = unique[_sort]
+
+    # counts in of elements in unique
+    counts = counts[_sort]
+
+    # indices in unique for all elements in arr
+    nums = np.argsort(_sort)[nums]
+
+    return unique, counts, nums
 
 # --------------------------------------------------------------------------------------------------
 

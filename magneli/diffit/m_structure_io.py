@@ -214,7 +214,7 @@ def write_lammps_data_file(file_name,crystal,atom_masses=None,atom_charges=None,
             p = cart_pos[ii,:] 
             if atom_charges is not None:
                 c = atom_charges[n]
-                f.write(f'{ii+1} {n+1} {c: .6f} {p[0]: 15.9f} {p[1]: 15.9f} {p[2]: 15.9f}\n')
+                f.write(f'{ii+1} {n+1} {c: .9f} {p[0]: 15.9f} {p[1]: 15.9f} {p[2]: 15.9f}\n')
             else:
                 f.write(f'{ii+1} {n+1} {p[0]: 15.9f} {p[1]: 15.9f} {p[2]: 15.9f}\n')
         

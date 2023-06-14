@@ -134,8 +134,15 @@ class c_domains:
         _n, _d = get_neighbors_for_all_atoms_no_minimum_image(self.crystal)
         _n = _n[:,1]; _d = _d[:,1]
 
+        print(_d.max(),_d.min())
+
         _ovlp = np.flatnonzero(_d <= cutoff)
-        self.crystal.delete_atoms(_ovlp)
+
+        if _ovlp.size == 0:
+            print('\nno overlapping atoms!\n')
+        else:
+            print(f'\nthere are {_ovlp.size} pairs of overlapping atoms!\n')
+            self.crystal.delete_atoms(_ovlp)
 
     # ----------------------------------------------------------------------------------------------
     

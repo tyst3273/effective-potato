@@ -1,7 +1,7 @@
 
 import numpy as np
 from diffit.m_code_utils import crash, c_timer
-from diffit.m_crystal_utils import change_coordinate_basis
+from diffit.m_crystal_utils import change_coordinate_basis, unsorted_unique
 from diffit.m_structure_io import read_poscar
 
 
@@ -74,8 +74,10 @@ class c_crystal:
         if self.basis_types.size != self.num_basis_atoms:
             crash(err)
             
-        self.basis_type_strings, self.basis_type_nums = \
-                np.unique(self.basis_types,return_inverse=True)
+#        self.basis_type_strings, self.basis_type_nums = \
+#                np.unique(self.basis_types,return_inverse=True)
+
+        self.basis_type_strings, _, self.basis_type_nums = unsorted_unique(self.basis_types)
         self.num_basis_types = self.basis_type_strings.size
         self.basis_type_string_inds = np.arange(self.num_basis_types)
                 
