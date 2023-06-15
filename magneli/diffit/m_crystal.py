@@ -1,5 +1,6 @@
 
 import numpy as np
+from copy import deepcopy
 from diffit.m_code_utils import crash, c_timer
 from diffit.m_crystal_utils import change_coordinate_basis, unsorted_unique
 from diffit.m_structure_io import read_poscar
@@ -287,6 +288,16 @@ class c_crystal:
          # get sc positions in cartesian coords
         self.sc_positions_cart = \
             change_coordinate_basis(self.sc_vectors,self.sc_positions_reduced)
+
+    # ----------------------------------------------------------------------------------------------
+
+    def get_copy(self):
+
+        """
+        return a COPY of this class, not a refece to it. i.e. a deepcopy
+        """
+
+        return deepcopy(self)
 
     # ----------------------------------------------------------------------------------------------
 

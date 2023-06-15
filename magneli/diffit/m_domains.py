@@ -63,9 +63,8 @@ class c_domains:
         print('thickness of slab:',thickness)
         
         if periodic:
-            msg = 'find_slab(periodic=True) is no longer implemented!'
-            crash(msg)
-            
+     #       msg = 'find_slab(periodic=True) is no longer implemented!'
+     #       crash(msg)
             # need origin in reduced coords since minimum image is done in reduced coords
             origin_reduced = change_coordinate_basis(self.crystal.sc_vectors_inv,origin)
             reduced_pos = np.copy(self.crystal.sc_positions_reduced)
@@ -146,10 +145,12 @@ class c_domains:
 
     # ----------------------------------------------------------------------------------------------
     
-    def displace_slab(self,vector):
+    def displace_slab(self,vector,update_reduced=True):
 
         """
         displace all of the atoms in the slab by 'vector'. vector is in CARTESIAN coordinats
+
+        can optionally not update reduced coord to save time but dont forget to do it later!
         """
         
         _c = self.crystal
@@ -159,7 +160,13 @@ class c_domains:
         _c.sc_positions_cart[_inds,1] += vector[1]
         _c.sc_positions_cart[_inds,2] += vector[2]
 
-        _c.update_reduced_coords()
+        if update_reduced:
+            _c.update_reduced_coords()
+        else:
+            print('\n*** WARNING ***\n')
+            msg = 'not update reduced coords! they wont be in sync with cartesian coords.\n'
+            msg += 'dont forget to update them manually later!\n'
+            print(msg)
             
     # ----------------------------------------------------------------------------------------------
 
@@ -173,119 +180,43 @@ class c_domains:
     
     # ----------------------------------------------------------------------------------------------
 
- 
-# --------------------------------------------------------------------------------------------------
-
-class c_embedded:
-
-    # ----------------------------------------------------------------------------------------------
-
-    def __init__(self,bulk,defect):
-
+    def crop_crystal(self,origin,vectors,epsilon=0.0,debug_atom_type=None):
+        
         """
-        'embed' defect crystal into bulk crystal.
-        """
-
-        self.bulk = bulk
-        self.defect = defect
-
-    # ----------------------------------------------------------------------------------------------
-
-    def transform_defect(self,translation=None,matrix=None):
-
-        """
-        transform the defect before embedding
-            x' = Rx + t 
-        """
-
-        # rotate THEN translate; i.e dont apply rotation to the translation
-        if matrix is not None:
-            matrix = np.array(matrix,dtype=float)
-            matrix.shape = [3,3]
-            self.defect.transform_coords(matrix)
-
-        # now translate
-        if translation is not None:
-            translation = np.array(translation,dtype=float)
-            translation.shape = [3]
-            self.defect.shift_coords(translation)
-
-    # ----------------------------------------------------------------------------------------------
-
-    def embed(self,origin=[0,0,0]):
-
-        """
-        embed defect structure with origin of defect structure translated to 'origin' arg in bulk
-        crystal
+        crop the crystal. place the origin of domain spanned by vectors at 'origin' and delete all
+        atoms that lie outside the domain
         """
 
         origin = np.array(origin,dtype=float)
-
-        domains = c_domains(self.bulk)
-
-        # get indices of atom in bulk crystal bounded by the unitcell of the defect structure
-        vecs = self.defect.sc_vectors
-        vec = vecs[0,:]; thickness = np.sqrt(np.sum(vec**2))
-        inds_0 = domains.find_slab(origin,vec,thickness,periodic=False)
-        vec = vecs[1,:]; thickness = np.sqrt(np.sum(vec**2))
-        inds_1 = domains.find_slab(origin,vec,thickness,periodic=False)
-        vec = vecs[2,:]; thickness = np.sqrt(np.sum(vec**2))
-        inds_2 = domains.find_slab(origin,vec,thickness,periodic=False)
-
-        # merge all the inds into a single slab
-        #inds = domains.merge_slab_inds([inds_0,inds_1,inds_2])
-
-        vec = np.array([1, 3, 2])
-        thickness = 10
-        origin = np.array([10,10,0])
-        domains.find_slab(origin,vec,thickness,periodic=False)
-
-        # DEV
-        domains.replace_slab_types('C')
-
-        self.bulk = domains.get_crystal()
-        #self.bulk.delete_atoms(inds)
         
-        # shift defect structure to new origin
-        self.defect.shift_coords(origin)
+        inds = []
+        # get indices of atom in bulk crystal bounded by the unitcell of the defect structure
+        vectors = np.array(vectors,dtype=float)
 
-        # add atoms in defect structure to bulk
-        cart = self.defect.sc_positions_cart
-        type_strings = self.defect.basis_type_strings
-        type_nums = self.defect.sc_type_nums
+        for ii in range(3):
+            vec = np.copy(vectors[ii,:])
+            thickness = np.sqrt(np.sum(vec**2))
+            vec /= thickness
+            inds.append(self.find_slab(origin-vec*epsilon,vec,thickness+epsilon,periodic=False))
 
-        print('\n!!! DEV !!!\nresetting type in defect struct to Zr\n')
-        type_strings[1] = 'Zr'
+        inds = self.merge_slab_inds(inds)
 
-        self.bulk.add_atoms(cart,type_strings,type_nums)
+        if debug_atom_type is not None:
+            self.replace_slab_types('C')
+            return
 
-        # unshift the defect coords to original positions
-        self.defect.shift_coords(-origin)
-
+        # update the crystal
+        _c = self.crystal
+        _c.sc_vectors = vectors
+        _c.sc_vectors_inv = np.linalg.inv(vectors)
+        _c.sc_type_nums = _c.sc_type_nums[inds]
+        _c.sc_positions_cart = _c.sc_positions_cart[inds,:]
+        _c.sc_positions_cart[:,0] -= _c.sc_positions_cart[:,0].min()
+        _c.sc_positions_cart[:,1] -= _c.sc_positions_cart[:,1].min()
+        _c.sc_positions_cart[:,2] -= _c.sc_positions_cart[:,2].min()
+        _c.num_sc_atoms = inds.size
+        _c.update_reduced_coords()
+        
     # ----------------------------------------------------------------------------------------------
-
-    def get_crystal(self):
-
-        """
-        self explanatory
-        """
-
-        return self.bulk
-
-    # ----------------------------------------------------------------------------------------------
-
-
-
-
-
-
-
-
-
-    
-
-
-
-
 
  

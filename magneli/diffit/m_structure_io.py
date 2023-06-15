@@ -170,7 +170,7 @@ def write_psf_hdf5(file_name,pos,types):
             
 # --------------------------------------------------------------------------------------------------
 
-def write_lammps_data_file(file_name,crystal,atom_masses=None,atom_charges=None,tilted=True):
+def write_lammps_data_file(file_name,crystal,atom_masses=None,atom_charges=None,tilted=False):
 
     """
     write a lammps input data file
