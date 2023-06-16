@@ -1,18 +1,13 @@
 
 import numpy as np
-import os
 import h5py
-import matplotlib.pyplot as plt
 
 from diffit.m_crystal import c_crystal
-from diffit.m_crystal_utils import get_neighbors_for_all_atoms_no_minimum_image
 from diffit.m_code_utils import c_timer, crash
 from diffit.m_structure_io import write_xyz, write_poscar, write_lammps_data_file
 from diffit.m_domains import c_domains
 
 from diffit.m_PSF_interface import run_PSF
-
-
 
 
 
@@ -72,7 +67,7 @@ def source_supercell():
     z_inds = np.arange(nz)
     
     # max_defects = -1
-    num_defects = 5
+    num_defects = 10
     
     # delete planes of O atoms 
     for ii in range(num_defects):
@@ -144,7 +139,6 @@ def source_supercell():
     
         domains.merge_slab_inds(inds)
         domains.displace_slab(displacement,update_reduced=False)
-    
     
     rutile = domains.get_crystal()
     rutile.update_reduced_coords()
