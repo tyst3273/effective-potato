@@ -72,7 +72,7 @@ def source_supercell():
     # delete planes of O atoms 
     for ii in range(num_defects):
     
-        np.random.shuffle(vector_inds)
+#        np.random.shuffle(vector_inds)
         ind = vector_inds[0]
     
         vector = orientation_vectors[ind,:]
@@ -91,7 +91,7 @@ def source_supercell():
         num = num_cluster[0]
     
         for ii in range(-num,num):
-            
+
             np.random.shuffle(normal)
             n = normal[0]
     
@@ -142,6 +142,8 @@ def source_supercell():
     
     rutile = domains.get_crystal()
     rutile.update_reduced_coords()
+
+    write_xyz('full_supercell.xyz',rutile)
     
     # --------------------------------------------------------------------------------------------------
     # crop a rutile shaped chunk of the crystal
@@ -155,6 +157,8 @@ def source_supercell():
     domains.crop_crystal(origin,vectors,epsilon=0.0)
     
     rutile = domains.get_crystal()
+
+    write_xyz('cropped_supercell.xyz',rutile)
     
     # # need to 'pad' lattice vectors so that atoms near boundary arent overlapping
     # rutile.sc_vectors[0,0] += a/4
@@ -188,7 +192,7 @@ psf_kwargs = {'atom_types':['Ti','O'],
               'output_prefix':None}
 sq = np.zeros((nx+1,nx+1,nz+1),dtype=float)
 
-num_avg = 10
+num_avg = 1
 for ii in range(num_avg):
 
     supercell = source_supercell()
