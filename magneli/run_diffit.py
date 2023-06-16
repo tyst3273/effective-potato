@@ -181,9 +181,7 @@ def source_supercell():
     
     return rutile
 
-
 # --------------------------------------------------------------------------------------------------        
-
 
 nx = 20; nz = 30
 psf_kwargs = {'atom_types':['Ti','O'],
@@ -201,7 +199,7 @@ for ii in range(num_avg):
 
     supercell = source_supercell()
     _sq, H, K, L = run_PSF(supercell,**psf_kwargs)
-    sq += sq
+    sq += _sq
     
 sq /= num_avg
 
@@ -210,7 +208,6 @@ with h5py.File('magneli_STRUFACS.hdf5','w') as db:
     db.create_dataset('H',data=H)
     db.create_dataset('K',data=K)
     db.create_dataset('L',data=L)
-    
     
 _t.stop()
 
