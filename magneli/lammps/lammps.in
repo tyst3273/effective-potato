@@ -1,0 +1,123 @@
+
+# --------------------------------------------------------------------------------------------------
+# rutile TiO2 WITHOUT elecanisoc field
+# NOTE: according to wikipedia, rutile melts at ~2200 K
+
+
+# --------------------------------------------------------------------------------------------------
+# define simulation domain
+# --------------------------------------------------------------------------------------------------
+
+units           metal
+dimension       3
+newton          on
+boundary        p p p 
+atom_style      charge
+
+#comm_modify     cutoff 48
+neighbor        2.0 bin
+neigh_modify    every 100 delay 0 check yes
+
+# --------------------------------------------------------------------------------------------------
+# define simulation paramters
+# --------------------------------------------------------------------------------------------------
+
+variable        dt equal    0.001         # timestep
+
+variable        dt_dump equal 16
+variable        sqw_run equal 8016
+
+variable	t_start     equal 600       
+variable        t_sim       equal 300
+
+variable        seed equal 864215
+
+variable        therm_run equal 1000 
+variable        quench_run equal 1000 
+variable        damp_run equal 500
+
+variable        trj_dump equal 100
+variable        thermo_dump equal 100
+
+# --------------------------------------------------------------------------------------------------
+# define crystal
+# -------------------------------------------------------------------------------------------------- 
+
+read_data       lammps.MA.in
+
+# --------------------------------------------------------------------------------------------------
+# define potential
+# --------------------------------------------------------------------------------------------------
+
+pair_style      buck/coul/long 12.0 # cutoff Buckingham at 10 A, use Ewald for Coulomb (not cut off)
+
+pair_coeff      1 1     31120.43 0.154  5.2469
+pair_coeff      1 2     16957.67 0.194 12.5926
+pair_coeff      2 2     11782.85 0.234 30.2222
+
+kspace_style    pppm 1.0e-5
+
+# --------------------------------------------------------------------------------------------------
+# set some more params
+# --------------------------------------------------------------------------------------------------
+
+#delete_atoms    overlap 0.1 all all
+
+timestep        ${dt}
+reset_timestep  0
+
+thermo          ${thermo_dump}
+thermo_style    custom step etotal temp pe press pxx pyy pzz pxy pxz pyz lx ly lz xy xz yz fmax
+
+dump            TRJ all custom ${trj_dump} sim.lammpstrj id type x y z
+dump_modify     TRJ sort id
+
+# --------------------------------------------------------------------------------------------------
+# large damping coeff; keep system from 'blowing up' if bad initial config
+# --------------------------------------------------------------------------------------------------
+
+fix             NVE all nve
+fix             VISCOUS all viscous 1
+run             ${damp_run}
+unfix           VISCOUS
+unfix           NVE
+
+fix             RELAX all box/relax aniso 0.0 vmax 0.001
+min_style       cg
+min_modify      line quadratic
+minimize        1e-55 1e-55 50000 100000
+unfix           RELAX
+
+# --------------------------------------------------------------------------------------------------
+# NPT run, no field
+# --------------------------------------------------------------------------------------------------
+
+velocity        all create ${t_start} ${seed} mom yes rot yes dist gaussian
+
+fix             THERM all npt temp ${t_start} ${t_start} $(100.0*dt) aniso 0.0 0.0 $(1000.0*dt)
+run             ${therm_run}
+unfix           THERM
+
+fix             QUENCH all npt temp ${t_start} ${t_sim} $(100.0*dt) aniso 0.0 0.0 $(1000.0*dt)
+run             ${quench_run}
+unfix           QUENCH
+
+fix             THERM all npt temp ${t_sim} ${t_sim} $(100.0*dt) aniso 0.0 0.0 $(1000.0*dt)
+run             ${therm_run}
+unfix           THERM
+
+write_data      magneli.equilibrated.pos nocoeff
+
+# --------------------------------------------------------------------------------------------------
+# sqw run
+# --------------------------------------------------------------------------------------------------
+
+dump            POSITIONS all h5md ${dt_dump} pos.h5 position species
+dump_modify     POSITIONS sort id
+
+fix             SQW all nve
+run             ${sqw_run}
+unfix           SQW
+
+undump          POSITIONS
+
