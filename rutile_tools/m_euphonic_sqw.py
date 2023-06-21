@@ -76,7 +76,7 @@ class c_euphonic_sqw:
 
     # ----------------------------------------------------------------------------------------------
 
-    def __init__(self,path=None,phonopy_file='phonopy.yaml',cmap_file=None):
+    def __init__(self,path=None,phonopy_file='phonopy.yaml',hdf5_file=None):
         
         """
         class to interact with euphonic to get and broaden structure factors.
@@ -86,9 +86,10 @@ class c_euphonic_sqw:
         if path is None:
             path = os.getcwd()
 
-        if cmap_file is not None:
-            cmap_file = os.path.join(path,cmap_file)
-            self._get_cmap_from_file(cmap_file)
+        if hdf5_file is not None:
+            hdf5_file = os.path.join(path,hdf5_file)
+            self._get_strufacs_from_file(hdf5_file)
+            return
 
         check_file(os.path.join(path,phonopy_file))
         self.force_constants_object = ForceConstants.from_phonopy(
@@ -101,7 +102,7 @@ class c_euphonic_sqw:
 
     # ----------------------------------------------------------------------------------------------
 
-    def _get_cmap_from_file(self,cmap_file):
+    def _get_strufacs_from_file(self,cmap_file):
 
         """
         read the cmap data from the file
@@ -110,9 +111,12 @@ class c_euphonic_sqw:
         check_file(cmap_file)
 
         with h5py.File(cmap_file,'r') as db:
-            self.cmap_structure_factors = db['cmap_structure_factors'][...]
-            self.cmap_energies = db['cmap_energies'][...]
-            self.cmap_Qpt_distances = db['cmap_Qpt_distances'][...]
+            self.raw_energues = db['raw_energies'][...]
+            self.raw_structure_factors = db['raw_structure_factors'][...]
+            if 'cmap_structure_factors' in db.keys():
+                self.cmap_structure_factors = db['cmap_structure_factors'][...]
+                self.cmap_energies = db['cmap_energies'][...]
+                self.cmap_Qpt_distances = db['cmap_Qpt_distances'][...]
 
     # ----------------------------------------------------------------------------------------------
 
@@ -217,7 +221,13 @@ class c_euphonic_sqw:
             ax.plot(_f[:,ii],marker='o',ms=1,lw=1,ls='-',c='k')
 
         ax.plot([_Q.min(),_Q.max()],[0,0],lw=2,ls=':',c='k',ms=0)
-        ax.axis([_Q.min(),_Q.max(),_f.min()*1.1,_f.max()*1.1])
+
+        if _f.min() > 0:
+            _f_min = 0
+        else:
+            _f_min = _f.min()*1.1
+
+        ax.axis([_Q.min(),_Q.max(),_f_min,_f.max()*1.1])
 
         for axis in ['top','bottom','left','right']:
             ax.spines[axis].set_linewidth(1.5)
