@@ -245,8 +245,8 @@ class c_euphonic_sqw:
 
     # ----------------------------------------------------------------------------------------------
 
-    def calculate_structure_factors(self,asr='realspace',dipole=True,
-                 temperature=None,dw_grid=None,plot_dispersion=False):
+    def calculate_structure_factors(self,asr='realspace',dipole=True,temperature=None,
+                dw_grid=None,plot_dispersion=False,scattering_lengths='Sears1992'):
 
         """
         calculate structure factors along the Qpt path set using set_Qpts. if you want to include
@@ -254,6 +254,16 @@ class c_euphonic_sqw:
         """
 
         _t = c_timer('calculate_structure_factors')
+
+        if isinstance(scattering_lengths,dict):
+            fm = ureg('fm')
+            for key in scattering_lengths.keys():
+                b = scattering_lengths[key]
+                if ureg.Quantity(b).check(fm):
+                    continue
+                else:
+                    scattering_lengths[key] *= fm
+            print(scattering_lengths)
 
         _modes = self.force_constants_object.calculate_qpoint_phonon_modes(
                 self.Qpts,asr=asr,dipole=dipole)
@@ -265,10 +275,11 @@ class c_euphonic_sqw:
             self.temperature = temperature*ureg('K')
 
         if dw_grid is None:
-            self.structure_factors_object = _modes.calculate_structure_factor()
+            self.structure_factors_object = _modes.calculate_structure_factor(scattering_lengths)
         else:
             dw = self._calculate_debye_waller(dw_grid,asr,dipole)
-            self.structure_factors_object = _modes.calculate_structure_factor(dw=dw)
+            self.structure_factors_object = _modes.calculate_structure_factor(dw=dw,
+                    scattering_lengths=scattering_lengths)
 
         _sqw = self.structure_factors_object.to_dict()
 
@@ -280,7 +291,7 @@ class c_euphonic_sqw:
 
     # ----------------------------------------------------------------------------------------------
 
-    def get_colormap(self,E_min=-100,E_max=100,dE=0.1,E_width=0.25,Q_width=None,
+    def get_colormap(self,E_min=-150,E_max=150,dE=0.1,E_width=2.5,Q_width=None,
                 temperature=None,calc_bose=True):
         
         """

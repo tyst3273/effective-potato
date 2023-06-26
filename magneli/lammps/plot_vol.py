@@ -84,7 +84,7 @@ def plot_vol(file_name='293K_quenched.hdf5',scale=1.0):
 if __name__ == '__main__':
 
     file_name = 'psf_STRUFACS.hdf5'
-    plot_vol(file_name,scale=1/50)
+    plot_vol(file_name,scale=2)
 
 
 
