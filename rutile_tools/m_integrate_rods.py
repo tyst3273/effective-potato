@@ -75,12 +75,13 @@ class c_integrate_rods:
 
     # ----------------------------------------------------------------------------------------------
 
-    def __init__(self,file_name,u=None,v=None,w=None,which=None,subtracted=False):
+    def __init__(self,file_name,uvw=None,which=None,subtracted=False):
         """
         rotate coords to be aligned with rod and calculate intersection of bins in aligned
         coords with hkl coords
 
-        NOTE: it is expected that u, v, w are orthonormal
+        NOTE: it is expected that uvw is a 3x3 array of column vecs 
+            and that u, v, w are orthonormal
         """
        
         check_file(file_name)
@@ -97,10 +98,11 @@ class c_integrate_rods:
 
         # which rod to integrate. optional, can give u,v,w manually.
         if which is not None:
-            u, v, w = get_uvw(which)
+            self.uvw = get_uvw(which).T
+        else:
+            self.uvw = uvw
 
         # uvw for rod binning -- NOTE: these are already in (1/A)
-        self.uvw = np.array([u[:],v[:],w[:]]).T # column vecs
         u = self.uvw[:,0]; v = self.uvw[:,1]; w = self.uvw[:,2]
 
         # check that length == 1
@@ -359,8 +361,9 @@ class c_integrate_rods:
             # xp, yp, zp are rotated coords, w are widths, and Q_rot is the offset in rot. frame
             weights = self.butterworth_3d(self.Qxp,self.Qyp,self.Qzp,
                                 w[0],w[1],w[2],Q_rot[0],Q_rot[1],Q_rot[2])
-
-            bin_sig, bin_err = self._integrate_data(weights,proc=proc) # integrate the data using the weights
+    
+            # integrate the data using the weights
+            bin_sig, bin_err = self._integrate_data(weights,proc=proc) 
 
             proc_integrated_signal[ii] = bin_sig
             proc_integrated_error[ii] = bin_err
@@ -613,7 +616,7 @@ def get_uvw(which='k1'):
         v = [0.0, 1.0, 0.0]
         w = [0.0, 0.0, 1.0]
 
-    return u, v, w
+    return np.array([u, v, w],dtype=float).T
 
     # ----------------------------------------------------------------------------------------------
 
