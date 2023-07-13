@@ -502,7 +502,7 @@ class c_integrate_rods:
         mlab.contour3d(x,y,z,weights,contours=contours,color=(0,0,1),
                 transparent=True,opacity=0.075,figure=fig)
 
-        mlab.outline(color=(0,0,0),line_width=1,extent=extent)
+        mlab.outline(color=(0,0,0),line_width=2,extent=extent)
         mlab.axes(color=(0,0,0),line_width=1,nb_labels=5,extent=extent,
                 xlabel=r'Q$_x$ (1/A)',
                 ylabel=r'Q$_y$ (1/A)',
