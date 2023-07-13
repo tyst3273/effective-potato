@@ -377,7 +377,8 @@ class c_integrate_rods:
 
     # ----------------------------------------------------------------------------------------------
     
-    def plot_volume(self,Q_bin_center,u_binning,v_binning,w_binning,Q_plot_center=None,scale=2e4):
+    def plot_volume(self,Q_bin_center,u_binning,v_binning,w_binning,
+            Q_plot_center=None,scale=2e4,stride=1):
         """
         read in volume to be intergrated and plot the binning region
         """
@@ -457,19 +458,27 @@ class c_integrate_rods:
         # need bin center in rotated frame too
         Q_rot = R@self.Q_bin_center
 
+        # downsample if plot is too large
+        xp = self.Qxp[::stride,::stride,::stride]
+        yp = self.Qyp[::stride,::stride,::stride]
+        zp = self.Qzp[::stride,::stride,::stride]
+        x = self.Qx[::stride,::stride,::stride]
+        y = self.Qy[::stride,::stride,::stride]
+        z = self.Qz[::stride,::stride,::stride]
+        signal = self.signal[::stride,::stride,::stride]
+        print('down sampled shape:',signal.shape)
+
         # approximate orthorhombic step function
-        xp = self.Qxp; yp = self.Qyp; zp = self.Qzp # coords in rotated frame
         weights = self.butterworth_3d(xp,yp,zp,
                 u_plot_width,v_plot_width,w_plot_width,Q_rot[0],Q_rot[1],Q_rot[2])
 
         fig = mlab.figure(1, bgcolor=(1,1,1), fgcolor=(0,0,0),size=(500, 500))
         mlab.clf()
 
-        x = self.Qx; y = self.Qy; z = self.Qz
         extent = [x.min(),x.max(),y.min(),y.max(),z.min(),z.max()]
 
         # need to mask nans to plot w/ mayavi
-        signal = np.nan_to_num(self.signal,nan=0.0,posinf=0.0,neginf=0.0)*scale
+        signal = np.nan_to_num(signal,nan=0.0,posinf=0.0,neginf=0.0)*scale
 
         contours = []
         for ii in np.linspace(0.15,0.3,150):
