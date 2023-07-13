@@ -42,5 +42,13 @@ positions = np.arange(len(colors))
 parula_cmap = make_colormap(colors,positions)
 
 # --------------------------------------------------------------------------------------------------
+# colormap to match my plots with mayavi
+
+colors = [[224,238,255,0],[224,238,255,0],[221,87,172,1],[221,153,172,1],
+                [235,180,49,1],[255,199,61,1]]
+positions = np.arange(len(colors))
+mayavi_cmap = make_colormap(colors,positions)
+
+# --------------------------------------------------------------------------------------------------
 
 
