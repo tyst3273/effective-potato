@@ -55,7 +55,7 @@ class c_domains:
         origin = np.array(origin,dtype=float)
         vector = np.array(vector,dtype=float)
         vector = vector/np.sqrt(np.sum(vector**2))
-        thickness = np.float(thickness)
+        thickness = float(thickness)
         
         print('\n*** find slab ***\n')
         print('point on lower plane of slab:',origin)
