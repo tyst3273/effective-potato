@@ -54,7 +54,7 @@ class c_domains:
 
         origin = np.array(origin,dtype=float)
         vector = np.array(vector,dtype=float)
-        vector = vector/np.sqrt(np.sum(vector**2))
+        vector /= np.linalg.norm(vector)
         thickness = float(thickness)
         
         print('\n*** find slab ***\n')

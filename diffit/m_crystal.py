@@ -85,7 +85,7 @@ class c_crystal:
         # get basis positions in cartesian coords
         self.basis_positions_cart = \
             change_coordinate_basis(self.basis_vectors,self.basis_positions_reduced)
-    
+
         print('\n*** primitive cell ***\n')
         print('basis vectors:\n',self.basis_vectors)
         print('basis positions (reduced coords):\n',self.basis_positions_reduced)
