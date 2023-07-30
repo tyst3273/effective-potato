@@ -20,6 +20,10 @@ class model:
         c = fwhm/np.sqrt(8*np.log(2))
         self.exp_corr = np.exp(-0.5*(self.pos/c)**2)*amplitude
 
+    def set_cos_corr(self,n=1,amplitude=1):
+        self.exp_corr = np.cos(np.linspace(0,2*np.pi,self.n_sites)*n)
+        self.exp_corr *= amplitude
+
     def calculate_disp_corr(self):
         _disp = self.disp
         _ft = np.fft.fft(_disp,norm='ortho')
@@ -133,11 +137,33 @@ if __name__ == '__main__':
 
     model = model()
 
-    model.set_exponential_corr(corr_len=15,amplitude=10)
-    #model.set_gaussian_corr()
+    n = 10
 
-    model.do_rmc(beta=100,tol=1e-4,max_iter=50000,step_size=0.05)
-    model.plot()
+    exists = False
+    for ii in range(n):
+
+        model.set_exponential_corr(corr_len=15,amplitude=10)
+
+        model.do_rmc(beta=10000,tol=1e-5,max_iter=10000,step_size=0.05)
+        model.plot()
+
+        disp = model.disp
+        ft = np.fft.fft(disp,norm='ortho')
+        _sq = np.abs(ft)**2
+
+        if not exists:
+            sq = np.zeros(_sq.shape)
+
+        sq += _sq
+
+    sq /= n
+
+    plt.plot(sq)
+    plt.show()
+
+
+
+
 
 
 
