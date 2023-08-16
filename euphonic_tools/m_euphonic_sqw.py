@@ -133,24 +133,27 @@ class c_euphonic_sqw:
 
     # ----------------------------------------------------------------------------------------------
 
-    def _get_bin_arr(self,bins):
+    def _get_bin_centers(self,bins):
 
         """
         get array of bin centers
         """
 
+        if not isinstance(bins,list):
+            bins = [bins]
+
         msg = '*_bins must be a list of floats'
         try:
-            bins = np.array(bins,dtype=float).round(4)
+            bins = np.array(bins,dtype=float)
         except:
             crash(msg)
 
         if bins.size == 1:
             return bins
         else:
-            _n = int((bins[2]-bins[0])/bins[1]+1)
-            Q = np.linspace(bins[0],bins[2],_n)
-            return Q
+            _n = int(((bins[2]-bins[0])/bins[1]).round())+1
+            bins = np.linspace(bins[0],bins[2],_n)
+            return bins
 
     # ----------------------------------------------------------------------------------------------
 
@@ -166,14 +169,22 @@ class c_euphonic_sqw:
         _R = np.linalg.solve(_I.T,proj.T)
 
         _Qpts = np.zeros(self.Qpts.shape)
+        
+        _m = self.Qpts.mean(axis=0)
+        self.Qpts[:,0] -= _m[0]; self.Qpts[:,1] -= _m[1]; self.Qpts[:,2] -= _m[2]
+
         for ii in range(_Qpts.shape[0]):
             _Qpts[ii,:] = _R@self.Qpts[ii,:]
 
         self.Qpts = _Qpts
 
+        self.Qpts[:,0] += _m[0]; self.Qpts[:,1] += _m[1]; self.Qpts[:,2] += _m[2]
+
+        crash()
+
     # ----------------------------------------------------------------------------------------------
 
-    def get_Qpts_on_grid(self,H_bins,K_bins,L_bins,proj=None):
+    def get_Qpts_on_grid(self,u_bins,v_bins,w_bins,proj=None,center=[0,0,0]):
 
         """
         take a set of 'vertices' and number of steps along the *shortest* segment and generate
@@ -181,28 +192,47 @@ class c_euphonic_sqw:
         """
 
         self.Qpts_option = 'grid'
-        
-        _H = self._get_bin_arr(H_bins)
-        _K = self._get_bin_arr(K_bins)
-        _L = self._get_bin_arr(L_bins)
 
-        self.H = _H
-        self.K = _K
-        self.L = _L
+        # get bin centers 
+        _u_bins = self._get_bin_centers(u_bins)
+        _num_u = _u_bins.size
+        print('\nnum u bins:',_num_u)
+        print('u bins:',_u_bins)
+        _v_bins = self._get_bin_centers(v_bins)
+        _num_v = _v_bins.size
+        print('num v bins:',_num_v)
+        print('v bins:',_v_bins)
+        _w_bins = self._get_bin_centers(w_bins)
+        _num_w = _w_bins.size
+        print('num w bins:',_num_w)
+        print('w bins:',_w_bins,'\n')
 
-        _H, _K, _L = np.meshgrid(_H,_K,_L,indexing='ij')
+        self.u_bins = _u_bins
+        self.v_bins = _v_bins
+        self.w_bins = _w_bins
 
-        self.Qpts_grid_shape = _H.shape
-        _H = _H.flatten(); _K = _K.flatten(); _L = _L.flatten()
+        # mesh of bin centers
+        _u_bins, _v_bins, _w_bins = np.meshgrid(_u_bins,_v_bins,_w_bins,indexing='ij')
+        self.Qpts_grid_shape = _u_bins.shape
+        _u_bins = _u_bins.flatten(); _v_bins = _v_bins.flatten(); _w_bins = _w_bins.flatten()
 
-        self.Qpts = np.c_[_H,_K,_L]
-        self.num_Qpts = self.Qpts.shape[0]
+        self.num_Qpts = _u_bins.size
+        print('num Qpts:',self.num_Qpts,'\n')
 
-        # if requesting diff. projection, go rotate Qpts
-        if not proj is None:
-            self._rotate_Qpts(proj)
+        # change basis if diff. projection is given
+        if proj is None:
+            self.Qpts = np.c_[_u_bins,_v_bins,_w_bins]
+            self.proj = np.identity(3)
+        else:
+            self.Qpts = np.zeros((self.num_Qpts,3))
+            proj = np.array(proj)
+            self.proj = proj
+            for ii in range(self.num_Qpts):
+                self.Qpts[ii,:] = proj[0,:]*_u_bins[ii]+ \
+                                  proj[1,:]*_v_bins[ii]+ \
+                                  proj[2,:]*_w_bins[ii]
 
-        print('num_Qpts',self.num_Qpts)
+        self.Qpts[:,0] += center[0]; self.Qpts[:,1] += center[1]; self.Qpts[:,2] += center[2]
 
         return self.Qpts, self.num_Qpts
 
@@ -380,7 +410,9 @@ class c_euphonic_sqw:
         """
 
         _sqw = self.structure_factors_object 
-        E_bins = np.arange(E_min,E_max+dE,dE)*ureg('meV')
+        E_bins = np.arange(E_min,E_max+dE,dE)
+        E_bins[np.flatnonzero(np.abs(E_bins) < 1e-3)] = 1e-3
+        E_bins *= ureg('meV')
         E_width *= ureg('meV')
 
         if Q_width is not None:
@@ -428,9 +460,10 @@ class c_euphonic_sqw:
                     db.create_dataset('cmap_Qpt_distances',data=self.cmap_Qpt_distances)
 
                 if self.Qpts_option == 'grid':
-                    db.create_dataset('H',data=self.H)
-                    db.create_dataset('K',data=self.K)
-                    db.create_dataset('L',data=self.L)
+                    db.create_dataset('proj',data=self.proj)
+                    db.create_dataset('u_bins',data=self.u_bins)
+                    db.create_dataset('v_bins',data=self.v_bins)
+                    db.create_dataset('w_bins',data=self.w_bins)
 
     # ----------------------------------------------------------------------------------------------
 
@@ -444,8 +477,6 @@ class c_euphonic_sqw:
 
         E = self.cmap_energies
         sqw = self.cmap_structure_factors.T
-
-        print(sqw.shape)
 
         if hasattr(self,'cmap_Qpt_distances'):
             Q = self.cmap_Qpt_distances
