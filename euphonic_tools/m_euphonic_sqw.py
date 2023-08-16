@@ -157,30 +157,14 @@ class c_euphonic_sqw:
 
     # ----------------------------------------------------------------------------------------------
 
-    def _rotate_Qpts(self,proj):
+    def rotate_Qpts(self,R):
 
         """
         Q' = RQ 
         """
 
-        proj = np.array(proj)
-
-        _I = np.identity(3)
-        _R = np.linalg.solve(_I.T,proj.T)
-
-        _Qpts = np.zeros(self.Qpts.shape)
-        
-        _m = self.Qpts.mean(axis=0)
-        self.Qpts[:,0] -= _m[0]; self.Qpts[:,1] -= _m[1]; self.Qpts[:,2] -= _m[2]
-
-        for ii in range(_Qpts.shape[0]):
-            _Qpts[ii,:] = _R@self.Qpts[ii,:]
-
-        self.Qpts = _Qpts
-
-        self.Qpts[:,0] += _m[0]; self.Qpts[:,1] += _m[1]; self.Qpts[:,2] += _m[2]
-
-        crash()
+        for ii in range(self.num_Qpts):
+            self.Qpts[ii,:] = R@self.Qpts[ii,:]
 
     # ----------------------------------------------------------------------------------------------
 
@@ -232,6 +216,7 @@ class c_euphonic_sqw:
                                   proj[1,:]*_v_bins[ii]+ \
                                   proj[2,:]*_w_bins[ii]
 
+        self.center = np.array(center)
         self.Qpts[:,0] += center[0]; self.Qpts[:,1] += center[1]; self.Qpts[:,2] += center[2]
 
         return self.Qpts, self.num_Qpts
@@ -460,6 +445,7 @@ class c_euphonic_sqw:
                     db.create_dataset('cmap_Qpt_distances',data=self.cmap_Qpt_distances)
 
                 if self.Qpts_option == 'grid':
+                    db.create_dataset('center',data=self.center)
                     db.create_dataset('proj',data=self.proj)
                     db.create_dataset('u_bins',data=self.u_bins)
                     db.create_dataset('v_bins',data=self.v_bins)
