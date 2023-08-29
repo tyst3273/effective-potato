@@ -436,6 +436,7 @@ class c_euphonic_sqw:
 
             db.create_dataset('raw_structure_factors',data=self.raw_structure_factors)
             db.create_dataset('raw_energies',data=self.raw_energies)
+            db.create_dataset('Qpts',data=self.Qpts)
 
             if hasattr(self,'cmap_structure_factors'):
                 db.create_dataset('cmap_structure_factors',data=self.cmap_structure_factors)
