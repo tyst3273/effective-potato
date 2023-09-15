@@ -42,11 +42,11 @@ class c_dos:
         else:
             self._read_dos()
         
-        # if self.lm_decomposed:
-        #     if self.spin_polarized:
-        #         self._read_lm_spin_polarized_dos()
-        #     else:
-        #         self._read_lm_dos()
+        if self.lm_decomposed:
+            if self.spin_polarized:
+                self._read_lm_spin_polarized_dos()
+            else:
+                self._read_lm_dos()
             
     def _read_spin_polarized_dos(self):
         _l = self.lines[6:6+self.num_e]
@@ -73,6 +73,21 @@ class c_dos:
             _l = self.lines[_s:_s+self.num_e]
             _l = [_.strip().split() for _ in _l]
             self.lm_dos[:,ii,:] = np.array(_l,dtype=float)[:,1:]
+            _s += self.num_e+1
+            
+    def _read_lm_spin_polarized_dos(self):
+        
+        _l = self.lines[6+self.num_e+1].strip().split()
+        _n = len(_l)-1
+        self.lm_dos = np.zeros((self.num_e,self.num_atoms,_n//2,2),dtype=float)
+        
+        _s = 6+self.num_e+1
+        for ii in range(self.num_atoms):
+            _l = self.lines[_s:_s+self.num_e]
+            _l = [_.strip().split() for _ in _l]
+            _data = np.array(_l,dtype=float)[:,1:]
+            _data.shape = [self.num_e,_n//2,2]
+            self.lm_dos[:,ii,:] = _data[...]
             _s += self.num_e+1
 
         
