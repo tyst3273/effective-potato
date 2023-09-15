@@ -75,10 +75,6 @@ class c_dos:
             self.lm_dos[:,ii,:] = np.array(_l,dtype=float)[:,1:]
             _s += self.num_e+1
 
-
-            
-
-
         
 # --------------------------------------------------------------------------------------------------
 
@@ -102,36 +98,3 @@ def get_dirs(path=None):
 
 # --------------------------------------------------------------------------------------------------
 
-d = 'x_0.30'
-
-dos = c_dos(os.path.join(d,'DOSCAR'))
-ef = dos.fermi_energy
-
-dos = c_dos(os.path.join('dos',d,'DOSCAR'))
-dos.read_dos()
-
-
-plt.plot(dos.dos_e-ef,dos.dos[:,0],c='r',lw=1,ls='-')
-plt.plot(dos.dos_e-ef,dos.dos[:,1],c='b',lw=1,ls=':')
-
-plt.xlim([-2,4])
-plt.show()
-
-# dos_dirs = get_dirs('dos')
-# for d in dos_dirs:
-    
-#     print(d)
-#     dos = c_dos(os.path.join(d,'DOSCAR'))
-#     ef = dos.fermi_energy
-    
-#     dos = c_dos(os.path.join('dos',d,'DOSCAR'))
-#     dos.read_dos()
-    
-#     plt.plot(dos.dos_e-ef,dos.dos,c='r',lw=1,ls=':')
-#     plt.show()
-    
-#     break
-    
-# --------------------------------------------------------------------------------------------------
-
-# gs_dirs = 
