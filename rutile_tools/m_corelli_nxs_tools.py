@@ -586,6 +586,7 @@ class c_CORELLI_tools:
             # get inds in file
             H_inds, K_inds, L_inds = self._get_inds_to_sum(bragg,H,K,L)
 
+            """
             print(H[H_inds])
             print(K[K_inds])
             print(L[L_inds])
@@ -593,8 +594,8 @@ class c_CORELLI_tools:
             print(H_inds)
             print(K_inds)
             print(L_inds)
-
-            crash()
+            """
+            #crash()
 
             # check that full BZ is covered
             if H_inds.size != h.size or K_inds.size != k.size or L_inds.size != l.size:
