@@ -646,11 +646,12 @@ class c_integrate_rods:
         mlab.contour3d(x,y,z,weights,contours=contours,color=(0,0,1),
                 transparent=True,opacity=0.075,figure=fig)
 
-        mlab.outline(color=(0,0,0),line_width=2,extent=extent)
-        mlab.axes(color=(0,0,0),line_width=1,nb_labels=5,extent=extent,
-                xlabel=r'Q$_x$ (1/A)',
-                ylabel=r'Q$_y$ (1/A)',
-                zlabel=r'Q$_z$ (1/A)')
+        mlab.outline(color=(0,0,0),line_width=10,extent=extent)
+        mlab.axes(color=(0,0,0),line_width=1,nb_labels=3,extent=extent,
+                xlabel='h',ylabel='k',zlabel='l')
+                #xlabel=r'Q$_x$ (1/A)',
+                #ylabel=r'Q$_y$ (1/A)',
+                #zlabel=r'Q$_z$ (1/A)')
 
         mlab.orientation_axes()
         
@@ -668,19 +669,29 @@ class c_integrate_rods:
         _Q = Q_plot_center
         fig_prefix = self.file_name.replace('.hdf5',
             f'_H{_Q[0]:3.2f}_K{_Q[1].mean():3.2f}_L{_Q[1]:3.2f}')
+        fig_prefix = os.path.basename(fig_prefix)
 
         for key in views.keys():
 
             fig_name = fig_prefix+'_'+key+'.jpg'
             print('saving figure',fig_name)
 
-            cam = fig.scene.camera
-            cam.parallel_scale = 1
+            if key == 'iso':
+                fig.scene.isometric_view()
+            elif key == 'X':
+                fig.scene.x_plus_view()
+            elif key == 'Y':
+                fig.scene.y_plus_view()
+            elif key == 'Z':
+                fig.scene.z_plus_view()
+    
+            #cam = fig.scene.camera
+            #cam.parallel_scale = 1
 
-            view = views[key]
-            mlab.view(*view)
+            #view = views[key]
+            #mlab.view(*view)
 
-            mlab.savefig(fig_name,size=(2000,2000),magnification=1.0)
+            mlab.savefig(fig_name,size=(2000,2000),magnification=1)
 
         #mlab.show()
 
