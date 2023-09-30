@@ -109,8 +109,8 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.49497475"
-     inkscape:cx="589.20903"
-     inkscape:cy="899.89287"
+     inkscape:cx="690.67579"
+     inkscape:cy="899.99687"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -128,7 +128,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -491,7 +491,7 @@
     <flowRoot
        xml:space="preserve"
        id="flowRoot1683"
-       style="font-style:normal;font-weight:normal;font-size:64px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
+       style="font-style:normal;font-weight:normal;font-size:48.0000006px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
        transform="matrix(0.26458333,0,0,0.26458333,126.62202,145.52083)"
        inkscape:export-xdpi="100"
        inkscape:export-ydpi="100"><flowRegion
@@ -505,8 +505,8 @@
          style="font-weight:bold">u</flowPara></flowRoot>    <flowRoot
        xml:space="preserve"
        id="flowRoot1683-8"
-       style="font-style:normal;font-weight:normal;font-size:64px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
-       transform="matrix(0.26458333,0,0,0.26458333,83.224305,106.32311)"
+       style="font-style:normal;font-weight:normal;font-size:48px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
+       transform="matrix(0.26458333,0,0,0.26458333,84.358234,108.96894)"
        inkscape:export-xdpi="100"
        inkscape:export-ydpi="100"><flowRegion
          id="flowRegion1685-3"><rect
@@ -533,7 +533,7 @@
     <flowRoot
        xml:space="preserve"
        id="flowRoot1683-9"
-       style="font-style:normal;font-weight:normal;font-size:64px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
+       style="font-style:normal;font-weight:normal;font-size:48.0000006px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
        transform="matrix(0.26458333,0,0,0.26458333,250.59932,144.06484)"
        inkscape:export-xdpi="100"
        inkscape:export-ydpi="100"><flowRegion
@@ -547,8 +547,8 @@
          style="font-weight:bold">u</flowPara></flowRoot>    <flowRoot
        xml:space="preserve"
        id="flowRoot1683-8-7"
-       style="font-style:normal;font-weight:normal;font-size:64px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
-       transform="matrix(0.26458333,0,0,0.26458333,255.20459,93.149846)"
+       style="font-style:normal;font-weight:normal;font-size:48px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
+       transform="matrix(0.26458333,0,0,0.26458333,256.33852,98.441512)"
        inkscape:export-xdpi="100"
        inkscape:export-ydpi="100"><flowRegion
          id="flowRegion1685-3-3"><rect

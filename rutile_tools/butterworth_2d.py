@@ -22,7 +22,7 @@ x, y = np.meshgrid(xx,xx,indexing='ij')
 
 extent = [-x_max,x_max,-x_max,x_max]
 
-fig, ax = plt.subplots(1,3,figsize=(12,3.5),gridspec_kw={'wspace':0.1,'hspace':0.1})
+fig, ax = plt.subplots(1,3,figsize=(12,3.3),gridspec_kw={'wspace':0.1,'hspace':0.1})
 
 b1 = butterworth_2d(x,y,wx=w,wy=w,cx=0,cy=0,n=n)
 ax[0].imshow(b1.T,aspect='auto',origin='lower',cmap='Purples',extent=extent,vmin=0,vmax=1)
@@ -70,6 +70,7 @@ a = np.array([cx-w/2-cx,cy-wy/2-cy]); b = np.array([cx-w/2-cx,cx+wy/2-cy])
 a = R.T@a; b = R.T@b
 ax[2].plot([a[0]+cx,b[0]+cx],[a[1]+cy,b[1]+cy],ls=(0,(2,2)),c='k',lw=1.5,alpha=1)
 
+xx = np.linspace(-x_max,x_max,nx+1)
 for ii in range(nx):
     _x = xx[ii]
     ax[0].plot([-x_max,x_max],[_x,_x],c='g',lw=1,ls='-',alpha=0.25)
