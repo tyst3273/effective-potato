@@ -120,8 +120,8 @@ class c_integrate_rods:
         # our uvw are the same and all we want is to rotate to their frame. 
         self.hkl = np.array([[1,0,0],[0,1,0],[0,0,1]],dtype=float).T # column vecs.
 
-        msg = 'the rotation matrix is defined wrong-ish. it is really the transpose of what' \
-              'is expected. linalg.solve(a,b) solves  a @ x = b. we rotate as R @ a = b,' \
+        msg = 'the rotation matrix is defined wrong-ish. it is really the transpose of what\n' \
+              'is expected. linalg.solve(a,b) solves  a @ x = b. we rotate as R @ a = b,\n' \
               'so really, we want to solve a.T @ x.T = b.T and our R = x.T' 
         print('\n*** WARNING ***')
         print(msg)
