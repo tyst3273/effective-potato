@@ -684,7 +684,6 @@ class c_integrate_rods:
 
         #mlab.show()
 
-
     # ----------------------------------------------------------------------------------------------
 
     def _integrate_data(self,weights,proc=0,cutoff=1e-3):
