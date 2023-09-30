@@ -519,6 +519,174 @@ class c_integrate_rods:
 
     # ----------------------------------------------------------------------------------------------
 
+    def save_volume_plot(self,Q_bin_center,u_binning,v_binning,w_binning,
+            Q_plot_center=None,scale=2e4,stride=1):
+        """
+        read in volume to be intergrated and plot the binning region
+        """
+
+        from mayavi import mlab
+
+        # the Q-pt in cartesian coords
+        self.Q_bin_center = np.array(Q_bin_center)
+        if Q_plot_center is None:
+            self.Q_plot_center = self.Q_bin_center
+        else:
+            self.Q_plot_center = np.array(Q_plot_center)
+
+        # process binning args
+        _num_integrated_dims = 0
+
+        u_length, u_width, u_bin_centers = self._get_bin_centers(u_binning)
+        num_u_bins = u_bin_centers.size
+        if num_u_bins == 1:
+            _num_integrated_dims += 1
+        if u_length > 0:
+            u_plot_width = u_length
+        else:
+            u_plot_width = u_width
+        print('\n*** u binning ***')
+        print('u width:',u_plot_width)
+
+        v_length, v_width, v_bin_centers = self._get_bin_centers(v_binning)
+        num_v_bins = v_bin_centers.size
+        if num_v_bins == 1:
+            _num_integrated_dims += 1
+        if v_length > 0:
+            v_plot_width = v_length
+        else:
+            v_plot_width = v_width
+        print('\n*** v binning ***')
+        print('v width:',v_plot_width)
+
+        w_length, w_width, w_bin_centers = self._get_bin_centers(w_binning)
+        num_w_bins = w_bin_centers.size
+        if num_w_bins == 1:
+            _num_integrated_dims += 1
+        if w_length > 0:
+            w_plot_width = w_length
+        else:
+            w_plot_width = w_width
+        print('\n*** w binning ***')
+        print('w width:',w_plot_width)
+
+        # we don't want to slice ALL the data for each bin, so we pad by a
+        # generous amount and slice that only that reduced volume
+        max_length = np.array([u_length,v_length,w_length]).max()
+        max_width = np.array([u_width,v_width,w_width]).max()
+        if _num_integrated_dims == 0: # cube
+            self.pad_length = (np.sqrt(3)*max_length)/2+max_width
+        elif _num_integrated_dims == 1: # square
+            self.pad_length = (np.sqrt(2)*max_length)/2+max_width
+        elif _num_integrated_dims == 2: # line
+            self.pad_length = max_length/2+max_width
+        else: # point
+            self.pad_length = max_width*2
+        print('\npad length:',self.pad_length)
+
+        # bin widths along each axis
+        self.bin_widths = np.array([u_width,v_width,w_width])
+
+        # read the volume around Q_center from the file
+        self._read_data_from_hdf5_file(self.Q_plot_center,self.pad_length)
+        print('shape:',self.shape)
+
+        # get cartesian coords in rotated frame
+        self._get_rotated_cartesian_coords()
+
+        # loop over bin centers and integrate the data
+        R = self.rotation_matrix
+
+        # need bin center in rotated frame too
+        Q_rot = R@self.Q_bin_center
+
+        # downsample if plot is too large
+        xp = self.Qxp[::stride,::stride,::stride]
+        yp = self.Qyp[::stride,::stride,::stride]
+        zp = self.Qzp[::stride,::stride,::stride]
+        x = self.Qx[::stride,::stride,::stride]
+        y = self.Qy[::stride,::stride,::stride]
+        z = self.Qz[::stride,::stride,::stride]
+        signal = self.signal[::stride,::stride,::stride]
+        print('down sampled shape:',signal.shape)
+
+        # approximate orthorhombic step function
+        weights = self.butterworth_3d(xp,yp,zp,
+                u_plot_width,v_plot_width,w_plot_width,Q_rot[0],Q_rot[1],Q_rot[2])
+
+        mlab.options.offscreen = True
+
+        fig = mlab.figure(1, bgcolor=(1,1,1), fgcolor=(0,0,0),size=(500, 500))
+        mlab.clf()
+
+        extent = [x.min(),x.max(),y.min(),y.max(),z.min(),z.max()]
+
+        # need to mask nans to plot w/ mayavi
+        signal = np.nan_to_num(signal,nan=0.0,posinf=0.0,neginf=0.0)*scale
+
+        contours = []
+        for ii in np.linspace(0.15,0.3,150):
+            contours.append(ii)
+        mlab.contour3d(x,y,z,signal,contours=contours,color=(1,0.5,1),
+                transparent=True,opacity=0.005,figure=fig)
+        contours = []
+        for ii in np.linspace(0.25,0.5,150):
+            contours.append(ii)
+        mlab.contour3d(x,y,z,signal,contours=contours,color=(1,0.75,0),
+                transparent=True,opacity=0.05,figure=fig)
+        contours = []
+        for ii in np.linspace(0.5,10,50):
+            contours.append(ii)
+        mlab.contour3d(x,y,z,signal,contours=contours,color=(1,0.75,0),
+            transparent=True,opacity=1.0,figure=fig)
+
+        contours = []
+        for ii in np.linspace(0.05,0.95,100):
+            contours.append(ii)
+        mlab.contour3d(x,y,z,weights,contours=contours,color=(0,0,1),
+                transparent=True,opacity=0.075,figure=fig)
+
+        mlab.outline(color=(0,0,0),line_width=2,extent=extent)
+        mlab.axes(color=(0,0,0),line_width=1,nb_labels=5,extent=extent,
+                xlabel=r'Q$_x$ (1/A)',
+                ylabel=r'Q$_y$ (1/A)',
+                zlabel=r'Q$_z$ (1/A)')
+
+        mlab.orientation_axes()
+        
+        fig.scene.parallel_projection = True
+
+        center = np.array([x.mean(),x.mean(),x.mean()])
+        views = {'iso':(45.0, 54.735610317245346, 'auto', center),
+                  'X':(180.0, 90.0, 'auto', center),
+                  'Y':(-90.0, 90.0, 'auto', center),
+                  'Z':(0.0, 180.0, 'auto', center)}
+                  #'a':(72.28808017764584, 78.43057609125368, 3.346065214951226*zoom, center),
+                  #'b':(34.43222890423177, 165.83420283990634, 3.346065214951206*zoom, center),
+                  #'c':(171.9282308683452, 101.1974312536663, 3.3460652149512016*zoom, center)}
+
+        _Q = Q_plot_center
+        fig_prefix = self.file_name.replace('.hdf5',
+            f'_H{_Q[0]:3.2f}_K{_Q[1].mean():3.2f}_L{_Q[1]:3.2f}')
+
+        for key in views.keys():
+
+            fig_name = fig_prefix+'_'+key+'.jpg'
+            print('saving figure',fig_name)
+
+            cam = fig.scene.camera
+            cam.parallel_scale = 1
+
+            view = views[key]
+            mlab.view(*view)
+
+            mlab.savefig(fig_name,size=(2000,2000),magnification=1.0)
+
+        #mlab.show()
+
+
+    # ----------------------------------------------------------------------------------------------
+
     def _integrate_data(self,weights,proc=0,cutoff=1e-3):
         """
         find the coords in the volumetric data where weights function is > cutoff and integrate those
