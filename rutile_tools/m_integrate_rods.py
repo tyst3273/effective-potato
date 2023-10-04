@@ -383,7 +383,7 @@ class c_integrate_rods:
     # ----------------------------------------------------------------------------------------------
     
     def plot_volume(self,Q_bin_center,u_binning,v_binning,w_binning,
-            Q_plot_center=None,scale=2e4,stride=1):
+            Q_plot_center=None,scale=2e4,stride=1,plot_uvw=False,uvw=None):
         """
         read in volume to be intergrated and plot the binning region
         """
@@ -506,6 +506,36 @@ class c_integrate_rods:
             contours.append(ii)
         mlab.contour3d(x,y,z,weights,contours=contours,color=(0,0,1),
                 transparent=True,opacity=0.075,figure=fig)
+
+        if plot_uvw:
+
+            if uvw is None:
+                uvw = np.copy(self.uvw)
+            
+            Qx = Q_plot_center[0]
+            Qy = Q_plot_center[1]
+            Qz = Q_plot_center[2]
+
+            u = uvw[0,0]/1.25
+            v = uvw[1,0]/1.25
+            w = uvw[2,0]/1.25
+            mlab.quiver3d(u+Qx,v+Qy,w+Qz,u,v,w,mode='cone',scale_factor=0.15,color=(1,0,0))
+            _x = np.array([Qx,Qx+u]); _y = np.array([Qy,Qy+v]); _z = np.array([Qz,Qz+w])
+            mlab.plot3d(_x,_y,_z,tube_radius=0.015,color=(1,0,0))
+
+            u = uvw[0,1]/2
+            v = uvw[1,1]/2
+            w = uvw[2,1]/2
+            mlab.quiver3d(u+Qx,v+Qy,w+Qz,u,v,w,mode='cone',scale_factor=0.25,color=(0,1,0))
+            _x = np.array([Qx,Qx+u]); _y = np.array([Qy,Qy+v]); _z = np.array([Qz,Qz+w])
+            mlab.plot3d(_x,_y,_z,tube_radius=0.015,color=(0,1,0))
+
+            u = uvw[0,2]/2
+            v = uvw[1,2]/2
+            w = uvw[2,2]/2
+            mlab.quiver3d(u+Qx,v+Qy,w+Qz,u,v,w,mode='cone',scale_factor=0.25,color=(0,0,1))
+            _x = np.array([Qx,Qx+u]); _y = np.array([Qy,Qy+v]); _z = np.array([Qz,Qz+w])
+            mlab.plot3d(_x,_y,_z,tube_radius=0.015,color=(0,0,1))
 
         mlab.outline(color=(0,0,0),line_width=2,extent=extent)
         mlab.axes(color=(0,0,0),line_width=1,nb_labels=5,extent=extent,
