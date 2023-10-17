@@ -10,9 +10,7 @@ class window(QMainWindow):
 
     def __init__(self,*args,**kwargs):
 
-        super().__init__(*args,**kwargs)
-
-        self.windowTitleChanged.connect(self.onWindowTitleChange)
+        super(window,self).__init__(*args,**kwargs)
 
         self.setWindowTitle('the eyes are the window to the... eyes')
 
@@ -21,13 +19,6 @@ class window(QMainWindow):
         label.setAlignment(Qt.AlignCenter)
 
         self.setCentralWidget(label)
-
-    def onWindowTitleChange(self,s):
-        print(s)
-
-    def contextMenuEvent(self, event):
-        print("Context menu event!")
-        super().contextMenuEvent(event)
 
 
 
