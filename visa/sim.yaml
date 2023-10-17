@@ -1,0 +1,67 @@
+spec: "1.0"
+devices:
+  device 3:
+    eom:
+      ASRL INSTR:
+        q: "\r\n"
+        r: "\n"
+      USB INSTR:
+        q: "\n"
+        r: "\n"
+      TCPIP INSTR:
+        q: "\n"
+        r: "\n"
+      GPIB INSTR:
+        q: "\n"
+        r: "\n"
+    dialogues:
+      - q: "*IDN?"
+        r: "SCPI,MOCK,VERSION_1.0"
+    error:
+      response:
+        command_error: "INVALID_COMMAND"
+      status_register:
+        - q: "*ESR?"
+          command_error: 32
+          query_error: 4
+    properties:
+      voltage:
+        default: 0.0
+        getter:
+          q: "VOLT?"
+          r: "{:.3f}"
+        setter:
+          q: "VOLT {:.3f}"
+        specs:
+          min: 0
+          max: 750
+          type: float
+      current:
+        default: 0.0
+        getter:
+          q: "CURR?"
+          r: "{:.3f}"
+        setter:
+          q: "CURR {:.3f}"
+        specs:
+          min: 0
+          max: 6
+          type: float
+      read_only:
+        default: P6V
+        getter:
+          q: "INST?"
+          r: "{:s}"
+      output_enabled:
+        default: 0
+        getter:
+          q: "OUTP?"
+          r: "{:d}"
+        setter:
+          q: "OUTP {:d}"
+
+resources:
+  ASRL1::INSTR:
+    device: device 3
+  USB::0x1111::0x2222::0x1234::INSTR:
+    device: device 3

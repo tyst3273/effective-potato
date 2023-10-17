@@ -1,0 +1,16 @@
+
+
+#resource_id = 'ASRL33::INSTR'
+resource_id = 'ASRL1::INSTR'
+resource_handle = 'ea_ps'
+
+
+#visa_library_path = 'usr/lib/x86_64-linux-gnu/libvisa.so'
+visa_library_path = 'sim.yaml@sim'
+
+#write_termination = '\n'
+#read_termination = '\n'
+#baud_rate = 9800
+
+log_to_screen = false
+
