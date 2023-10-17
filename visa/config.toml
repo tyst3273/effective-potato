@@ -1,9 +1,0 @@
-
-instrument-id = "ASRL33::INSTR"
-#visa-library-path = "/usr/lib/x86_64-linux-gnu/libvisa.so"
-
-#write-termination = "\n"
-#read-termination = "\n"
-#baud-rate = 9800
-
-

@@ -1,0 +1,28 @@
+from m_pyvisa import c_pyvisa
+from configparser import ConfigParser
+
+config = ConfigParser()
+config.read('config.ini')
+
+print(config['visa']['resource_id'])
+
+pv = c_pyvisa()
+
+pv.print_available_resources(try_to_connect=True)
+pv.open_resource('ASRL33::INSTR')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
