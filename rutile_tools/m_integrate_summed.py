@@ -449,6 +449,7 @@ class c_integrate_summed:
 
         # approximate orthorhombic step function
         xp = self.Qxp; yp = self.Qyp; zp = self.Qzp # coords in rotated frame
+        print(xp,yp,zp)
         weights = self.butterworth_3d(xp,yp,zp,
                 u_plot_width,v_plot_width,w_plot_width,Q_rot[0],Q_rot[1],Q_rot[2])
 
@@ -472,16 +473,15 @@ class c_integrate_summed:
         mlab.contour3d(x,y,z,signal,contours=contours,color=(1,0.75,0),
                 transparent=True,opacity=0.05,figure=fig)
         contours = []
-        for ii in np.linspace(0.5,10,50):
+        for ii in np.linspace(0.5,1.0,50):
             contours.append(ii)
         mlab.contour3d(x,y,z,signal,contours=contours,color=(1,0.75,0),
             transparent=True,opacity=1.0,figure=fig)
-
         contours = []
         for ii in np.linspace(0.05,0.95,100):
             contours.append(ii)
         mlab.contour3d(x,y,z,weights,contours=contours,color=(0,0,1),
-                transparent=True,opacity=0.075,figure=fig)
+                transparent=True,opacity=0.175,figure=fig)
 
         mlab.outline(color=(0,0,0),line_width=1,extent=extent)
         mlab.axes(color=(0,0,0),line_width=1,nb_labels=5,extent=extent,
