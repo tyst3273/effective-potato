@@ -396,7 +396,7 @@ class c_euphonic_sqw:
 
         _sqw = self.structure_factors_object 
         E_bins = np.arange(E_min,E_max+dE,dE)
-        E_bins[np.flatnonzero(np.abs(E_bins) < 1e-3)] = 1e-3
+        #E_bins[np.flatnonzero(np.abs(E_bins) < 1e-3)] = 1e-3
         E_bins *= ureg('meV')
         E_width *= ureg('meV')
 
@@ -463,7 +463,7 @@ class c_euphonic_sqw:
         fig, ax = plt.subplots(figsize=(8,8))
 
         E = self.cmap_energies
-        sqw = self.cmap_structure_factors.T
+        sqw = np.squeeze(self.cmap_structure_factors).T
 
         if hasattr(self,'cmap_Qpt_distances'):
             Q = self.cmap_Qpt_distances
