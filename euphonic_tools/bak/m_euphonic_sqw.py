@@ -383,6 +383,8 @@ class c_euphonic_sqw:
         E_bins = np.arange(E_min,E_max+dE,dE)*ureg('meV')
         E_width *= ureg('meV')
 
+        print(E_bins)
+
         if Q_width is not None:
             Q_width *= ureg('1/angstrom')
 
@@ -444,6 +446,7 @@ class c_euphonic_sqw:
 
         E = self.cmap_energies
         sqw = self.cmap_structure_factors.T
+        sqw = np.squeeze(sqw)
 
         print(sqw.shape)
 
