@@ -1,5 +1,6 @@
 
 import numpy as np
+import matplotlib.pyplot as plt
 from scipy.linalg import eigh
 
 class octahedra:
@@ -15,13 +16,11 @@ class octahedra:
                 [ 0, 0, 0], # M
                 [ 1, 0, 0], # m
                 [ 0, 1, 0], # m
-                [ 0, 0, 1], # m
                 [-1, 0, 0], # m
-                [ 0,-1, 0], # m
-                [ 0, 0,-1]], # m
+                [ 0,-1, 0]], # m
                 dtype=float)
         self.natom = self.pos.shape[0]
-        self.types = np.array([1,2,2,2,2,2,2],dtype=int)
+        self.types = np.array([1,2,2,2,2],dtype=int)
 
     def get_fc(self,k,d,l):
         
@@ -61,13 +60,11 @@ class octahedra:
                 if _tii == _tjj: # vertex to vertex
                     k = self.g
                     l = np.sqrt(2)
-                    _m = np.sqrt(self.m**2)
                 else: # vertex to center
                     k = self.G
                     l = 1.0
-                    _m = np.sqrt(self.m*self.M)
 
-                _fc[ii,jj] += self.get_fc(k,d,l)/_m
+                _fc[ii,jj] += self.get_fc(k,d,l)
             
         # self terms ...
         for ii in range(self.natom):
@@ -76,8 +73,19 @@ class octahedra:
         # reshape
         self.fc = np.zeros((self.natom*3,self.natom*3),dtype=float)
         for ii in range(self.natom):
+            _tii = self.types[ii]
+
             for jj in range(self.natom):
-                self.fc[ii*3:(ii+1)*3,jj*3:(jj+1)*3] = _fc[ii,jj,...]
+                _tjj = self.types[jj]
+
+                if _tii == 1 and _tjj == 1: # vertex to vertex
+                    _m = self.M
+                elif _tii != _tjj: # vertex to center
+                    _m = np.sqrt(self.m*self.M)
+                else:
+                    _m = self.m
+
+                self.fc[ii*3:(ii+1)*3,jj*3:(jj+1)*3] = _fc[ii,jj,...]/_m
 
         np.savetxt('fc',self.fc,fmt='% 4.2f')
 
@@ -92,15 +100,12 @@ class octahedra:
         _neg = -1*(_evals < 0.0).astype(float) + (_evals >= 0.0).astype(float)
         freq = np.sqrt(np.abs(_evals))*_neg
 
-        print(freq)
+        for ii in range(self.natom*3):
+            plt.plot(freq[ii],marker='o',ms=4,lw=0)
+        plt.show()
 
-        evecs.shape = [self.natom,3]
-        print(evecs)
-
-
-
-
-
+        #evecs.shape = [self.natom,3]
+        #print(evecs)
 
 
 
