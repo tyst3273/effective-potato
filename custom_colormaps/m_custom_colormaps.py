@@ -44,11 +44,20 @@ parula_cmap = make_colormap(colors,positions)
 # --------------------------------------------------------------------------------------------------
 # colormap to match my plots with mayavi
 
+colors = [[0,0,255],[255,0,0],[0,255,0],[255,0,255]]
+positions = [0,1/3,2/3,1]
+phase_cmap = make_colormap(colors,positions)
+
+# --------------------------------------------------------------------------------------------------
+# colormap to match my plots with mayavi
+
 colors = [[224,238,255,0],[224,238,255,0],[221,87,172,1],[221,153,172,1],
                 [235,180,49,1],[255,199,61,1]]
 positions = np.arange(len(colors))
 mayavi_cmap = make_colormap(colors,positions)
 
 # --------------------------------------------------------------------------------------------------
+
+
 
 

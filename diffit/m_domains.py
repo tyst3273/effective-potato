@@ -33,7 +33,8 @@ class c_domains:
 
         inds = np.array(set_of_inds[0],dtype=int)
         for ii in range(1,len(set_of_inds)):
-            inds = np.intersect1d(inds,np.array(set_of_inds[ii],dtype=int))
+            # inds = np.intersect1d(inds,np.array(set_of_inds[ii],dtype=int))
+            inds = np.union1d(inds,np.array(set_of_inds[ii],dtype=int))
         
         self.inds_in_slab = inds
 

@@ -2,7 +2,7 @@
 import numpy as np
 from copy import deepcopy
 from diffit.m_code_utils import crash, c_timer
-from diffit.m_crystal_utils import change_coordinate_basis, unsorted_unique
+from diffit.m_crystal_utils import change_coordinate_basis, unsorted_unique, do_minimum_image
 from diffit.m_structure_io import read_poscar
 
 
@@ -95,6 +95,38 @@ class c_crystal:
         
     # ----------------------------------------------------------------------------------------------
     
+    def get_neighbor_coordination(self,atom_ind=1,num_shells=1):
+        
+        """
+        get nearst neighbor distance and coordination (num neighbors) for atom w/ index atom_ind
+        """
+
+        atom_type = self.sc_type_nums[atom_ind]
+        
+        _origin = self.sc_positions_reduced[atom_ind,:]
+        _reduced_pos = do_minimum_image(_origin,self.sc_positions_reduced)
+        _cart_pos = change_coordinate_basis(self.sc_vectors,_reduced_pos)
+        _dists = np.sqrt(np.sum(_cart_pos**2,axis=1)).round(9)
+        _sort = np.argsort(_dists)
+        _dists = _dists[_sort] 
+        _types = self.sc_type_nums[_sort]
+        
+        _ud = np.unique(_dists)
+        
+        nn_dists = np.atleast_1d(_ud[1:num_shells+1])
+        nn_coord = np.zeros(num_shells)
+        nn_types = [[] for _ in range(num_shells)]
+        
+        for ii in range(num_shells):
+            
+            _inds = np.flatnonzero(_dists == nn_dists[ii])
+            nn_coord[ii] = _inds.size
+            nn_types[ii] = _types[_inds]
+            
+        return nn_coord, nn_dists, nn_types
+    
+    # ----------------------------------------------------------------------------------------------
+    
     def add_new_basis_type(self,new_type):
         
         """
@@ -165,6 +197,9 @@ class c_crystal:
         self.sc_translations = np.array((_x,_y,_z),dtype=int).T
         self.sc_translations.shape = [self.num_sc_reps,1,3]
         self.sc_translations = np.tile(self.sc_translations,reps=(1,self.num_basis_atoms,1))
+        
+        self.sc_basis_inds = np.tile(np.arange(self.num_basis_atoms).reshape(
+                1,self.num_basis_atoms),reps=(self.num_sc_reps,1))
 
         # positions_reduced in reduced coords of supercell
         self.sc_positions_reduced += self.sc_translations
