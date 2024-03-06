@@ -32,6 +32,16 @@ class c_dos:
         if self.lm_decomposed:
             self.lm_labels = ['s','p_y','p_z','p_x','d_xy','d_yz','d_z2-r2','d_xz','d_x2-y2',
              'f_y(3x2-y2)','f_xyz','f_yz2','f_z3','f_xz2','f_z(x2-y2)','f_y(3x2-y2)','f_x(x2-3y2)']
+
+    def get_lm_inds(self,orbitals):
+        if not isinstance(orbitals,list):
+            orbitals = [orbitals]
+        inds = []
+        for orbital in orbitals:
+            if orbital not in self.lm_labels:
+                print(f'orbital type \'{orbital}\' not found!')
+            inds.append(self.lm_labels.index(orbital))
+        return inds
     
     def _get_fermi_energy(self):
         self.fermi_energy = float(self.lines[5].strip().split()[3])
