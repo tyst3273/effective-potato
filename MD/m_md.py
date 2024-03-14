@@ -14,7 +14,6 @@ class c_md:
 
         NOTE: we are in units where kb=1
         """
-        print('\n*** WARNING ***\npair potential probably needs a factor of 1/2 for total PE\n')
 
         self.num_atoms = int(num_atoms)
         self.step = 0
