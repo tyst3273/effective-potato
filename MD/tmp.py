@@ -1,20 +1,45 @@
-import h5py 
 import numpy as np
 import matplotlib.pyplot as plt
 
 
-f = 'nvt.hdf5'
+def calc_fc(r,sigma,epsilon):
+    ind = np.flatnonzero(r == 0.0)
+    r[ind] = 1.0
+    fc = 24*epsilon/r**2*(-26*(sigma/r)**12+7*(sigma/r)**6)
+    r[ind] = 0.0
+    fc[ind] = 0.0
+    fc[ind] = -np.sum(fc) # acoustic sum rule
+    return fc
 
-with h5py.File(f,'r') as db:
-    etot = db['etotal'][...]
-    temp = db['temperature'][...]
-    pos = db['positions'][...]
+def get_dynmat(q,r,fc):
+    dynmat = np.sum(np.exp(2j*np.pi*q*r)*fc)
+    return np.real(dynmat)
 
-num_atoms = pos.shape[1]
 
-mean_pos = pos.mean(axis=0)
-mean_pos -= mean_pos.min()
+## get force constants
+nr = 25
+sigma = 1 #1/2**(1/6)
+epsilon = 1
 
-np.savetxt('mean',mean_pos,fmt='% 6.3f')
-print(pos)
+r = np.arange(nr).astype(float)-nr//2 
+fc = calc_fc(r,sigma,epsilon)
+
+msg = ''
+for ii in range(nr):
+    msg += f'{r[ii]: 3.2f} {fc[ii]: 9.6f}\n'
+print(msg)
+
+
+## get phonon freqs
+nq = 101
+q = np.linspace(-0.5,0.5,nq)
+freq = np.zeros(nq)
+for ii in range(nq):
+    freq[ii] = get_dynmat(q[ii],r,fc)
+print(freq)
+freq = np.sqrt(freq)
+
+import matplotlib.pyplot as plt
+plt.plot(q,freq)
+plt.show()
 

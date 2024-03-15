@@ -42,7 +42,7 @@ class c_md:
 
         # default is minimum energy for given LJ potential
         if box_size is None:
-            box_size = 2**(1/6)*self.sigma*self.num_atoms
+            box_size = self.num_atoms #2**(1/6)*self.sigma*self.num_atoms
         self.box_size = float(box_size)
 
         # neighbor vectors and distances
@@ -110,7 +110,7 @@ class c_md:
 
     # ----------------------------------------------------------------------------------------------
 
-    def _calculate_forces_and_potential(self):
+    def calculate_forces_and_potential(self):
         """
         calculate force on all atoms by summing over pairs 
         """
@@ -196,13 +196,13 @@ class c_md:
         _m = self.masses
 
         # get forces and pot. and current positions
-        _f = self._calculate_forces_and_potential()
+        _f = self.calculate_forces_and_potential()
 
         self.pos = self.pos + _dt*self.vels + _dt**2*_f/2/_m
         self.vels = self.vels + _dt*_f/2/_m
 
         # get forces and pot. and new positions
-        _f = self._calculate_forces_and_potential()
+        _f = self.calculate_forces_and_potential()
 
         self.vels = self.vels + _dt*_f/2/_m
 
@@ -283,13 +283,13 @@ class c_md:
         _eta2 = np.random.normal(size=_num_sample)
 
         # get forces and pot. and current positions
-        _f1 = np.copy(self._calculate_forces_and_potential())
+        _f1 = np.copy(self.calculate_forces_and_potential())
 
         self.vels = _c1*self.vels + _c2*_eta1/_m
         self.pos = self.pos + self.vels*_dt + _f1*(_dt)**2/2/_m
 
         # get forces and pot. and new positions
-        _f2 = np.copy(self._calculate_forces_and_potential())
+        _f2 = np.copy(self.calculate_forces_and_potential())
 
         self.vels = self.vels + (_f1+_f2)*_dt/2/_m
         self.vels = _c1*self.vels + _c2*_eta2/_m
@@ -364,7 +364,7 @@ class c_md:
         _ke, _ = self._calculate_ke_and_temperature()
 
         # forces at r(t)
-        _f = self._calculate_forces_and_potential()
+        _f = self.calculate_forces_and_potential()
 
         # r(t+dt)
         self.pos = self.pos + _dt*self.vels + _dt**2*(_f/_m-_dof*self.vels)/2
@@ -379,7 +379,7 @@ class c_md:
         _ke, _ = self._calculate_ke_and_temperature()
 
         # forces at r(t+dt)
-        _f = self._calculate_forces_and_potential()
+        _f = self.calculate_forces_and_potential()
 
         # xi(t+dt)
         _dof = _dof + _dt/2/_Q*(_ke-_temp*(self.num_atoms+1)/2) 
@@ -397,7 +397,45 @@ class c_md:
 
 if __name__ == '__main__':
 
-    md = c_md(num_atoms=100,epsilon=1,sigma=1/2**(1/6),masses=1)
+    calc_fc = True
+
+    sigma = 1 #1/2**(1/6)
+    epsilon = 1
+
+    md = c_md(num_atoms=25,epsilon=1,masses=1)
+
+    # ----------------------------------------------------------------------------------------------
+
+    if calc_fc:
+
+        # numerical force-constants
+        pos = md.pos
+
+        d = 1e-6
+
+        pos[0] = d
+        forces = md.calculate_forces_and_potential()
+        fc = -forces/d
+
+        pos[0] = -d
+        forces = md.calculate_forces_and_potential()
+        fc += forces/d
+
+        fc /= 2
+        pos[0] = 0.0
+
+        inds = np.argsort(pos)
+        pos = pos[inds]
+        fc = fc[inds]
+
+        msg = ''
+        for ii in range(md.num_atoms):
+            msg += f'{pos[ii]: 3.2f} {fc[ii]: 9.6f}\n'
+        print(msg)
+
+        exit()
+
+    # ----------------------------------------------------------------------------------------------
 
     #md.plot_potential()
 
