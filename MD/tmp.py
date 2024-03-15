@@ -15,6 +15,10 @@ def get_dynmat(q,r,fc):
     dynmat = np.sum(np.exp(2j*np.pi*q*r)*fc)
     return np.real(dynmat)
 
+def get_freq(freq_sq):
+    mask = -1*(freq_sq <= 0.0).astype(float)+(freq_sq >= 0).astype(float)
+    freq = np.sqrt(np.abs(freq_sq))*mask
+    return freq
 
 ## get force constants
 nr = 25
@@ -29,15 +33,13 @@ for ii in range(nr):
     msg += f'{r[ii]: 3.2f} {fc[ii]: 9.6f}\n'
 print(msg)
 
-
 ## get phonon freqs
 nq = 101
 q = np.linspace(-0.5,0.5,nq)
-freq = np.zeros(nq)
+freq_sq = np.zeros(nq)
 for ii in range(nq):
-    freq[ii] = get_dynmat(q[ii],r,fc)
-print(freq)
-freq = np.sqrt(freq)
+    freq_sq[ii] = get_dynmat(q[ii],r,fc)
+freq = get_freq(freq_sq)
 
 import matplotlib.pyplot as plt
 plt.plot(q,freq)
