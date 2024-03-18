@@ -7,59 +7,52 @@ import h5py
 class c_md:
 
     # ----------------------------------------------------------------------------------------------
-
-    def __init__(self,num_atoms=50,box_size=None,epsilon=1,sigma=1,masses=None,atom_ids=None):
+    
+    def __init__(self,pos,box_size,atom_types,masses,epsilon=1,sigma=1,cutoff=None):
         """
         class for NVT simulation of 1D LJ chain. setup a bunch of stuff we will need later
 
         NOTE: we are in units where kb=1
         """
 
-        self.num_atoms = int(num_atoms)
-        self.step = 0
+        # initialize parameters
+        self.pos = np.array(pos,dtype=float)
+        self.num_atoms = self.pos.size
+        self.box_size = float(box_size)
+        self.atom_types = np.array(atom_types,dtype=int)
 
-        self.traj_file = 'pos.xyz'
-        if os.path.exists(self.traj_file):
-            os.remove(self.traj_file)
+        # create array of masses for each atom in simulation
+        _masses = np.array(masses,dtype=float)
+        _, _inv = np.unique(self.atom_types,return_inverse=True)
+        self.masses = _masses[_inv]
 
         # LJ parameters: V(r) = 4 * eps * [ (sig/r)**12 - (sig/r)**6 ]
         self.epsilon = float(epsilon)
         self.sigma = float(sigma)
 
-        # masses of the atoms
-        if masses is None:
-            self.masses = np.ones(self.num_atoms)
-        elif isinstance(masses,float):
-            self.masses = np.ones(self.num_atoms)*masses
+        # cutoff to truncate forces etc
+        if cutoff is None:
+            self.cutoff = self.box_size
         else:
-            self.masses = np.array(masses)
+            self.cutoff = float(cutoff)
 
-        # ids of the atoms (to map to primitive cell)
-        if atom_ids is None:
-            self.atom_ids = np.ones(self.num_atoms)
-        else:
-            self.atom_ids = np.array(atom_ids,dtype=int)
-
-        # default is minimum energy for given LJ potential
-        if box_size is None:
-            box_size = self.num_atoms #2**(1/6)*self.sigma*self.num_atoms
-        self.box_size = float(box_size)
+        # build neighbor lists once and for all
+        self._build_neighbor_lists()
+        
+        # initializing these once and for all 
 
         # neighbor vectors and distances
-        self.neighbor_vecs = np.zeros((self.num_atoms,self.num_atoms))
-        self.neighbor_dist = np.zeros((self.num_atoms,self.num_atoms))
+        self.neighbor_vecs = np.zeros((self.num_atoms,self.num_neighbors))
+        self.neighbor_dists = np.zeros((self.num_atoms,self.num_neighbors))
 
         # forces and potential energy
-        self.pair_forces = np.zeros((self.num_atoms,self.num_atoms))
-        self.pair_potential = np.zeros((self.num_atoms,self.num_atoms))
+        self.pair_forces = np.zeros((self.num_atoms,self.num_neighbors))
+        self.pair_potential = np.zeros((self.num_atoms,self.num_neighbors))
         self.forces = np.zeros(self.num_atoms)
         self.potential = np.zeros(self.num_atoms)
 
         # velocities during MD integration
         self.vels = np.zeros(self.num_atoms)
-
-        # create array of atoms
-        self._setup_box()
 
     # ----------------------------------------------------------------------------------------------
 
@@ -82,21 +75,45 @@ class c_md:
 
     # ----------------------------------------------------------------------------------------------
 
-    def _setup_box(self):
+    def _build_neighbor_lists(self):
         """
-        equally spaced array of atoms filling box
+        tiddies - claire
+
+        get neighbor lists within cutoff to speedup force calculations later
         """
-        self.pos = np.arange(self.num_atoms)/self.num_atoms*self.box_size
-    
+
+        _cutoff = self.cutoff
+
+        _vecs = np.zeros((self.num_atoms,self.num_atoms),dtype=float)
+        _dists = np.zeros((self.num_atoms,self.num_atoms),dtype=float)
+        _inds = np.zeros((self.num_atoms,self.num_atoms),dtype=int)
+
+        _num = 0
+        for ii in range(self.num_atoms):
+            _v = self._do_minimum_image(self.pos-self.pos[ii])
+            _d = np.abs(_v)
+            _i = np.argsort(_d)
+            _dists[ii,:] = _d[_i]
+            _vecs[ii,:] = _v[_i]
+            _inds[ii,:] = _i
+
+            _n = np.count_nonzero(_d <= _cutoff) 
+            if _n > _num:
+                _num = _n
+        
+        self.neighbor_lists = _inds[:,:_num]
+        self.num_neighbors = _num
+
     # ----------------------------------------------------------------------------------------------
 
-    def _get_neighbors(self):
+    def _get_neighbor_vecs_and_dists(self):
         """
         loop over all atoms and get neighbor list for each
         """
         for ii in range(self.num_atoms):
-            self.neighbor_vecs[ii,:] = self._do_minimum_image(self.pos-self.pos[ii])
-        self.neighbor_dist[...] = np.abs(self.neighbor_vecs)
+            _inds = self.neighbor_lists[ii,:] # atom ii's neighbors within cutoff
+            self.neighbor_vecs[ii,:] = self._do_minimum_image(self.pos[_inds]-self.pos[ii])
+        self.neighbor_dists[...] = np.abs(self.neighbor_vecs)
 
     # ----------------------------------------------------------------------------------------------
 
@@ -110,70 +127,88 @@ class c_md:
 
     # ----------------------------------------------------------------------------------------------
 
+    def _get_masks(self):
+        """
+        need to mask |r|==0 term., i.e. self-interaction
+        """
+        self._get_neighbor_vecs_and_dists()
+
+        _dists = self.neighbor_dists
+
+        # need to mask the |r|==0 (i.e. i==j) terms
+        self.neighbor_dists_mask = (_dists > 0.0).astype(float)
+        self.neighbor_dists_shift = (_dists == 0.0).astype(float)
+
+    # ----------------------------------------------------------------------------------------------
+
     def calculate_forces_and_potential(self):
         """
-        calculate force on all atoms by summing over pairs 
+        calculate force on all atoms by summing over pairs
         """
 
         # get neighbor lists
-        self._get_neighbors()
+        self._get_neighbor_vecs_and_dists()
 
         # neighbor distance
-        _dist = self.neighbor_dist
+        _dists = self.neighbor_dists 
+        _dists[:,0] = 1.0 # mask the |r| == 0 term
 
         # LJ parameters
         _eps = self.epsilon
         _sig = self.sigma
 
-        # need to mask the |r|==0 (i.e. i==j) terms
-        mask = (_dist > 0.0).astype(float)
-        _dist += (_dist == 0.0).astype(float) 
-
         # unit vectors
-        _vecs = self.neighbor_vecs/_dist
+        _unit = self.neighbor_vecs/_dists
 
         # calculate force and potential
-        self.pair_forces[...] = -24*_eps*(2*(_sig/_dist)**12-(_sig/_dist)**6)/_dist*_vecs
-        self.pair_potential[...] = 4*_eps*((_sig/_dist)**12-(_sig/_dist)**6)*mask
+        self.pair_forces[...] = -24*_eps*(2*(_sig/_dists)**12-(_sig/_dists)**6)/_dists*_unit
+        self.pair_potential[...] = 4*_eps*((_sig/_dists)**12-(_sig/_dists)**6)
+
+        # mask the |r| == 0.0 terms
+        self.pair_forces[:,0] = 0.0 
+        self.pair_potential[:,0] = 0.0
+
+        # sum over pairs
         self.forces[:] = self.pair_forces.sum(axis=1)
         self.potential[:] = self.pair_potential.sum(axis=1)
         self.pe = self.pair_potential.sum()/2
 
-        _dist *= mask
+        _dists[:,0] = 0.0 # reset the |r|==0 term to 0
 
         return self.forces
 
     # ----------------------------------------------------------------------------------------------
 
-    def run_nve(self,dt=0.001,num_steps=1000):
+    def run_nve(self,dt=0.001,num_steps=1000,xyz_file='nve.xyz'):
         """
         run NVE simulation using velocity verlet integration
         """
         
         # MD time step
         self.time_step = dt
+        
+        # calculate initial PE to write to log file ...
+        self.calculate_forces_and_potential()
 
         print('# nve:  step,  temp,    ke,    pe,  etot')
-
-        with open('pos.xyz','a') as _fout:
+        
+        with open(xyz_file,'w') as _fout:
 
             for ii in range(num_steps):
-
-                self._do_velocity_verlet()
 
                 ke, T = self._calculate_ke_and_temperature()
                 pe = self.pe
                 etot = ke+pe
 
-                msg = f'{self.step+1: 6} {T: .6e} {ke: .6e} {pe: .6e} {etot: .6e}'
+                msg = f'{ii: 6} {T: .6e} {ke: .6e} {pe: .6e} {etot: .6e}'
                 print(msg)
                 
                 _fout.write(f'{self.num_atoms}\nstep {ii+1}\n')
                 for jj in range(self.num_atoms):
                     _fout.write(f'C {self.pos[jj]: 9.6f}  0.0  0.0\n') 
-    
-                self.step += 1
 
+                self._do_velocity_verlet()
+    
     # ----------------------------------------------------------------------------------------------
 
     def _calculate_ke_and_temperature(self):
@@ -232,37 +267,45 @@ class c_md:
 
     # ----------------------------------------------------------------------------------------------
 
-    def run_nvt_langevin(self,dt=0.001,num_steps=1000,T=1,damp=0.1):
+    def run_nvt_langevin(self,dt=0.001,num_steps=1000,T=1,damp=0.1,xyz_file='langevin.xyz'):
         """
         run NVT simulation using velocity verlet integration and Langevin thermostat. note,
         damp has dims 1/time
         """
+
+        msg = '\n*** WARNING ***\n'
+        msg += 'i found a dissertation (in dir.) that compared transport and other\n'
+        msg += 'things w/ langevin vs. nose-hooever. transport and phonon-dos are\n'
+        msg += 'independent of nose-hoover damping, while they depend STRONGLY on\n'
+        msg += 'langevin damping. dont use langevin for phonons!\n'
+        print(msg)
 
         # MD time step
         self.time_step = dt
         self.target_temperature = T
         self.damp = damp
 
+        # calculate initial PE to write to log file ...
+        self.calculate_forces_and_potential()
+
         print('# nvt:  step,  temp,    ke,    pe,  etot')
 
-        with open('pos.xyz','a') as _fout:
+        with open(xyz_file,'w') as _fout:
 
             for ii in range(num_steps):
-
-                self._do_langevin_velocity_verlet()
 
                 ke, T = self._calculate_ke_and_temperature()
                 pe = self.pe
                 etot = ke+pe
 
-                msg = f'{self.step+1: 6} {T: .6e} {ke: .6e} {pe: .6e} {etot: .6e}'
+                msg = f'{ii: 6} {T: .6e} {ke: .6e} {pe: .6e} {etot: .6e}'
                 print(msg)
 
                 _fout.write(f'{self.num_atoms}\nstep {ii+1}\n')
                 for jj in range(self.num_atoms):
                     _fout.write(f'C {self.pos[jj]: 9.6f}  0.0  0.0\n')
 
-                self.step += 1
+                self._do_langevin_velocity_verlet()
 
     # ----------------------------------------------------------------------------------------------
 
@@ -296,7 +339,8 @@ class c_md:
 
     # ----------------------------------------------------------------------------------------------
 
-    def run_nvt_nose_hoover(self,dt=0.001,num_steps=1000,T=1,Q=0.1,hdf5_file='nvt.hdf5'):
+    def run_nvt_nose_hoover(self,dt=0.001,num_steps=1000,T=1,Q=0.1,hdf5_file=None,xyz_file=None,
+            log_stride=100):
         """
         run NVT simulation using velocity verlet integration and nose-hoover thermostat. Q is the 
         the heat-bath "mass" (actually has dims M*L**2 in this algorithm?)
@@ -310,43 +354,57 @@ class c_md:
         # thermostat degree of freedom
         self.nose_dof = 0.0 
 
+        # calculate initial PE to write to log file ...
+        self.calculate_forces_and_potential()
+        
+        # whether or not to write hdf5
+        write_hdf5 = False
+        if hdf5_file is not None:
+            write_hdf5 = True
+            _hdf5 = h5py.File(hdf5_file,'w')
+            _hdf5.create_dataset('masses',data=self.masses,dtype=float)
+            _hdf5.create_dataset('steps',data=np.arange(num_steps),dtype=int)
+            _hdf5.create_dataset('timestep',data=(self.time_step),dtype=float)
+            _hdf5.create_dataset('target_temperature',data=(self.target_temperature),dtype=float)
+            _hdf5.create_dataset('atom_types',data=self.atom_types,dtype=int)
+            _hdf5.create_dataset('box_size',data=self.box_size,dtype=float)
+            _hdf5.create_dataset('positions',shape=(num_steps,self.num_atoms),dtype=float)
+            _hdf5.create_dataset('velocities',shape=(num_steps,self.num_atoms),dtype=float)
+            _hdf5.create_dataset('etotal',shape=num_steps,dtype=float)
+            _hdf5.create_dataset('temperature',shape=num_steps,dtype=float)
+        
+        # whether of not to write xyz file
+        write_xyz = False
+        if xyz_file is not None:
+            write_xyz = True
+            _xyz = open(xyz_file,'w')
+
+        # header of log to 
         print('# nvt:  step,  temp,    ke,    pe,  etot')
 
-        with open('pos.xyz','a') as _fout, h5py.File(hdf5_file,'w') as db:
+        for ii in range(num_steps):
 
-            db.create_dataset('masses',data=self.masses,dtype=float)
-            db.create_dataset('steps',data=np.arange(num_steps),dtype=int)
-            db.create_dataset('timestep',data=(self.time_step),dtype=float)
-            db.create_dataset('target_temperature',data=(self.target_temperature),dtype=float)
-            db.create_dataset('atom_ids',data=self.atom_ids,dtype=int)
+            ke, T = self._calculate_ke_and_temperature()
+            pe = self.pe
+            etot = ke+pe
             
-            db.create_dataset('positions',shape=(num_steps,self.num_atoms),dtype=float)
-            db.create_dataset('velocities',shape=(num_steps,self.num_atoms),dtype=float)
-            db.create_dataset('etotal',shape=num_steps,dtype=float)
-            db.create_dataset('temperature',shape=num_steps,dtype=float)
+            if write_hdf5:
+                _hdf5['positions'][ii,:] = self.pos[...]
+                _hdf5['velocities'][ii,:] = self.vels[...]
+                _hdf5['temperature'][ii] = T
+                _hdf5['etotal'][ii] = etot
 
-            for ii in range(num_steps):
+            if write_xyz:
+                _xyz.write(f'{self.num_atoms}\nstep {ii+1}\n')
+                for jj in range(self.num_atoms):
+                    _xyz.write(f'C {self.pos[jj]: 15.9f}  0.0  0.0\n')
 
-                self._do_nose_hoover_velocity_verlet()
-
-                ke, T = self._calculate_ke_and_temperature()
-                pe = self.pe
-                etot = ke+pe
-                
-                # write some data to hdf5 file
-                db['positions'][ii,:] = self.pos[...]
-                db['velocities'][ii,:] = self.vels[...]
-                db['temperature'][ii] = T
-                db['etotal'][ii] = etot
-
-                msg = f'{self.step+1: 6} {T: .6e} {ke: .6e} {pe: .6e} {etot: .6e}'
+            if ii % log_stride == 0: 
+                msg = f'{ii: 6} {T: .6e} {ke: .6e} {pe: .6e} {etot: .6e}'
                 print(msg)
 
-                _fout.write(f'{self.num_atoms}\nstep {ii+1}\n')
-                for jj in range(self.num_atoms):
-                    _fout.write(f'C {self.pos[jj]: 9.6f}  0.0  0.0\n')
-
-                self.step += 1
+            # update positions, velocities, forces, etc
+            self._do_nose_hoover_velocity_verlet()
 
     # ----------------------------------------------------------------------------------------------
 
@@ -387,69 +445,109 @@ class c_md:
         # v(t+dt)
         self.vels = (self.vels + _dt*_f/2/_m) / (1 + _dt*_dof/2)
 
-        # zero c.o.m.
-        _v_cm = np.sum(self.masses*self.vels)/self.masses.sum()
-        self.vels -= _v_cm/self.num_atoms
+    # ----------------------------------------------------------------------------------------------
+
+    def read_restart(self,restart_file):
+        """
+        read velocities and positions from a previous hdf5 file to restart at a previous 
+        configuration
+        """
+
+        with h5py.File(restart_file,'r') as db:
+            _vels = db['velocities'][-1,:]
+            _pos = db['positions'][-1,:]
+            _box_size = db['box_size'][...]
+
+        _num_atoms = _vels.size
+        if _num_atoms != self.num_atoms:
+            msg = '\nnumber of atoms in restart file doesnt match simulation!\n'
+            exit(msg)
+        if _box_size != self.box_size:
+            msg = '\nbox size in restart file doesnt match simulation!\n'
+            exit(msg)
+
+        self.vels[...] = _vels
+        self.pos[...] = _pos
 
     # ----------------------------------------------------------------------------------------------
         
 # --------------------------------------------------------------------------------------------------
 
+def calc_fc(md,d_pos=1e-6):
+    """
+    calculate and print force constants for defined model
+    """
+    # numerical force-constants
+    pos = md.pos
+
+    pos[0] = d_pos
+    forces = md.calculate_forces_and_potential()
+    fc = -forces/d_pos
+
+    pos[0] = -d_pos
+    forces = md.calculate_forces_and_potential()
+    fc += forces/d_pos
+
+    fc /= 2
+    pos[0] = 0.0
+
+    inds = np.argsort(pos)
+    pos = pos[inds]
+    fc = fc[inds]
+
+    msg = ''
+    for ii in range(md.num_atoms):
+        msg += f'{pos[ii]: 3.2f} {fc[ii]: 9.6f}\n'
+    print(msg)
+
+    exit()
+
+# --------------------------------------------------------------------------------------------------
+
+def check_force_cutoff(md,d_pos=0.0,tol=1e-9):
+    """
+    shift 0th atom by d_pos and calculate forces and find distance where forces are >= tol
+    """
+
+    md.pos[0] = d_pos
+    md.calculate_forces_and_potential()
+    forces = md.pair_forces[0,:]
+    vecs = md.neighbor_vecs[0,:]
+    dist = md.neighbor_dists[0,:]
+
+    msg = 'vec, dist, force\n'
+    for ii in range(md.num_neighbors):
+        msg += f'{vecs[ii]: 9.3f} {dist[ii]: 9.3f} {forces[ii]: 16.9f}\n'
+    print(msg)
+
+    exit()
+
+# --------------------------------------------------------------------------------------------------
+
 if __name__ == '__main__':
 
-    calc_fc = True
+    # define simulation
+    num_atoms = 100
+    pos = np.arange(num_atoms)
+    box_size = num_atoms
+    atom_types = np.ones(num_atoms)
+    masses = [1]
 
-    sigma = 1 #1/2**(1/6)
-    epsilon = 1
+    md = c_md(pos,box_size,atom_types,masses,epsilon=1,sigma=1,cutoff=30)
 
-    md = c_md(num_atoms=25,epsilon=1,masses=1)
-
-    # ----------------------------------------------------------------------------------------------
-
-    if calc_fc:
-
-        # numerical force-constants
-        pos = md.pos
-
-        d = 1e-6
-
-        pos[0] = d
-        forces = md.calculate_forces_and_potential()
-        fc = -forces/d
-
-        pos[0] = -d
-        forces = md.calculate_forces_and_potential()
-        fc += forces/d
-
-        fc /= 2
-        pos[0] = 0.0
-
-        inds = np.argsort(pos)
-        pos = pos[inds]
-        fc = fc[inds]
-
-        msg = ''
-        for ii in range(md.num_atoms):
-            msg += f'{pos[ii]: 3.2f} {fc[ii]: 9.6f}\n'
-        print(msg)
-
-        exit()
-
-    # ----------------------------------------------------------------------------------------------
-
-    #md.plot_potential()
+    #calc_fc(md)
+    #check_force_cutoff(md)
 
     dt = 0.001
     temp = 0.1
 
-    md.set_velocities(temp)
-    #md.run_nve(dt=dt,num_steps=1000)
+    #md.set_velocities(temp)
+    md.read_restart('restart.hdf5')
 
-    #md.run_nvt_langevin(dt=dt,num_steps=5000,T=temp,damp=10)
+    #md.run_nve(dt=dt,num_steps=100000)
 
-    md.run_nvt_nose_hoover(dt=dt,num_steps=10000,T=temp,Q=0.001)
-
-    md.run_nvt_nose_hoover(dt=dt,num_steps=50000,T=temp,Q=0.001)
+    md.run_nvt_nose_hoover(dt=dt,num_steps=100000,T=temp,Q=0.0001,hdf5_file='equil.hdf5')
+    md.run_nvt_nose_hoover(dt=dt,num_steps=100000,T=temp,Q=0.0001,hdf5_file='run.hdf5')
 
 
 
