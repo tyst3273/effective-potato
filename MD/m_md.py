@@ -339,17 +339,24 @@ class c_md:
 
     # ----------------------------------------------------------------------------------------------
 
-    def run_nvt_nose_hoover(self,dt=0.001,num_steps=1000,T=1,Q=0.1,hdf5_file=None,xyz_file=None,
+    def run_nvt_nose_hoover(self,dt=0.001,num_steps=1000,T=1,damp=0.1,hdf5_file=None,xyz_file=None,
             log_stride=100):
         """
-        run NVT simulation using velocity verlet integration and nose-hoover thermostat. Q is the 
-        the heat-bath "mass" (actually has dims M*L**2 in this algorithm?)
+        run NVT simulation using velocity verlet integration and nose-hoover thermostat. 
+        the intergation scheme is based on the algo in 'nvt.pdf', but i changed (3N+1) => (3N) 
+        in the velocitiy verlet step. it was giving the wrong target T.
+        
+        damp is related to Q in 'nvt.pdf' by damp**2 = Q/(3NkT)
+            -- in 1d, it is damp**2 = Q/(NKT)
+
+        Q is the the heat-bath "mass" (actually has dims M*L**2 in this algorithm?)
         """
 
         # MD time step
         self.time_step = dt
         self.target_temperature = T
-        self.Q = Q
+
+        self.Q = damp**2*self.num_atoms*self.target_temperature
         
         # thermostat degree of freedom
         self.nose_dof = 0.0 
@@ -428,10 +435,11 @@ class c_md:
         self.pos = self.pos + _dt*self.vels + _dt**2*(_f/_m-_dof*self.vels)/2
 
         # v(t+dt/2)
-        self.vels = self.vels + _dt*(_f/_m-_dof*self.vels)/2 # 
+        self.vels = self.vels + _dt*(_f/_m-_dof*self.vels)/2 
 
         # xi(t+dt/2)
-        _dof = _dof + _dt/2/_Q*(_ke-_temp*(self.num_atoms+1)/2) 
+        #_dof = _dof + _dt/2/_Q*(_ke-_temp*(self.num_atoms+1)/2) 
+        _dof = _dof + _dt/2/_Q*(_ke-_temp*self.num_atoms/2)
 
         # now need ke at v(t+dt/2) 
         _ke, _ = self._calculate_ke_and_temperature()
@@ -440,7 +448,8 @@ class c_md:
         _f = self.calculate_forces_and_potential()
 
         # xi(t+dt)
-        _dof = _dof + _dt/2/_Q*(_ke-_temp*(self.num_atoms+1)/2) 
+        #_dof = _dof + _dt/2/_Q*(_ke-_temp*(self.num_atoms+1)/2) 
+        _dof = _dof + _dt/2/_Q*(_ke-_temp*self.num_atoms/2)
 
         # v(t+dt)
         self.vels = (self.vels + _dt*_f/2/_m) / (1 + _dt*_dof/2)
@@ -539,16 +548,16 @@ if __name__ == '__main__':
     #check_force_cutoff(md)
 
     dt = 0.001
+    damp = 0.01
     temp = 0.1
 
-    #md.set_velocities(temp)
-    md.read_restart('restart.hdf5')
+    md.set_velocities(temp)
+    #md.read_restart('restart.hdf5')
 
     #md.run_nve(dt=dt,num_steps=100000)
 
-    md.run_nvt_nose_hoover(dt=dt,num_steps=100000,T=temp,Q=0.0001,hdf5_file='equil.hdf5')
-    md.run_nvt_nose_hoover(dt=dt,num_steps=100000,T=temp,Q=0.0001,hdf5_file='run.hdf5')
-
+    md.run_nvt_nose_hoover(dt=dt,num_steps=100000,T=temp,damp=damp,hdf5_file='equil.hdf5')
+    md.run_nvt_nose_hoover(dt=dt,num_steps=100000,T=temp,damp=damp,hdf5_file='run.hdf5')
 
 
 

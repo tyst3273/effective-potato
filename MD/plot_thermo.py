@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-f = 'restart.hdf5'
+f = 'keep.hdf5'
 
 with h5py.File(f,'r') as db:
     etot = db['etotal'][...]
@@ -14,7 +14,7 @@ with h5py.File(f,'r') as db:
 num_atoms = pos.shape[1]
 
 mean_pos = pos.mean(axis=0)
-#mean_pos -= mean_pos.min()
+mean_pos -= mean_pos.min()
 
 np.savetxt('mean',mean_pos,fmt='% 6.3f')
 print(pos)
