@@ -20,6 +20,8 @@ md.set_velocities(temp)
 
 #md.run_nve(dt=dt,num_steps=100000)
 
-md.run_nvt_nose_hoover(dt=dt,num_steps=100000,T=temp,damp=damp,hdf5_file='equil.hdf5')
-md.run_nvt_nose_hoover(dt=dt,num_steps=100000,T=temp,damp=damp,hdf5_file='run.hdf5')
+md.run_nvt_nose_hoover(dt=dt,num_steps=100000,T=temp,damp=damp,
+        hdf5_file='equil.hdf5',xyz_file='equil.xyz')
+md.run_nvt_nose_hoover(dt=dt,num_steps=100000,T=temp,damp=damp,
+        hdf5_file='run.hdf5',xyz_file='run.xyz')
 

@@ -241,6 +241,10 @@ class c_md:
 
         self.vels = self.vels + _dt*_f/2/_m
 
+        # zero com ...
+        _v_cm = np.sum(self.masses*self.vels)/self.masses.sum()
+        self.vels -= _v_cm/self.num_atoms
+
     # ----------------------------------------------------------------------------------------------
 
     def set_velocities(self,T=1,zero_drift=True):
@@ -336,6 +340,10 @@ class c_md:
 
         self.vels = self.vels + (_f1+_f2)*_dt/2/_m
         self.vels = _c1*self.vels + _c2*_eta2/_m
+
+        # zero com ...
+        _v_cm = np.sum(self.masses*self.vels)/self.masses.sum()
+        self.vels -= _v_cm/self.num_atoms
 
     # ----------------------------------------------------------------------------------------------
 
@@ -453,6 +461,10 @@ class c_md:
 
         # v(t+dt)
         self.vels = (self.vels + _dt*_f/2/_m) / (1 + _dt*_dof/2)
+
+        # zero com ...
+        _v_cm = np.sum(self.masses*self.vels)/self.masses.sum()
+        self.vels -= _v_cm/self.num_atoms
 
     # ----------------------------------------------------------------------------------------------
 
