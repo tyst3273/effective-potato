@@ -11,9 +11,6 @@ masses = [1]
 
 md = c_md(pos,box_size,atom_types,masses,epsilon=1,sigma=1,cutoff=30)
 
-#calc_fc(md)
-#check_force_cutoff(md)
-
 dt = 0.001
 damp = 0.01
 temp = 0.1
