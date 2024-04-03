@@ -13,7 +13,8 @@ def run_PSF(crystal,input_file=None,**kwargs):
     timer = c_timer('PSF')
 
     # default kwargs 
-    default_kwargs = {'output_prefix':None,'calc_sqw':False,'box_vectors':None,'unwrap_trajectory':False}
+    default_kwargs = {'output_prefix':None,'calc_sqw':False,'box_vectors':None,
+                      'unwrap_trajectory':False}
 
     # overwrite defaults
     default_kwargs.update(kwargs)
