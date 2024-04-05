@@ -95,7 +95,7 @@ class c_crystal:
         
     # ----------------------------------------------------------------------------------------------
     
-    def get_neighbor_coordination(self,atom_ind=1,num_shells=1,precision=9):
+    def get_neighbor_coordination(self,atom_ind=1,num_shells=1,precision=6):
         
         """
         get nearst neighbor distance and coordination (num neighbors) for atom w/ index atom_ind
@@ -103,9 +103,9 @@ class c_crystal:
         NOTE: might break for really small systems with large requested number of shells!
         """
 
-        msg = '\n*** WARNING ***\n'
-        msg += 'get_neighbor_coordination() might fail for large num_shells in small systems!\n'
-        print(msg)
+        # msg = '\n*** WARNING ***\n'
+        # msg += 'get_neighbor_coordination() might fail for large num_shells in small systems!\n'
+        # print(msg)
 
         atom_type = self.sc_type_nums[atom_ind]
         
