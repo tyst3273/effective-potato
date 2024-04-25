@@ -16,22 +16,25 @@ class c_calc_fc:
             self.steps = db['steps'][...]
             self.masses = db['masses'][...]
             self.atom_types = db['atom_types'][...]
+            self.basis_index = db['basis_index'][...]
             self.box_size = db['box_size'][...]
             self.temperature = db['temperature'][...]
-    
+
         self._crop_trajectory(skip,trim,stride)
+        self.num_atoms = self.pos.shape[1]
+
         #self._get_freqs()
 
         self.mean_pos = self.pos.mean(axis=0)
         _min = self.mean_pos.min()
         self.mean_pos += -_min
         self.pos += -_min
+        self.displacements = self.pos-self.mean_pos
 
-        self.displacement = self.pos-self.mean_pos
+        # reshape for vectorized fourier transforms later
+        self.mean_pos = np.tile(self.mean_pos.reshape(1,self.num_atoms),reps=(self.num_steps,1))
 
         self.temperature = self.temperature.mean()
-
-        self.num_atoms = self.pos.shape[1]
 
         self._get_types()
 
@@ -39,18 +42,26 @@ class c_calc_fc:
 
     def _get_types(self):
 
-        self.unique_types, self.type_counts = np.unique(self.atom_types,return_counts=True)
-        self.num_types = self.unique_types.size
+        self.unique_basis, self.basis_counts = np.unique(self.basis_index,return_counts=True)
+        self.num_basis = self.unique_basis.size
 
-        _n = self.num_types
+        # should be ordered, i.e. same basis in each unitcell.
+        self.num_unitcells = self.basis_counts[0]
+
+        _n = self.num_basis
         self.num_pairs = int(_n*(_n+1)/2)
-        self.type_pairs = np.zeros((self.num_pairs,2),dtype=int)
+        self.basis_pairs = np.zeros((self.num_pairs,2),dtype=int)
 
         _s = 0
         for ii in range(_n):
             for jj in range(ii,_n):
-                self.type_pairs[_s,:] = [ii,jj]
+                self.basis_pairs[_s,:] = [ii,jj]
                 _s += 1
+
+        self.inds_per_basis = [[] for _ in range(_n)]
+        for ii in range(_n):
+            ind = self.unique_basis[ii]
+            self.inds_per_basis[ii] = np.flatnonzero(self.basis_index == ind)
 
     # ----------------------------------------------------------------------------------------------
 
@@ -88,7 +99,7 @@ class c_calc_fc:
     def get_qpts(self,num_qpts=None,a=1.0):
 
         if num_qpts is None:
-            self.num_qpts = self.num_atoms+1
+            self.num_qpts = self.num_unitcells+1
         else:
             self.num_qpts = num_qpts
         
@@ -102,33 +113,67 @@ class c_calc_fc:
 
     def calc_dynmat(self):
         
-        self.dynmat = np.zeros((self.num_qpts,self.num_types,self.num_types),dtype=complex)
+        self.dynmat = np.zeros((self.num_qpts,self.num_basis,self.num_basis),dtype=complex)
 
-        for ii in range(self.num_qpts):
+        _num_basis = self.num_basis
+
+        for qq in range(self.num_qpts):
             
-            qpt = self.qpts_cart[ii]
-            self._loop_over_atom_pairs(qpt)
+            print(f'now on qpt {qq+1} out of {self.num_qpts}')
 
-            _q = np.ones(self.num_steps)*self.qpts_cart[ii]
+            self.this_qpt = np.ones((self.num_steps,self.num_unitcells))*self.qpts_cart[qq]
+
+            for ii in range(_num_basis):
+                u_q_ii = self._get_displacement_ft(ii)
+
+                for jj in range(ii,_num_basis):
+                    u_q_jj = self._get_displacement_ft(jj)
+
+                    self.dynmat[qq,ii,jj] = 2/self.temperature/np.mean(u_q_jj.conj()*u_q_ii)
+
+        freq = np.sqrt(self.dynmat[:,0,0])
+        plt.plot(np.linspace(0,1,self.num_qpts),freq)
+        plt.axis([0,1,0,10000])
+        plt.show()
 
     # ----------------------------------------------------------------------------------------------
 
-    def _loop_over_atoms(self,qpt):
-            
-        qpt = np.ones(self.num_steps)*qpt
+    def _get_displacement_ft(self,basis_ind):
 
-        _n = self.num_types
-        for ii in range(_n):
-            for jj in range(ii,_n):
-                
-                pass
+        # this basis atom int he whole supercell
+        _inds = self.inds_per_basis[basis_ind]
+        _num_unitcells = self.num_unitcells
+
+        # get mean pos and displacement 
+        _pos = self.mean_pos[:,_inds]
+        _disp = self.displacements[:,_inds]
+
+        # vectorized FT
+        _qpt = self.this_qpt
+        _exp_iqr = np.exp(-1j*_qpt*_pos)
+        u_q = np.sum(_disp*_exp_iqr,axis=1)/np.sqrt(_num_unitcells)
+
+        return u_q
 
     # ----------------------------------------------------------------------------------------------
+
+
+# --------------------------------------------------------------------------------------------------
 
 if __name__ == '__main__':
 
     calc = c_calc_fc('keep.hdf5',stride=100)
 
-    calc.get_qpts()
+    calc.get_qpts(num_qpts=101)
     calc.calc_dynmat()
+
+
+
+
+
+
+
+
+
+
 

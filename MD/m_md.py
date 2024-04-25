@@ -8,7 +8,7 @@ class c_md:
 
     # ----------------------------------------------------------------------------------------------
     
-    def __init__(self,pos,box_size,atom_types,masses,epsilon=1,sigma=1,cutoff=None):
+    def __init__(self,pos,box_size,atom_types,masses,basis_index,epsilon=1,sigma=1,cutoff=None):
         """
         class for NVT simulation of 1D LJ chain. setup a bunch of stuff we will need later
 
@@ -19,6 +19,7 @@ class c_md:
         self.pos = np.array(pos,dtype=float)
         self.num_atoms = self.pos.size
         self.box_size = float(box_size)
+        self.basis_index = np.array(basis_index,dtype=int)
         self.atom_types = np.array(atom_types,dtype=int)
 
         # create array of masses for each atom in simulation
@@ -382,6 +383,7 @@ class c_md:
             _hdf5.create_dataset('timestep',data=(self.time_step),dtype=float)
             _hdf5.create_dataset('target_temperature',data=(self.target_temperature),dtype=float)
             _hdf5.create_dataset('atom_types',data=self.atom_types,dtype=int)
+            _hdf5.create_dataset('basis_index',data=self.basis_index,dtype=int)
             _hdf5.create_dataset('box_size',data=self.box_size,dtype=float)
             _hdf5.create_dataset('positions',shape=(num_steps,self.num_atoms),dtype=float)
             _hdf5.create_dataset('velocities',shape=(num_steps,self.num_atoms),dtype=float)
@@ -552,9 +554,10 @@ if __name__ == '__main__':
     pos = np.arange(num_atoms)
     box_size = num_atoms
     atom_types = np.ones(num_atoms)
+    basis_index = np.ones(num_atoms)
     masses = [1]
 
-    md = c_md(pos,box_size,atom_types,masses,epsilon=1,sigma=1,cutoff=30)
+    md = c_md(pos,box_size,atom_types,masses,basis_index,epsilon=1,sigma=1,cutoff=30)
 
     #calc_fc(md)
     #check_force_cutoff(md)
@@ -568,8 +571,8 @@ if __name__ == '__main__':
 
     #md.run_nve(dt=dt,num_steps=100000)
 
-    md.run_nvt_nose_hoover(dt=dt,num_steps=100000,T=temp,damp=damp,hdf5_file='equil.hdf5')
-    md.run_nvt_nose_hoover(dt=dt,num_steps=100000,T=temp,damp=damp,hdf5_file='run.hdf5')
+    md.run_nvt_nose_hoover(dt=dt,num_steps=100000,T=temp,damp=damp,hdf5_file='nvt_equil.hdf5')
+    md.run_nvt_nose_hoover(dt=dt,num_steps=100000,T=temp,damp=damp,hdf5_file='nvt_run.hdf5')
 
 
 
