@@ -95,18 +95,24 @@ class c_crystal:
         
     # ----------------------------------------------------------------------------------------------
     
-    def get_neighbor_coordination(self,atom_ind=1,num_shells=1):
+    def get_neighbor_coordination(self,atom_ind=1,num_shells=1,precision=6):
         
         """
         get nearst neighbor distance and coordination (num neighbors) for atom w/ index atom_ind
+
+        NOTE: might break for really small systems with large requested number of shells!
         """
+
+        # msg = '\n*** WARNING ***\n'
+        # msg += 'get_neighbor_coordination() might fail for large num_shells in small systems!\n'
+        # print(msg)
 
         atom_type = self.sc_type_nums[atom_ind]
         
         _origin = self.sc_positions_reduced[atom_ind,:]
         _reduced_pos = do_minimum_image(_origin,self.sc_positions_reduced)
         _cart_pos = change_coordinate_basis(self.sc_vectors,_reduced_pos)
-        _dists = np.sqrt(np.sum(_cart_pos**2,axis=1)).round(9)
+        _dists = np.sqrt(np.sum(_cart_pos**2,axis=1)).round(precision)
         _sort = np.argsort(_dists)
         _dists = _dists[_sort] 
         _types = self.sc_type_nums[_sort]
