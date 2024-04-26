@@ -102,7 +102,10 @@ class c_integrate_rods:
         if which is not None:
             self.uvw = get_uvw(which).T
         else:
-            self.uvw = uvw
+            if uvw is None:
+                self.uvw = np.eye(3)
+            else:
+                self.uvw = uvw
 
         # uvw for rod binning -- NOTE: these are already in (1/A)
         u = self.uvw[:,0]; v = self.uvw[:,1]; w = self.uvw[:,2]
