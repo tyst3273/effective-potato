@@ -191,7 +191,7 @@ class c_integrate_rods:
 
     # ----------------------------------------------------------------------------------------------
 
-    def butterworth_spherical(self,x,y,z,radius,cx=0,cy=0,cz=0,n=10):
+    def butterworth_spherical(self,x,y,z,radius,cx=0,cy=0,cz=0,n=40):
         """
         spherical butterworth function
         """
