@@ -188,15 +188,55 @@ class c_integrate_rods:
 
     # ----------------------------------------------------------------------------------------------
 
+    def butterworth_spherical(self,x,y,z,radius,cx=0,cy=0,cz=0,n=40):
+        """
+        spherical butterworth function
+        """
+        q = np.sqrt((x-cx)**2+(y-cy)**2+(z-cz)**2)
+        f = 1/(1+(q/radius)**n)
+        return f
+
+    # ----------------------------------------------------------------------------------------------
+
     def butterworth_3d(self,x,y,z,wx,wy,wz,cx=0,cy=0,cz=0,n=40):
         """
-        3d butterworth function; good approximation to a square pulse for large n but to 
-        get fractional contribution from voxels near the edge, we can use lower n to 'smear' 
+        3d butterworth function; good approximation to a square pulse for large n but to
+        get fractional contribution from voxels near the edge, we can use lower n to 'smear'
         the square shape a little
         """
-        sx = wx/2; sy = wy/2; sz = wz/2 
+        sx = wx/2; sy = wy/2; sz = wz/2
         f = (1/(1+((x-cx)/sx)**n))*(1/(1+((y-cy)/sy)**n))*(1/(1+((z-cz)/sz)**n))
         return f
+
+    # ----------------------------------------------------------------------------------------------
+
+    def integrate_sphere(self,Q_center,radius):
+        """
+        integrate around a Q-pt. Q is in cartesian coords, radius is in 1/angstrom.
+        """
+
+        # the Q-pt in cartesian coords
+        self.Q_center = np.array(Q_center)
+
+        self.sphere_radius = radius
+
+        # integrated data
+        self.integrated_signal = 0.0
+        self.integrated_error = 0.0
+
+        _loop_timer = c_timer('integrate sphere')
+
+        self._read_data_from_hdf5_file(self.Q_center,delta=self.sphere_radius*1.5)
+        print('\nshape:',self.shape)
+
+        # approximate orthorhombic step function
+        weights = self.butterworth_spherical(self.Qx,self.Qy,self.Qz,self.sphere_radius,
+                                             self.Q_center[0],self.Q_center[1],self.Q_center[2])
+
+        # integrate the data using the weights
+        self.intergrated_signal, self.integrated_error = self._integrate_data(weights)
+
+        _loop_timer.stop()
 
     # ----------------------------------------------------------------------------------------------
 
@@ -382,6 +422,75 @@ class c_integrate_rods:
                 _t.stop()
 
         self.queue.put([proc,proc_integrated_signal,proc_integrated_error])
+
+    # ----------------------------------------------------------------------------------------------
+
+    def plot_sphere_volume(self,Q_center,radius,scale=2e4,stride=1):
+        """
+        read in volume to be intergrated and plot the binning region
+        """
+
+        from mayavi import mlab
+
+        self.Q_plot_center = np.array(Q_center)
+        self.sphere_radius = radius
+
+        # read the volume around Q_center from the file
+        self._read_data_from_hdf5_file(self.Q_plot_center,delta=self.sphere_radius*1.5)
+        print('shape:',self.shape)
+
+        # downsample if plot is too large
+        x = self.Qx[::stride,::stride,::stride]
+        y = self.Qy[::stride,::stride,::stride]
+        z = self.Qz[::stride,::stride,::stride]
+        signal = self.signal[::stride,::stride,::stride]
+        print('down sampled shape:',signal.shape)
+
+        # approximate orthorhombic step function
+        _Q = self.Q_plot_center
+        weights = self.butterworth_spherical(x,y,z,self.sphere_radius,_Q[0],_Q[1],_Q[2])
+        print(weights.max())
+
+        fig = mlab.figure(1, bgcolor=(1,1,1), fgcolor=(0,0,0),size=(500, 500))
+        mlab.clf()
+
+        extent = [x.min(),x.max(),y.min(),y.max(),z.min(),z.max()]
+
+        # need to mask nans to plot w/ mayavi
+        signal = np.nan_to_num(signal,nan=0.0,posinf=0.0,neginf=0.0)*scale
+
+        contours = []
+        for ii in np.linspace(0.15,0.3,150):
+            contours.append(ii)
+        mlab.contour3d(x,y,z,signal,contours=contours,color=(1,0.5,1),
+                transparent=True,opacity=0.005,figure=fig)
+        contours = []
+        for ii in np.linspace(0.25,0.5,150):
+            contours.append(ii)
+        mlab.contour3d(x,y,z,signal,contours=contours,color=(1,0.75,0),
+                transparent=True,opacity=0.05,figure=fig)
+        contours = []
+        for ii in np.linspace(0.5,1,50):
+            contours.append(ii)
+        mlab.contour3d(x,y,z,signal,contours=contours,color=(1,0.75,0),
+            transparent=True,opacity=1.0,figure=fig)
+
+        # plot the weights
+        contours = []
+        for ii in np.linspace(0.05,0.95,100):
+            contours.append(ii)
+        mlab.contour3d(x,y,z,weights,contours=contours,color=(0,0,1),
+                transparent=True,opacity=0.075,figure=fig)
+
+        mlab.outline(color=(0,0,0),line_width=2,extent=extent)
+        mlab.axes(color=(0,0,0),line_width=1,nb_labels=5,extent=extent,
+                xlabel=r'Q$_x$ (1/A)',
+                ylabel=r'Q$_y$ (1/A)',
+                zlabel=r'Q$_z$ (1/A)')
+
+        mlab.orientation_axes()
+        fig.scene.parallel_projection = True
+        mlab.show()
 
     # ----------------------------------------------------------------------------------------------
     
