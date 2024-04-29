@@ -183,6 +183,9 @@ class c_integrate_rods:
     # ----------------------------------------------------------------------------------------------
 
     def _get_inds(self,Q_arr,Q,delta):
+        """
+        get the inds in Q_arr that are within Q +/- delta
+        """
         return np.intersect1d(np.flatnonzero(Q_arr >= Q-delta),
                               np.flatnonzero(Q_arr <= Q+delta))
 
@@ -371,6 +374,9 @@ class c_integrate_rods:
     # ----------------------------------------------------------------------------------------------
 
     def _proc_loop_over_bins(self,proc=0):
+        """
+        go and integrate the data around the bin centers on this proc.
+        """
 
         proc_bin_inds = self.bin_inds_on_procs[proc]
         num_proc_bins = proc_bin_inds.size
@@ -877,6 +883,7 @@ class c_integrate_rods:
 
     def _get_bin_centers(self,bins):
         """
+        interpret binning arguments and return data accordingly
         """
         if isinstance(bins,list):
             if len(bins) == 1:
