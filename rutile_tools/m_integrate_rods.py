@@ -193,7 +193,7 @@ class c_integrate_rods:
         spherical butterworth function
         """
         q = np.sqrt((x-cx)**2+(y-cy)**2+(z-cz)**2)
-        f = 1/(1+(q/radius))**n
+        f = 1/(1+(q/radius)**n)
         return f
 
     # ----------------------------------------------------------------------------------------------
