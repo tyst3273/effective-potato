@@ -220,12 +220,7 @@ class c_integrate_rods:
 
         # the Q-pt in cartesian coords
         self.Q_center = np.array(Q_center)
-
         self.sphere_radius = radius
-
-        # integrated data
-        self.integrated_signal = 0.0
-        self.integrated_error = 0.0
 
         _loop_timer = c_timer('integrate sphere')
 
@@ -237,7 +232,7 @@ class c_integrate_rods:
                                              self.Q_center[0],self.Q_center[1],self.Q_center[2])
 
         # integrate the data using the weights
-        self.intergrated_signal, self.integrated_error = self._integrate_data(weights)
+        self.integrated_signal, self.integrated_error = self._integrate_data(weights)
 
         _loop_timer.stop()
 
