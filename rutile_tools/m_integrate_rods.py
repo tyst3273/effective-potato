@@ -200,6 +200,76 @@ class c_integrate_rods:
 
     # ----------------------------------------------------------------------------------------------
 
+    def integrate_sphere(self,Q_center,radius):
+        """
+        integrate around a Q-pt. Q is in cartesian coords, *_binning are the binning args
+        along each UVW axis (i.e. rod binning).
+        if *_binning = [lo, d, hi], the binning is done from Q-lo to Q+hi with bin size d.
+        if *_binning = d, the binning is done centered on Q with bin size d
+
+        explanation: bin center coords are calculated as steps along u,v,w. they are then
+        shifted by the requested Q-pt (Q_center). each bin center is looped over and  a reduced
+        volume of data near the bin center is read. weights are calculated by rotating the coords
+        to be aligned with uvw and then calculating a rectangular 3d butterworht function on the
+        rotated grid. the signal and error where the weights are non-neglible are avg'd using
+        the weights.
+        """
+
+        # the Q-pt in cartesian coords
+        self.Q_center = np.array(Q_center)
+
+        self.sphere_radius = radius
+        self.sphere_diameter = diameter
+
+        # integrated data
+        self.integrated_signal = 0.0
+        self.integrated_error = 0.0
+
+        _loop_timer = c_timer('integrate sphere')
+
+        self._read_data_from_hdf5(Q,delta=self.radius*1.5)
+
+        proc = 1
+        if proc == 0:
+
+            _t = c_timer(f'bin[{ii}]')
+
+            # this bin center
+            Q = self.bin_center_coords[ind,:]
+
+            # read the volume around bin center from the file
+            self._read_data_from_hdf5_file(Q,delta=np.sqrt(3)*w.max())
+            if proc == 0:
+                print('\nshape:',self.shape)
+
+            # get cartesian coords in rotated frame
+            self._get_rotated_cartesian_coords()
+            xp = self.Qxp; yp = self.Qyp; zp = self.Qzp # coords in rotated frame
+
+            # need bin center in rotated frame too: Q' = R(Q-c) = R@Q - R@c where c is center
+            Q_rot = R@Q
+
+            # approximate orthorhombic step function
+            # xp, yp, zp are rotated coords, w are widths, and Q_rot is the offset in rot. frame
+            weights = self.butterworth_3d(self.Qxp,self.Qyp,self.Qzp,
+                                w[0],w[1],w[2],Q_rot[0],Q_rot[1],Q_rot[2])
+
+            # integrate the data using the weights
+            bin_sig, bin_err = self._integrate_data(weights,proc=proc)
+
+            proc_integrated_signal[ii] = bin_sig
+            proc_integrated_error[ii] = bin_err
+
+            if proc == 0:
+                _t.stop()
+
+
+        #self._proc_loop_over_bins,args=[_proc]))
+
+        _loop_timer.stop()
+
+    # ----------------------------------------------------------------------------------------------
+
     def integrate(self,Q_center,u_binning,v_binning,w_binning,num_procs=1):
         """
         integrate around a Q-pt. Q is in cartesian coords, *_binning are the binning args
