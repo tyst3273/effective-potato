@@ -76,7 +76,7 @@ def integrate_sphere(Q,file_name='293K_quenched.hdf5',radius=0.1,
 #file_names = ['100C_000mA_no_symm.hdf5','100C_040mA_no_symm.hdf5','100C_300mA_no_symm.hdf5',
 #              '100C_500mA_no_symm.hdf5','293K_annealed_no_symm.hdf5','293K_quenched_no_symm.hdf5']
 
-file_names = ['293K_quenched_no_symm.hdf5'] #,'293K_quenched_no_symm.hdf5']
+file_names = ['100C_000mA_no_symm.hdf5'] #,'293K_quenched_no_symm.hdf5']
 
 braggs = np.loadtxt('outlier_peaks_symm',dtype=int)
 rotations = get_rotations()
