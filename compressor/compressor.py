@@ -8,8 +8,9 @@ Notes:
     in the file
         /etc/sysctl.d/10-ptrace.conf
     and then restarting. 
-    i am sure this is a security risk somehow and should be done at your own risk! or don't
-    use MPI. alternatively, set to 0, run, and then revert once done. 
+    i am sure this is a security risk somehow and should be done at your own risk! it probably 
+    isnt necessary either, there was just a warning message. you could also set to 0, run, and 
+    then revert once done. 
 """
 
 import h5py 
