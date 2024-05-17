@@ -8,9 +8,8 @@ Notes:
     in the file
         /etc/sysctl.d/10-ptrace.conf
     and then restarting. 
-    i am sure this is a security risk somehow and should be done at your own risk! it probably 
-    isnt necessary either, there was just a warning message. you could also set to 0, run, and 
-    then revert once done. 
+    i am sure this is a security risk somehow and should be done at your own risk! or don't
+    use MPI. alternatively, set to 0, run, and then revert once done. 
 """
 
 import h5py 
@@ -21,10 +20,15 @@ have_mpi = h5py.get_config().mpi
 if not have_mpi:
     print('\n*** WARNING ***\nh5py not mpi enabled!')
     rank = 0
+    size = 1
 else:
     from mpi4py import MPI
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
+    size = comm.Get_size()
+
+if rank == 0:
+    print(size)
 
 # --------------------------------------------------------------------------------------------------
 
@@ -34,15 +38,26 @@ class c_compressor:
     
     def __init__(self,file_name,num_steps=None,header_length=9):
         
+        """
+        class to read lammps trajectory file and write it to hdf5 file. this file is designed 
+        to work in parallel
+        """
+        
         self.header_length = header_length
         self.file_name = file_name
 
-        self.positions = np.zeros(self.num_atoms,)
-        self.types = np.zeros(self.num_atoms)
+        #self.positions = np.zeros(self.num_atoms,)
+        #self.types = np.zeros(self.num_atoms)
         
     # ----------------------------------------------------------------------------------------------
     
     def _get_meta_data(self,num_steps=None):
+
+        """
+        get number of atoms, number of time steps, and number of lines in the file. if num steps 
+        is already known, we can save a little time by not scanning the whole file to find the 
+        number of lines
+        """
         
         with open(self.file_name,'r') as _f:
             for ii in range(3):
@@ -62,6 +77,8 @@ class c_compressor:
         print('num lines:',self.num_lines)
         print('num steps:',self.num_steps)
     
+    # ----------------------------------------------------------------------------------------------
+
     # ----------------------------------------------------------------------------------------------
 
 
