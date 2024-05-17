@@ -1,19 +1,26 @@
 
 """
+
 Notes:
-    - i had some security issue on ubuntu 22.04 about shared memory permissions. see here: 
+    - i had some security issue on ubuntu 22.04 about shared memory permissions. a warning
+    is printed when running with MPI saying something about degraded performance. see here: 
         https://github.com/microsoft/WSL/issues/3397. 
+
     i 'fixed' it by setting 
         kernel.yama.ptrace_scope = 0 
     in the file
         /etc/sysctl.d/10-ptrace.conf
     and then restarting. 
-    i am sure this is a security risk somehow and should be done at your own risk! or don't
-    use MPI. alternatively, set to 0, run, and then revert once done. 
+
+    i am sure this is a security risk somehow and should be done at your own risk! alternatively
+    you can ignore the warning or not use MPI at all. or, set to 0, run, and then revert once done. 
+
 """
 
 import h5py 
 import numpy as np
+
+# --------------------------------------------------------------------------------------------------
 
 # check if h5py built w/ MPI support
 have_mpi = h5py.get_config().mpi
@@ -27,8 +34,8 @@ else:
     rank = comm.Get_rank()
     size = comm.Get_size()
 
-if rank == 0:
-    print(size)
+if rank == 0 and have_mpi:
+    print(f'\nusing {size} MPI ranks')
 
 # --------------------------------------------------------------------------------------------------
 
@@ -48,7 +55,25 @@ class c_compressor:
 
         #self.positions = np.zeros(self.num_atoms,)
         #self.types = np.zeros(self.num_atoms)
-        
+
+        if rank == 0:
+            self._get_meta_data()
+            self._split_trajectory_over_ranks()
+
+    # ----------------------------------------------------------------------------------------------
+
+    def _split_trajectory_over_ranks(self):
+
+        """
+        split the time steps over the ranks, so each rank knows what to do
+        """
+
+        self.time_steps = np.arange(self.num_steps)
+        self.time_steps_on_ranks = np.array_split(self.time_steps,size)
+
+        print('\ntime steps on ranks:')
+        [print(f'rank[{ii}]:',_steps) for ii, _steps in enumerate(self.time_steps_on_ranks)]
+
     # ----------------------------------------------------------------------------------------------
     
     def _get_meta_data(self,num_steps=None):
@@ -84,10 +109,8 @@ class c_compressor:
 
 # --------------------------------------------------------------------------------------------------
 
-print(rank)
-
-file_name = 'pos.dat'
-#compressor = c_compressor(file_name,num_steps=2501)
+file_name = 'pos_trimmed.dat'
+compressor = c_compressor(file_name) 
 
 
 
