@@ -10,7 +10,8 @@ cutoffs = [500, 750, 1000, 1250, 1500, 1750, 2000]
 rel_cutoffs = [50] 
 
 #run_cmd = f'/home/ty/anaconda3/envs/cp2k/bin/cp2k.psmp -i tmp.inp -o tmp.out'
-run_cmd = f'mpirun -np 16 /home/ty/anaconda3/envs/cp2k/bin/cp2k.psmp -i tmp.inp -o tmp.out'
+# run_cmd = f'mpirun -np 16 /home/ty/anaconda3/envs/cp2k/bin/cp2k.psmp -i tmp.inp -o tmp.out'
+run_cmd = 'mpirun -np 4 cp2k.psmp -i tmp.inp -o tmp.out'
 
 # to track convergence
 last_energy = 0.0

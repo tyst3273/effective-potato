@@ -2,8 +2,11 @@
 &GLOBAL
 
     PROJECT LSNO
-    RUN_TYPE ENERGY #_FORCE
+    RUN_TYPE ENERGY #CELL_OPT 
     PRINT_LEVEL MEDIUM
+
+    PREFERRED_DIAG_LIBRARY ELPA
+    PREFERRED_FFT_LIBRARY FFTW3
 
 &END GLOBAL
 
@@ -11,41 +14,28 @@
 
     METHOD QUICKSTEP
 
-    &PRINT
-
-        &FORCES ON
-            FILENAME forces
-        &END FORCES
-        
-        &STRESS_TENSOR ON
-        &END STRESS_TENSOR
-
-    &END PRINT
-
-    STRESS_TENSOR ANALYTICAL
-
     &DFT
 
-        BASIS_SET_FILE_NAME /home/ty/research/projects/materials/lsno/cp2k/BASIS_MINE
-        POTENTIAL_FILE_NAME /home/ty/research/projects/materials/lsno/cp2k/POTENTIAL_MINE
+        BASIS_SET_FILE_NAME /Users/ty/research/repos/effective-potato/cp2k_tools/BASIS_MINE
+        POTENTIAL_FILE_NAME /Users/ty/research/repos/effective-potato/cp2k_tools/POTENTIAL_MINE
 
         SPIN_POLARIZED TRUE
-        MULTIPLICITY  0
 
         &QS
             EPS_DEFAULT 1.0E-16
+            EXTRAPOLATION USE_GUESS
         &END QS
 
         &MGRID
             NGRIDS 5
-            CUTOFF !cut # 1500
-            REL_CUTOFF !rel # 40
+            CUTOFF !cut
+            REL_CUTOFF !rel
         &END MGRID
 
         &KPOINTS
             SCHEME GAMMA
-            !SYMMETRY 
-            !SCHEME MONKHORST-PACK 2 2 2
+            #SYMMETRY 
+            #SCHEME MONKHORST-PACK 4 4 4 #8 8 4
         &END KPOINTS
 
         &POISSON
@@ -54,8 +44,9 @@
 
         &SCF
 
+            #SCF_GUESS RESTART
             SCF_GUESS ATOMIC
-            MAX_SCF 1 #100
+            MAX_SCF 1
             ADDED_MOS 40
             EPS_SCF 1.E-5
 
@@ -71,8 +62,9 @@
             &END SMEAR
 
             &MIXING
-                METHOD PULAY_MIXING
-                NPULAY 12
+                METHOD BROYDEN_MIXING # Broyden defaults seem to be doing well ...
+                #METHOD PULAY_MIXING
+                #NPULAY 12
             &END MIXING
 
         &END SCF
@@ -88,80 +80,87 @@
 
         &END XC
 
+        &PRINT
+
+            #&LOWDIN ON
+            #    FILENAME lowdin 
+            #    &EACH
+            #        CELL_OPT 1
+            #        GEO_OPT 1
+            #        MD 1
+            #    &END EACH
+            #&END LOWDIN
+
+            &HIRSHFELD 
+                FILENAME hirshfeld 
+            &END HIRSHFELD
+
+            #&DOS OFF
+            #    FILENAME dos
+            #    DELTA_E 0.001
+            #    NDIGITS  12
+            #&END dos
+
+        &END PRINT
+
     &END DFT
         
     &SUBSYS
 
         &CELL
-            A  5.2997510509616337    0.0000000000000000    0.0000000000000000
-            B  0.0000000000000000    5.2997510509616337    0.0000000000000000
-            C  0.0000000000000000    0.0000000000000000   13.0067516890548198
+            A       3.9400000000000000    0.0000000000000000    0.0000000000000000
+            B       0.0000000000000000    3.9400000000000000    0.0000000000000000
+            C       0.0000000000000000    0.0000000000000000    3.9400000000000000
             PERIODIC XYZ
+            SYMMETRY TETRAGONAL_AB
         &END CELL
 
         &COORD
             SCALED
-            La      0.0000000000000000  0.0000000000000000  0.3617070369166953
-            La      0.5000000000000000  0.5000000000000000  0.3617070369166953
-            La      0.0000000000000000  0.5000000000000000  0.1382929630833047
-            La      0.5000000000000000 -0.0000000000000000  0.1382929630833047
-            La      0.0000000000000000  0.5000000000000000  0.8617070369166953
-            La      0.5000000000000000  0.0000000000000000  0.8617070369166953
-            La      0.0000000000000000  0.0000000000000000  0.6382929630833047
-            La      0.5000000000000000  0.5000000000000000  0.6382929630833047
-            Ni_u    0.0000000000000000  0.0000000000000000 -0.0000000000000000
-            Ni_d    0.5000000000000000  0.5000000000000000 -0.0000000000000000
-            Ni_u    0.0000000000000000  0.5000000000000000  0.5000000000000000
-            Ni_d    0.5000000000000000 -0.0000000000000000  0.5000000000000000
-            O       0.7500000000000000  0.2500000000000000 -0.0000000000000000
-            O       0.2500000000000000  0.7500000000000000 -0.0000000000000000
-            O       0.2500000000000000  0.2500000000000000 -0.0000000000000000
-            O       0.7500000000000000  0.7500000000000000 -0.0000000000000000
-            O       0.0000000000000000 -0.0000000000000000  0.1834519015098907
-            O       0.5000000000000000  0.5000000000000000  0.1834519015098907
-            O       0.0000000000000000  0.5000000000000000  0.3165480984901093
-            O       0.5000000000000000 -0.0000000000000000  0.3165480984901093
-            O       0.2500000000000000  0.2500000000000000  0.5000000000000000
-            O       0.7500000000000000  0.7500000000000000  0.5000000000000000
-            O       0.7500000000000000  0.2500000000000000  0.5000000000000000
-            O       0.2500000000000000  0.7500000000000000  0.5000000000000000
-            O       0.0000000000000000  0.5000000000000000  0.6834519015098908
-            O       0.5000000000000000  0.0000000000000000  0.6834519015098908
-            O       0.0000000000000000 -0.0000000000000000  0.8165480984901092
-            O       0.5000000000000000  0.5000000000000000  0.8165480984901092
+            La      0.5000000000000000  0.5000000000000000  0.5000000000000000
+            Mn      0.0000000000000000  0.0000000000000000  0.0000000000000000
+            O       0.5000000000000000  0.0000000000000000  0.0000000000000000
+            O       0.0000000000000000  0.5000000000000000  0.0000000000000000
+            O       0.0000000000000000  0.0000000000000000  0.5000000000000000
         &END COORD
 
         &KIND La
             ELEMENT La
-            #BASIS_SET DZVP-MOLOPT-SR-GTH 
-            BASIS_SET sv-pbe
-            POTENTIAL GTH-PBE-q11
+            BASIS_SET DZVP-MOLOPT-SR-GTH 
+            #BASIS_SET sv-pbe
+            POTENTIAL GTH-PBE
         &END KIND
 
-        &KIND Ni_u
-            ELEMENT Ni
-            #BASIS_SET DZVP-MOLOPT-SR-GTH 
-            BASIS_SET sv-pbe
-            POTENTIAL GTH-PBE-q18
+        &KIND Mn
+            ELEMENT Mn
+            BASIS_SET DZVP-MOLOPT-SR-GTH 
+            #BASIS_SET sv-pbe
+            POTENTIAL GTH-PBE
             MAGNETIZATION 3
-        &END KIND
-
-        &KIND Ni_d
-            ELEMENT Ni
-            #BASIS_SET DZVP-MOLOPT-SR-GTH 
-            BASIS_SET sv-pbe
-            POTENTIAL GTH-PBE-q18
-            MAGNETIZATION -3
         &END KIND
         
         &KIND O
             ELEMENT O
-            #BASIS_SET DZVP-MOLOPT-SR-GTH 
-            BASIS_SET sv-pbe
-            POTENTIAL GTH-PBE-q6
+            BASIS_SET DZVP-MOLOPT-SR-GTH 
+            #BASIS_SET sv-pbe
+            POTENTIAL GTH-PBE
         &END KIND
 
     &END SUBSYS
+
+    &PRINT
+
+        #&FORCES ON
+        #    FILENAME forces
+        #&END FORCES
+        
+        #&STRESS_TENSOR ON
+        #    FILENAME stress
+        #&END STRESS_TENSOR
+
+    &END PRINT
+
+    STRESS_TENSOR ANALYTICAL
 
 &END FORCE_EVAL
 
@@ -170,26 +169,65 @@
 
     &CELL_OPT
 
-        OPTIMIZER LBFGS
-        MAX_FORCE 1.0E-4
+        OPTIMIZER CG
+        MAX_FORCE 1.0E-3
+        PRESSURE_TOLERANCE 1000
         EXTERNAL_PRESSURE 0.0
+        MAX_ITER 200
+        TYPE DIRECT_CELL_OPT
         KEEP_SYMMETRY
+        #KEEP_SPACE_GROUP
 
     &END CELL_OPT
 
     &GEO_OPT
 
-        OPTIMIZER LBFGS
-        MAX_FORCE 1.0E-4
-        KEEP_SPACE_GROUP
+        OPTIMIZER CG
+        MAX_FORCE 1.0E-3
+        MAX_ITER 200
+        #KEEP_SPACE_GROUP
 
     &END GEO_OPT
+
+    &MD
+
+    &END MD
 
     &PRINT
 
         &RESTART ON
             BACKUP_COPIES 0
+            FILENAME restart
         &END RESTART
+
+        &RESTART_HISTORY ON
+            FILENAME restart_history
+            &EACH
+                GEO_OPT 1
+                CELL_OPT 1
+                MD 1
+            &END EACH
+        &END RESTART_HISTORY
+
+        &FORCES ON
+            FILENAME forces
+        &END FORCES
+
+        &CELL ON
+            FILENAME cell
+        &END CELL
+        
+        &STRESS ON
+            FILENAME stress
+        &END STRESS
+
+        &TRAJECTORY ON
+            FILENAME traj
+        &END TRAJECTORY
+
+        #&VELOCITIES ON
+        #    FILENAME traj
+        #END VELOCITIES
 
     &END PRINT
 
