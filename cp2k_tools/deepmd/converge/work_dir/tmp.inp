@@ -1,0 +1,218 @@
+# CUT 250, REL 60
+
+
+&GLOBAL
+
+    PROJECT LSNO
+    RUN_TYPE ENERGY #CELL_OPT 
+    PRINT_LEVEL MEDIUM
+
+    PREFERRED_DIAG_LIBRARY ELPA
+    PREFERRED_FFT_LIBRARY FFTW3
+
+&END GLOBAL
+
+&FORCE_EVAL
+
+    METHOD QUICKSTEP
+
+    &DFT
+
+        BASIS_SET_FILE_NAME BASIS_MOLOPT
+        POTENTIAL_FILE_NAME POTENTIAL
+
+        &QS
+            EPS_DEFAULT 1.0E-12
+            EXTRAPOLATION USE_GUESS
+        &END QS
+
+        &MGRID
+            NGRIDS 4
+            CUTOFF 250
+            REL_CUTOFF 60
+        &END MGRID
+
+        &KPOINTS
+            #SCHEME GAMMA
+            SYMMETRY 
+            SCHEME MONKHORST-PACK 8 8 8
+        &END KPOINTS
+
+        &POISSON
+            PERIODIC XYZ
+        &END POISSON
+
+        &SCF
+
+            #SCF_GUESS RESTART
+            SCF_GUESS ATOMIC
+            MAX_SCF 1
+            ADDED_MOS 20
+            EPS_SCF 1.E-6
+
+            IGNORE_CONVERGENCE_FAILURE TRUE
+
+            &DIAGONALIZATION
+                ALGORITHM STANDARD
+            &END DIAGONALIZATION
+
+            &SMEAR 
+                METHOD FERMI_DIRAC
+                ELECTRONIC_TEMPERATURE [K] 1000
+            &END SMEAR
+
+            &MIXING
+                METHOD BROYDEN_MIXING # Broyden defaults seem to be doing well ...
+                #METHOD PULAY_MIXING
+                #NPULAY 12
+            &END MIXING
+
+        &END SCF
+
+        &XC
+
+            &XC_FUNCTIONAL PBE
+            &END XC_FUNCTIONAL
+
+        &END XC
+
+        &PRINT
+
+            #&LOWDIN ON
+            #    FILENAME lowdin 
+            #    &EACH
+            #        CELL_OPT 1
+            #        GEO_OPT 1
+            #        MD 1
+            #    &END EACH
+            #&END LOWDIN
+
+            &HIRSHFELD 
+                FILENAME hirshfeld 
+            &END HIRSHFELD
+
+            #&DOS OFF
+            #    FILENAME dos
+            #    DELTA_E 0.001
+            #    NDIGITS  12
+            #&END dos
+
+        &END PRINT
+
+    &END DFT
+        
+    &SUBSYS
+
+        &CELL
+            A       5.4000000000000000    0.0000000000000000    0.0000000000000000
+            B       0.0000000000000000    5.4000000000000000    0.0000000000000000
+            C       0.0000000000000000    0.0000000000000000    5.4000000000000000
+            PERIODIC XYZ
+            SYMMETRY TETRAGONAL_AB
+        &END CELL
+
+        &COORD
+            SCALED
+            Si 0.00 0.00 0.00
+            Si 0.00 0.50 0.50
+            Si 0.50 0.00 0.50
+            Si 0.50 0.50 0.00
+            Si 0.25 0.25 0.25
+            Si 0.25 0.75 0.75
+            Si 0.75 0.25 0.75
+            Si 0.75 0.75 0.25
+        &END COORD
+
+        &KIND Si
+            ELEMENT Si
+            BASIS_SET SZV-MOLOPT-SR-GTH 
+            POTENTIAL GTH-PBE
+        &END KIND
+
+    &END SUBSYS
+
+    &PRINT
+
+        #&FORCES ON
+        #    FILENAME forces
+        #&END FORCES
+        
+        #&STRESS_TENSOR ON
+        #    FILENAME stress
+        #&END STRESS_TENSOR
+
+    &END PRINT
+
+    STRESS_TENSOR ANALYTICAL
+
+&END FORCE_EVAL
+
+
+&MOTION
+
+    &CELL_OPT
+
+        OPTIMIZER CG
+        MAX_FORCE 1.0E-3
+        PRESSURE_TOLERANCE 1000
+        EXTERNAL_PRESSURE 0.0
+        MAX_ITER 200
+        TYPE DIRECT_CELL_OPT
+        KEEP_SYMMETRY
+        #KEEP_SPACE_GROUP
+
+    &END CELL_OPT
+
+    &GEO_OPT
+
+        OPTIMIZER CG
+        MAX_FORCE 1.0E-3
+        MAX_ITER 200
+        #KEEP_SPACE_GROUP
+
+    &END GEO_OPT
+
+    &MD
+
+    &END MD
+
+    &PRINT
+
+        &RESTART ON
+            BACKUP_COPIES 0
+            FILENAME restart
+        &END RESTART
+
+        &RESTART_HISTORY ON
+            FILENAME restart_history
+            &EACH
+                GEO_OPT 1
+                CELL_OPT 1
+                MD 1
+            &END EACH
+        &END RESTART_HISTORY
+
+        &FORCES ON
+            FILENAME forces
+        &END FORCES
+
+        &CELL ON
+            FILENAME cell
+        &END CELL
+        
+        &STRESS ON
+            FILENAME stress
+        &END STRESS
+
+        &TRAJECTORY ON
+            FILENAME traj
+        &END TRAJECTORY
+
+        #&VELOCITIES ON
+        #    FILENAME traj
+        #END VELOCITIES
+
+    &END PRINT
+
+&END MOTION
+
