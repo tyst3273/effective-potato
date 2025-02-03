@@ -2,11 +2,8 @@
 &GLOBAL
 
     PROJECT DEEPMD
-    RUN_TYPE CELL_OPT 
+    RUN_TYPE MD #CELL_OPT 
     PRINT_LEVEL MEDIUM
-
-    PREFERRED_DIAG_LIBRARY ELPA
-    PREFERRED_FFT_LIBRARY FFTW3
 
 &END GLOBAL
 
@@ -21,7 +18,8 @@
 
         &QS
             EPS_DEFAULT 1.0E-12
-            EXTRAPOLATION USE_GUESS
+            EXTRAPOLATION PS
+            EXTRAPOLATION_ORDER 3
         &END QS
 
         &MGRID
@@ -32,8 +30,6 @@
 
         &KPOINTS
             SCHEME GAMMA
-            #SYMMETRY 
-            #SCHEME MONKHORST-PACK 8 8 8
         &END KPOINTS
 
         &POISSON
@@ -46,7 +42,7 @@
             SCF_GUESS ATOMIC
             MAX_SCF 100
             ADDED_MOS 20
-            EPS_SCF 1.E-5
+            EPS_SCF 1.E-4
 
             IGNORE_CONVERGENCE_FAILURE TRUE
 
@@ -60,9 +56,7 @@
             &END SMEAR
 
             &MIXING
-                METHOD BROYDEN_MIXING # Broyden defaults seem to be doing well ...
-                #METHOD PULAY_MIXING
-                #NPULAY 12
+                METHOD BROYDEN_MIXING 
             &END MIXING
 
         &END SCF
@@ -73,29 +67,6 @@
             &END XC_FUNCTIONAL
 
         &END XC
-
-        &PRINT
-
-            #&LOWDIN ON
-            #    FILENAME lowdin 
-            #    &EACH
-            #        CELL_OPT 1
-            #        GEO_OPT 1
-            #        MD 1
-            #    &END EACH
-            #&END LOWDIN
-
-            &HIRSHFELD 
-                FILENAME hirshfeld 
-            &END HIRSHFELD
-
-            #&DOS OFF
-            #    FILENAME dos
-            #    DELTA_E 0.001
-            #    NDIGITS  12
-            #&END dos
-
-        &END PRINT
 
     &END DFT
         
@@ -212,29 +183,44 @@
 
 &MOTION
 
-    &CELL_OPT
-
-        OPTIMIZER CG
-        MAX_FORCE 1.0E-3
-        PRESSURE_TOLERANCE 1000
-        EXTERNAL_PRESSURE 0.0
-        MAX_ITER 200
-        TYPE DIRECT_CELL_OPT
-        KEEP_SYMMETRY
-        #KEEP_SPACE_GROUP
-
-    &END CELL_OPT
-
-    &GEO_OPT
-
-        OPTIMIZER CG
-        MAX_FORCE 1.0E-3
-        MAX_ITER 200
-        #KEEP_SPACE_GROUP
-
-    &END GEO_OPT
-
     &MD
+
+        #ENSEMBLE LANGEVIN
+        #TIMESTEP 1.0 # fs
+        #STEPS 100
+        #TEMPERATURE 300.0 # kelvin
+        #&LANGEVIN
+        #    GAMMA 0.01 # damping constant
+        #&END LANGEVIN
+
+        ENSEMBLE NPT_F
+        TIMESTEP 1.0 # fs
+        STEPS 100
+        TEMPERATURE 300.0 # kelvin
+
+        &BAROSTAT
+            TIMECON 100 # 1 fs for annealing, 1000 fs for MD
+        &END BAROSTAT
+
+        &THERMOSTAT
+            REGION GLOBAL
+            TYPE CSVR
+            &CSVR
+                TIMECON 10 # 1 fs for annealing, 1000 fs for MD
+            &END CSVR
+        &END THERMOSTAT
+
+        &PRINT
+
+            &ENERGY
+                &EACH
+                    GEO_OPT 1
+                    CELL_OPT 1
+                    MD 1
+                &END EACH
+            &END ENERGY
+            
+        &END PRINT
 
     &END MD
 
