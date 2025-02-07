@@ -6,12 +6,11 @@ import os
 # for SZV basis, NGRIDS = 5, CUTOFF = 2000, REL_CUTOFF = 50 are good choices to ~3 meV.
 
 work_dir = 'work_dir'
-cutoffs = [500, 750, 1000, 1250, 1500, 1750, 2000] 
+cutoffs = [1500, 1750, 2000, 2250, 2500, 2750, 3000] 
 rel_cutoffs = [50] 
 
 #run_cmd = f'/home/ty/anaconda3/envs/cp2k/bin/cp2k.psmp -i tmp.inp -o tmp.out'
-# run_cmd = f'mpirun -np 16 /home/ty/anaconda3/envs/cp2k/bin/cp2k.psmp -i tmp.inp -o tmp.out'
-run_cmd = 'mpirun -np 4 cp2k.psmp -i tmp.inp -o tmp.out'
+run_cmd = f'mpirun -np 16 cp2k.psmp -i tmp.inp > tmp.out 2> err'
 
 # to track convergence
 last_energy = 0.0
@@ -71,6 +70,9 @@ for cut in cutoffs:
                 energy = float(line.split()[-1])*13.605703976
                 continue
 
+            elif line.strip().startswith('SUM OF ATOMIC FORCES'):
+                forces = line.strip().split()[4:]
+
             # get grid count
             elif line.strip().startswith('count for grid'):
                 grid_counts.append(line.strip().split()[4])
@@ -85,7 +87,8 @@ for cut in cutoffs:
         msg += f'\nrel_cutoff:  [Ry]  {rel:<}'
         msg += f'\nenergy:      [eV]  {energy:<}'
         msg += f'\nconvergence: [eV]  {conv:<}'
-        msg += f'\ngrid_counts:\n  ' + '  '.join(f'{int(n)}' for n in grid_counts)
+        msg += f'\nforces:      [au]  ' + ' '.join(f'{f}' for f in forces)
+        msg += f'\ngrid_counts:       ' + '  '.join(f'{int(n)}' for n in grid_counts)
         print(msg)
         
         # print(cut,rel,tot_e,'\t',*grid_counts)#,ng5)
