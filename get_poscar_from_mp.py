@@ -1,8 +1,11 @@
 
 from mp_api.client import MPRester
+import sys
 
 # Define your Materials Project API key
-API_KEY = "YFzvkQbGsQDdt1HnOCZFhgZgVWMDJBtJ"
+API_KEY = None
+if len(sys.argv) > 1:
+    API_KEY = sys.argv[1]
 
 # Initialize the MPRester client
 with MPRester(API_KEY) as mpr:
