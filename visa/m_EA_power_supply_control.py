@@ -95,9 +95,19 @@ class c_EA_power_supply_control:
         # clear errors
         while True:
 
-            err = self.instr.query('SYST:ERR?')
+            err = self.get_error()
             if err.split(',')[0] == '0':
                 break   
+    
+    # ----------------------------------------------------------------------------------------------
+
+    def get_error(self):
+
+        """
+        get error
+        """
+
+        return self.instr.query('SYST:ERR?')
 
     # ----------------------------------------------------------------------------------------------
 
@@ -268,7 +278,7 @@ class c_EA_power_supply_control:
 
                 except Exception as ex:
                     print('logging error:',ex)
-                    print(self.instr.query('SYST:ERR?'))
+                    print(self.get_error())
 
                 time.sleep(interval)
 
@@ -357,7 +367,7 @@ if __name__ == '__main__':
 
     # ps = get_power_supply_control()
 
-    ps.start_sequencing(15,0.001)
+    ps.start_sequencing(10,0.001)
     time.sleep(10)
 
     ps.set_voltage(10)
