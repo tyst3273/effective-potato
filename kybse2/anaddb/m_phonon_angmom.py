@@ -2,6 +2,48 @@
 import numpy as np
 import netCDF4 as nc
 import matplotlib.pyplot as plt
+import scipy
+
+
+# --------------------------------------------------------------------------------------------------
+
+def solve_QEP(M,C,K):
+
+    """
+    a quadratic eigenvalue problem is defined as Q(E) = E^2 M + E C + K . We want its eigenvectors
+    and eigenvalues:
+        Q x = 0
+
+    we can solve it by writing an equivalent set of equations
+        [  0  I ](  x ) =  E [ I  0 ](  x )
+        [ -K -C ]( Ex )      [ 0  M ]( Ex )
+    
+    and solving by direct diagonalization.
+    """
+
+    rank = M.shape[0]
+    I = np.eye(rank)
+
+    A = np.zeros((2*rank,2*rank),dtype=complex)
+    A[:rank,rank:] = I
+    A[rank:,:rank] = -K
+    A[rank:,rank:] = -C
+
+    # ordinary eigenvalue problem
+    if np.allclose(M, I):
+        evals, evecs = scipy.linalg.eig(A,left=False,right=True)
+
+    # generalized eigenvalue problem
+    else:
+        ordinary = False
+        B = np.zeros((2*rank,2*rank),dtype=complex)
+        B[:rank,:rank] = I
+        B[rank:,rank:] = M
+        evals, evecs = scipy.linalg.eig(A,B,left=False,right=True)
+
+    return evals, evecs
+    
+# --------------------------------------------------------------------------------------------------
 
 
 # --------------------------------------------------------------------------------------------------
@@ -256,9 +298,12 @@ class c_phonon_angmom:
         """
 
         self.charges = np.array(charges,dtype=float)[self.types-1]
+        self.B = np.array(B,dtype=float)
 
         self.lorentz_matrix = np.zeros(self.eigenvectors.shape,dtype=complex)
         self.dynamical_matrix = np.zeros(self.eigenvectors.shape,dtype=float)
+
+        self.evals = np.zeros((self.num_qpts,self.num_modes*2),dtype=complex)
 
         for qq in range(self.num_qpts):
 
@@ -272,9 +317,19 @@ class c_phonon_angmom:
 
                     _L = 0.0+0.0j
                     for aa in range(self.num_atoms):
+                        _L += self.charges[aa]/self.masses[aa] * np.cross( _eu[aa,:], _ev[aa,:])
 
-                        _L += self.charges[aa]/self.masses[aa] * np.cross( _eu, _ev)
-                    # self.lorentz_matrix[qq,uu,vv] +=  
+                    self.lorentz_matrix[qq,uu,vv] += 1j * ( B @ _L )
+
+            _evals, _evecs = solve_QEP(M=np.eye(self.num_modes),C=-self.lorentz_matrix[qq,...],
+                            K=-self.dynamical_matrix[qq,...])
+            self.evals[qq,:] = _evals
+
+        ### DEV ###
+        for ii in range(self.num_modes*2):
+            plt.plot(self.x_arr, self.evals[:,ii] * 1000,c='k',lw=0,ms=2,marker='o')
+        plt.show()
+        ### DEV ###
     
     # ----------------------------------------------------------------------------------------------
 
@@ -285,9 +340,9 @@ if __name__ == '__main__':
     phonon_angmom = c_phonon_angmom()
 
     # phonon_angmom.average_over_degenerate_modes() # DONT DO THIS
-    # phonon_angmom.plot_phonon_angmom()
+    phonon_angmom.plot_phonon_angmom()
 
-    phonon_angmom.solve_lorentz_dynamical_equations()
+    phonon_angmom.solve_lorentz_dynamical_equations(B=[1e-2,0,0])
 
 
 

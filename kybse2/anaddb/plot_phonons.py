@@ -30,13 +30,13 @@ with nc.Dataset('run_PHBST.nc','r') as ds:
 
 for bb in range(num_modes):
 
-    plt.plot(x,bands[:,bb],c='k',ls='-',lw=1)
+    plt.plot(x,bands[:,bb],c='k',ls='-',lw=0,marker='o',ms=2)
 
-    L_len = np.sqrt( np.sum(angmom[:,bb]**2, axis=1) ) / 500
-    hi = bands[:,bb] + L_len
-    lo = bands[:,bb] - L_len
+    # L_len = np.sqrt( np.sum(angmom[:,bb]**2, axis=1) ) / 500
+    # hi = bands[:,bb] + L_len
+    # lo = bands[:,bb] - L_len
 
-    plt.fill_between(x,lo,hi,color='m',alpha=0.2)
+    # plt.fill_between(x,lo,hi,color='m',alpha=0.2)
     
 
 plt.show()
