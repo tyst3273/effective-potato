@@ -15,9 +15,10 @@ chneut      1
 dipdip     -1
 symdynmat   1
 
-eivec       1
+#eivec       1
 
-ndivsm      101 
+#ndivsm      101 
+ndivsm      21 
 nqpath      14
 qpath       0.0000     0.0000     0.0000   # \Gamma
             0.5000     0.0000     0.0000   # L

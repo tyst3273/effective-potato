@@ -93,7 +93,7 @@ class c_phonon_angmom:
             self.num_modes = self.num_atoms*3
             self.num_basis = self.num_atoms*3 
             
-            self.masses = ds['atomic_mass_units'][...]
+            self.masses = ds['atomic_mass_units'][...][self.types-1]
 
             self.reduced_pos = ds['reduced_atom_positions'][...]
             self.lattice_vectors = ds['primitive_vectors'][:,:]
@@ -123,8 +123,7 @@ class c_phonon_angmom:
         convert displacements to normalized eigenvectors
         """
 
-        _mass_matrix = self.masses[self.types-1]
-        _mass_matrix = np.tile(_mass_matrix.reshape(self.num_atoms,1),reps=(1,3)).flatten()
+        _mass_matrix = np.tile(self.masses.reshape(self.num_atoms,1),reps=(1,3)).flatten()
         _mass_matrix = np.tile(_mass_matrix.reshape(1,self.num_basis),reps=(self.num_basis,1))
 
         self.eigenvectors = np.zeros( self.displacements.shape,dtype=complex)
@@ -137,6 +136,17 @@ class c_phonon_angmom:
             for vv in range( self.num_modes):
                 _eig =  self.eigenvectors[qq,:,vv]
                 self.eigenvectors[qq,:,vv] /= np.sqrt(_eig.conj() @ _eig) 
+
+        # # check normalization
+        # _ovlp = np.zeros((self.num_modes,self.num_modes),dtype=float)
+        # for qq in range(self.num_qpts):
+        #     _ovlp[...] = 0.0
+
+        #     for uu in range(self.num_modes):
+        #         for vv in range(self.num_modes):
+        #             _ovlp[uu,vv] = self.eigenvectors[qq,:,uu].conj() @  self.eigenvectors[qq,:,vv]
+
+        #     print(_ovlp.round(6))
 
     # ----------------------------------------------------------------------------------------------
                 
@@ -246,6 +256,25 @@ class c_phonon_angmom:
         """
 
         self.charges = np.array(charges,dtype=float)[self.types-1]
+
+        self.lorentz_matrix = np.zeros(self.eigenvectors.shape,dtype=complex)
+        self.dynamical_matrix = np.zeros(self.eigenvectors.shape,dtype=float)
+
+        for qq in range(self.num_qpts):
+
+            np.fill_diagonal(self.dynamical_matrix[qq,...],self.freqs[qq,:])
+
+            for uu in range(self.num_modes):
+                _eu = self.eigenvectors[qq,:,uu].conj().reshape(self.num_atoms,3)
+
+                for vv in range(self.num_modes):
+                    _ev = self.eigenvectors[qq,:,vv].reshape(self.num_atoms,3)
+
+                    _L = 0.0+0.0j
+                    for aa in range(self.num_atoms):
+
+                        _L += self.charges[aa]/self.masses[aa] * np.cross( _eu, _ev)
+                    # self.lorentz_matrix[qq,uu,vv] +=  
     
     # ----------------------------------------------------------------------------------------------
 
