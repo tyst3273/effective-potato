@@ -1,0 +1,13 @@
+
+--- !ERROR
+src_file: m_parser.F90
+src_line: 1497
+mpi_rank: 7
+message: |
+    There are two occurences of the keyword " NDIVSM " in the input file.
+    This is confusing, so it has been forbidden.
+    Action: remove one of the two occurences.
+...
+
+
+ abinit_abort: decision taken to exit. Check above messages for more info

@@ -10,15 +10,13 @@ asr         1
 #asr         2
 chneut      1
 #chneut      2
-#dipdip      0
-#dipdip      1     
-dipdip     -1
+dipdip      0
+#dipdip     -1
 symdynmat   1
 
 #eivec       1
 
-#ndivsm      101 
-ndivsm      21 
+ndivsm      101
 nqpath      14
 qpath       0.0000     0.0000     0.0000   # \Gamma
             0.5000     0.0000     0.0000   # L
@@ -34,6 +32,12 @@ qpath       0.0000     0.0000     0.0000   # \Gamma
             0.5000     0.0000     0.0000   # L
             0.8166     0.3417     0.3417   # P 
             0.0000     0.0000     0.0000   # \Gamma
+#ndivsm      251
+#nqpath      2
+#qpath       0.5000     0.5000     0.5000   # Z
+#            0.0000     0.0000     0.0000   # \Gamma
+            
+
 
 #nph2l       3     
 #qph2l       1.0  0.0  0.0    0.0

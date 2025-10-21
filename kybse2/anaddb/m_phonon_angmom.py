@@ -291,11 +291,36 @@ class c_phonon_angmom:
     
     # ----------------------------------------------------------------------------------------------
 
+    def calculate_phonon_angmom(self):
+
+        """
+        charges are the ionic charges (oxidation state) of the elements.
+        """
+
+        
+        self.phonon_angmom = np.zeros((*self.freqs.shape,3),dtype=float)
+
+        for qq in range(self.num_qpts):
+            
+            for uu in range(self.num_modes):
+                _eu = self.eigenvectors[qq,:,uu].reshape(self.num_atoms,3)
+
+                _L = np.zeros(3,dtype=float)
+                for aa in range(self.num_atoms):
+                    _L += np.imag(np.cross( _eu[aa,:].conj(), _eu[aa,:]))
+                self.phonon_angmom[qq,uu,:] = _L
+    
+    # ----------------------------------------------------------------------------------------------
+
     def solve_lorentz_dynamical_equations(self,charges=[1,3,-2],B=[0,0,1.0]):
 
         """
         charges are the ionic charges (oxidation state) of the elements.
         """
+
+        _eV2THz = 241.7991
+        _e2C = 1.6022e-19
+        _amu2kg = 1.6605e-27
 
         self.charges = np.array(charges,dtype=float)[self.types-1]
         self.B = np.array(B,dtype=float)
@@ -307,7 +332,7 @@ class c_phonon_angmom:
 
         for qq in range(self.num_qpts):
 
-            np.fill_diagonal(self.dynamical_matrix[qq,...],self.freqs[qq,:])
+            np.fill_diagonal(self.dynamical_matrix[qq,...],(self.freqs[qq,:] * _eV2THz) ** 2)
 
             for uu in range(self.num_modes):
                 _eu = self.eigenvectors[qq,:,uu].conj().reshape(self.num_atoms,3)
@@ -317,17 +342,32 @@ class c_phonon_angmom:
 
                     _L = 0.0+0.0j
                     for aa in range(self.num_atoms):
-                        _L += self.charges[aa]/self.masses[aa] * np.cross( _eu[aa,:], _ev[aa,:])
+                        _L += self.charges[aa]/self.masses[aa] * _e2C/_amu2kg \
+                            * np.cross( _eu[aa,:], _ev[aa,:])
 
                     self.lorentz_matrix[qq,uu,vv] += 1j * ( B @ _L )
 
             _evals, _evecs = solve_QEP(M=np.eye(self.num_modes),C=-self.lorentz_matrix[qq,...],
                             K=-self.dynamical_matrix[qq,...])
+                            
             self.evals[qq,:] = _evals
 
         ### DEV ###
+        fig, ax = plt.subplots(1,1,figsize=(4,4))
         for ii in range(self.num_modes*2):
-            plt.plot(self.x_arr, self.evals[:,ii] * 1000,c='k',lw=0,ms=2,marker='o')
+
+            _w = self.evals[:,ii].real
+            flag = (_w <= 0.0)
+            c = np.zeros((self.num_qpts,3))
+            c[:,0] = 1.0
+            c[flag,0] = 0.0
+            c[flag,2] = 1.0
+                
+            ax.scatter(self.x_arr, np.abs(_w) * 1000 / _eV2THz,lw=0,s=5,marker='o',c=c)
+
+        for ii in range(self.num_modes):
+            ax.plot(self.x_arr, self.freqs[:,ii] * 1000,c='k')
+
         plt.show()
         ### DEV ###
     
@@ -340,9 +380,11 @@ if __name__ == '__main__':
     phonon_angmom = c_phonon_angmom()
 
     # phonon_angmom.average_over_degenerate_modes() # DONT DO THIS
+    phonon_angmom.calculate_phonon_angmom()
     phonon_angmom.plot_phonon_angmom()
 
-    phonon_angmom.solve_lorentz_dynamical_equations(B=[1e-2,0,0])
+    # phonon_angmom.solve_lorentz_dynamical_equations(B=[0,0,0.1])
+    phonon_angmom.solve_lorentz_dynamical_equations(B=[0,0,1e-6])
 
 
 
