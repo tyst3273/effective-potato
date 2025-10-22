@@ -4,6 +4,23 @@ import netCDF4 as nc
 import matplotlib.pyplot as plt
 import scipy
 
+ang2bohr = 1.88973
+bohr2ang = 1/ang2bohr
+
+ha2eV = 27.2114
+ev2ha = 1/ha2eV
+
+ev2meV = 1000
+meV2eV = 1/ev2meV
+
+amu2me = 1822.89
+me2amu = 1/amu2me
+
+me2kg = 9.10938e-31
+meV2thz = 0.2417991
+thz2meV = 1/meV2thz
+
+e2C = 1.602176e-19
 
 # --------------------------------------------------------------------------------------------------
 
@@ -18,7 +35,7 @@ def solve_QEP(M,C,K):
         [  0  I ](  x ) =  E [ I  0 ](  x )
         [ -K -C ]( Ex )      [ 0  M ]( Ex )
     
-    and solving by direct diagonalization.
+    and solving by numerical diagonalization.
     """
 
     rank = M.shape[0]
@@ -67,7 +84,7 @@ class c_phonon_angmom:
 
     # ----------------------------------------------------------------------------------------------
 
-    def plot_phonon_angmom(self,scale=1/500):
+    def plot_phonon_angmom(self,scale=1):
 
         """
         """
@@ -76,30 +93,45 @@ class c_phonon_angmom:
 
         for ii in range(self.num_modes):
             
-            ax[0].plot(self.x_arr, self.freqs[:,ii] * 1000,c='k',lw=1,ms=0)
+            ax[0].plot(self.x_arr, self.freqs[:,ii],c='k',lw=1,ms=0)
 
             _L = self.phonon_angmom[:,ii,0] * scale 
             hi = self.freqs[:,ii] + _L
             lo = self.freqs[:,ii] - _L
-            ax[0].fill_between(self.x_arr,lo * 1000,hi * 1000,color='m',alpha=0.5)
+            ax[0].fill_between(self.x_arr,lo,hi,color='m',alpha=0.25)
+
+            _L = self.my_phonon_angmom[:,ii,0 ]* scale
+            hi = self.freqs[:,ii] + _L
+            lo = self.freqs[:,ii] - _L
+            ax[0].fill_between(self.x_arr,lo,hi,color='g',alpha=0.25)
 
         for ii in range(self.num_modes):
             
-            ax[1].plot(self.x_arr, self.freqs[:,ii] * 1000,c='k',lw=1,ms=0)
+            ax[1].plot(self.x_arr, self.freqs[:,ii],c='k',lw=1,ms=0)
 
             _L = self.phonon_angmom[:,ii,1] * scale
             hi = self.freqs[:,ii] + _L
             lo = self.freqs[:,ii] - _L
-            ax[1].fill_between(self.x_arr,lo * 1000,hi * 1000,color='m',alpha=0.5)
-        
+            ax[1].fill_between(self.x_arr,lo,hi,color='m',alpha=0.25)
+
+            _L = self.my_phonon_angmom[:,ii,1]* scale
+            hi = self.freqs[:,ii] + _L
+            lo = self.freqs[:,ii] - _L
+            ax[1].fill_between(self.x_arr,lo,hi,color='g',alpha=0.25)
+
         for ii in range(self.num_modes):
             
-            ax[2].plot(self.x_arr, self.freqs[:,ii] * 1000,c='k',lw=1,ms=0)
+            ax[2].plot(self.x_arr, self.freqs[:,ii],c='k',lw=1,ms=0)
 
             _L = self.phonon_angmom[:,ii,2] * scale
             hi = self.freqs[:,ii] + _L
             lo = self.freqs[:,ii] - _L
-            ax[2].fill_between(self.x_arr,lo * 1000,hi * 1000,color='m',alpha=0.5)
+            ax[2].fill_between(self.x_arr,lo,hi,color='m',alpha=0.25)
+
+            _L = self.my_phonon_angmom[:,ii,2]* scale
+            hi = self.freqs[:,ii] + _L
+            lo = self.freqs[:,ii] - _L
+            ax[2].fill_between(self.x_arr,lo,hi,color='g',alpha=0.25)
 
         plt.show()
     
@@ -126,6 +158,12 @@ class c_phonon_angmom:
 
         """
         parse the anaddb PHBST file
+
+        from m_phonons.F90 in abinit:
+            !!  Input data is in a.u, whereas the netcdf files saves data in eV for frequencies
+            !!  and Angstrom for the displacements
+            !!  The angular momentum is output in units of hbar
+            
         """
 
         with nc.Dataset(self.phbst_file,'r') as ds:
@@ -135,13 +173,13 @@ class c_phonon_angmom:
             self.num_modes = self.num_atoms*3
             self.num_basis = self.num_atoms*3 
             
-            self.masses = ds['atomic_mass_units'][...][self.types-1]
+            self.masses = ds['atomic_mass_units'][...][self.types-1] * amu2me
 
-            self.reduced_pos = ds['reduced_atom_positions'][...]
-            self.lattice_vectors = ds['primitive_vectors'][:,:]
+            self.reduced_pos = ds['reduced_atom_positions'][...] 
+            self.lattice_vectors = ds['primitive_vectors'][:,:] # angstrom ?
 
             # shape = [num_qpts, num_modes, xyz] (its a 3d vector)
-            self.phonon_angmom = ds['phangmom'][...]
+            self.phonon_angmom = ds['phangmom'][...] # units of hbar
 
             self.qpts = ds['qpoints'][...]
             self.num_qpts = self.qpts.shape[0]
@@ -153,9 +191,10 @@ class c_phonon_angmom:
 
             else:
 
-                # shape = [num_qpts, num_basis, num_modes] 
+                # shape = [num_qpts, num_basis, num_modes]. units are angstrom
                 self.displacements = ds['phdispl_cart'][...,0] + 1j*ds['phdispl_cart'][...,1] 
-                self.freqs = ds['phfreqs'][...]
+                self.displacements *= ang2bohr
+                self.freqs = ds['phfreqs'][...] * ev2meV
 
     # ----------------------------------------------------------------------------------------------
 
@@ -165,14 +204,15 @@ class c_phonon_angmom:
         convert displacements to normalized eigenvectors
         """
 
-        _mass_matrix = np.tile(self.masses.reshape(self.num_atoms,1),reps=(1,3)).flatten()
+        _sqrt_m = np.sqrt(self.masses)
+        _mass_matrix = np.tile(_sqrt_m.reshape(self.num_atoms,1),reps=(1,3)).flatten()
         _mass_matrix = np.tile(_mass_matrix.reshape(1,self.num_basis),reps=(self.num_basis,1))
 
         self.eigenvectors = np.zeros( self.displacements.shape,dtype=complex)
         for qq in range( self.num_qpts):
 
             # convert disp. to eigs: eig_(q nu, a) = sqrt(m_a) disp_(q nu, a)
-            self.eigenvectors[qq,...] = np.sqrt(_mass_matrix) *  self.displacements[qq,...]
+            self.eigenvectors[qq,...] = _mass_matrix *  self.displacements[qq,...]
 
             # normalize
             for vv in range( self.num_modes):
@@ -294,11 +334,11 @@ class c_phonon_angmom:
     def calculate_phonon_angmom(self):
 
         """
-        charges are the ionic charges (oxidation state) of the elements.
+        ...
         """
 
         
-        self.phonon_angmom = np.zeros((*self.freqs.shape,3),dtype=float)
+        self.my_phonon_angmom = np.zeros((*self.freqs.shape,3),dtype=float)
 
         for qq in range(self.num_qpts):
             
@@ -308,7 +348,7 @@ class c_phonon_angmom:
                 _L = np.zeros(3,dtype=float)
                 for aa in range(self.num_atoms):
                     _L += np.imag(np.cross( _eu[aa,:].conj(), _eu[aa,:]))
-                self.phonon_angmom[qq,uu,:] = _L
+                self.my_phonon_angmom[qq,uu,:] = _L
     
     # ----------------------------------------------------------------------------------------------
 
@@ -316,11 +356,9 @@ class c_phonon_angmom:
 
         """
         charges are the ionic charges (oxidation state) of the elements.
-        """
 
-        _eV2THz = 241.7991
-        _e2C = 1.6022e-19
-        _amu2kg = 1.6605e-27
+        units are m=m_e, Z=e, and w=meV => convert B field to gauss ?
+        """
 
         self.charges = np.array(charges,dtype=float)[self.types-1]
         self.B = np.array(B,dtype=float)
@@ -332,7 +370,7 @@ class c_phonon_angmom:
 
         for qq in range(self.num_qpts):
 
-            np.fill_diagonal(self.dynamical_matrix[qq,...],(self.freqs[qq,:] * _eV2THz) ** 2)
+            np.fill_diagonal(self.dynamical_matrix[qq,...],self.freqs[qq,:] ** 2)
 
             for uu in range(self.num_modes):
                 _eu = self.eigenvectors[qq,:,uu].conj().reshape(self.num_atoms,3)
@@ -342,10 +380,9 @@ class c_phonon_angmom:
 
                     _L = 0.0+0.0j
                     for aa in range(self.num_atoms):
-                        _L += self.charges[aa]/self.masses[aa] * _e2C/_amu2kg \
-                            * np.cross( _eu[aa,:], _ev[aa,:])
+                        _L += self.charges[aa]/self.masses[aa] * np.cross( _eu[aa,:], _ev[aa,:])
 
-                    self.lorentz_matrix[qq,uu,vv] += 1j * ( B @ _L )
+                    self.lorentz_matrix[qq,uu,vv] += -1j * ( self.B.dot(_L) )
 
             _evals, _evecs = solve_QEP(M=np.eye(self.num_modes),C=-self.lorentz_matrix[qq,...],
                             K=-self.dynamical_matrix[qq,...])
@@ -363,10 +400,10 @@ class c_phonon_angmom:
             c[flag,0] = 0.0
             c[flag,2] = 1.0
                 
-            ax.scatter(self.x_arr, np.abs(_w) * 1000 / _eV2THz,lw=0,s=5,marker='o',c=c)
+            ax.scatter(self.x_arr, np.abs(_w) ,lw=0,s=5,marker='o',c=c)
 
         for ii in range(self.num_modes):
-            ax.plot(self.x_arr, self.freqs[:,ii] * 1000,c='k')
+            ax.plot(self.x_arr, self.freqs[:,ii],c='k')
 
         plt.show()
         ### DEV ###
@@ -384,7 +421,7 @@ if __name__ == '__main__':
     phonon_angmom.plot_phonon_angmom()
 
     # phonon_angmom.solve_lorentz_dynamical_equations(B=[0,0,0.1])
-    phonon_angmom.solve_lorentz_dynamical_equations(B=[0,0,1e-6])
+    phonon_angmom.solve_lorentz_dynamical_equations(B=[0,0,100000])
 
 
 
