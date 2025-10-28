@@ -13,6 +13,8 @@ ev2ha = 1/ha2eV
 ev2meV = 1000
 meV2eV = 1/ev2meV
 
+ha2meV = ha2eV * ev2meV
+
 amu2me = 1822.89
 me2amu = 1/amu2me
 
@@ -21,6 +23,9 @@ meV2thz = 0.2417991
 thz2meV = 1/meV2thz
 
 e2C = 1.602176e-19
+
+au2T = 2.35e5
+T2au = 1/au2T
 
 # --------------------------------------------------------------------------------------------------
 
@@ -93,44 +98,44 @@ class c_phonon_angmom:
 
         for ii in range(self.num_modes):
             
-            ax[0].plot(self.x_arr, self.freqs[:,ii],c='k',lw=1,ms=0)
+            ax[0].plot(self.x_arr, self.freqs[:,ii] * ha2meV ,c='k',lw=1,ms=0)
 
-            _L = self.phonon_angmom[:,ii,0] * scale 
-            hi = self.freqs[:,ii] + _L
-            lo = self.freqs[:,ii] - _L
-            ax[0].fill_between(self.x_arr,lo,hi,color='m',alpha=0.25)
+            # _L = self.phonon_angmom[:,ii,0] * scale 
+            # hi = self.freqs[:,ii] * ha2meV  + _L
+            # lo = self.freqs[:,ii] * ha2meV  - _L
+            # ax[0].fill_between(self.x_arr,lo,hi,color='m',alpha=0.25)
 
             _L = self.my_phonon_angmom[:,ii,0 ]* scale
-            hi = self.freqs[:,ii] + _L
-            lo = self.freqs[:,ii] - _L
+            hi = self.freqs[:,ii] * ha2meV  + _L
+            lo = self.freqs[:,ii] * ha2meV  - _L
             ax[0].fill_between(self.x_arr,lo,hi,color='g',alpha=0.25)
 
         for ii in range(self.num_modes):
             
-            ax[1].plot(self.x_arr, self.freqs[:,ii],c='k',lw=1,ms=0)
+            ax[1].plot(self.x_arr, self.freqs[:,ii] * ha2meV ,c='k',lw=1,ms=0)
 
-            _L = self.phonon_angmom[:,ii,1] * scale
-            hi = self.freqs[:,ii] + _L
-            lo = self.freqs[:,ii] - _L
-            ax[1].fill_between(self.x_arr,lo,hi,color='m',alpha=0.25)
+            # _L = self.phonon_angmom[:,ii,1] * scale
+            # hi = self.freqs[:,ii] * ha2meV  + _L
+            # lo = self.freqs[:,ii] * ha2meV  - _L
+            # ax[1].fill_between(self.x_arr,lo,hi,color='m',alpha=0.25)
 
-            _L = self.my_phonon_angmom[:,ii,1]* scale
-            hi = self.freqs[:,ii] + _L
-            lo = self.freqs[:,ii] - _L
+            _L = self.my_phonon_angmom[:,ii,1] * scale
+            hi = self.freqs[:,ii] * ha2meV  + _L
+            lo = self.freqs[:,ii] * ha2meV  - _L
             ax[1].fill_between(self.x_arr,lo,hi,color='g',alpha=0.25)
 
         for ii in range(self.num_modes):
             
-            ax[2].plot(self.x_arr, self.freqs[:,ii],c='k',lw=1,ms=0)
+            ax[2].plot(self.x_arr, self.freqs[:,ii] * ha2meV ,c='k',lw=1,ms=0)
 
-            _L = self.phonon_angmom[:,ii,2] * scale
-            hi = self.freqs[:,ii] + _L
-            lo = self.freqs[:,ii] - _L
-            ax[2].fill_between(self.x_arr,lo,hi,color='m',alpha=0.25)
+            # _L = self.phonon_angmom[:,ii,2] * scale
+            # hi = self.freqs[:,ii] * ha2meV  + _L
+            # lo = self.freqs[:,ii] * ha2meV  - _L
+            # ax[2].fill_between(self.x_arr,lo,hi,color='m',alpha=0.25)
 
             _L = self.my_phonon_angmom[:,ii,2]* scale
-            hi = self.freqs[:,ii] + _L
-            lo = self.freqs[:,ii] - _L
+            hi = self.freqs[:,ii] * ha2meV  + _L
+            lo = self.freqs[:,ii] * ha2meV  - _L
             ax[2].fill_between(self.x_arr,lo,hi,color='g',alpha=0.25)
 
         plt.show()
@@ -173,10 +178,10 @@ class c_phonon_angmom:
             self.num_modes = self.num_atoms*3
             self.num_basis = self.num_atoms*3 
             
-            self.masses = ds['atomic_mass_units'][...][self.types-1] * amu2me
+            self.masses = ds['atomic_mass_units'][...][self.types-1] #* amu2me
 
             self.reduced_pos = ds['reduced_atom_positions'][...] 
-            self.lattice_vectors = ds['primitive_vectors'][:,:] # angstrom ?
+            self.lattice_vectors = ds['primitive_vectors'][:,:] # these are already in Bohr
 
             # shape = [num_qpts, num_modes, xyz] (its a 3d vector)
             self.phonon_angmom = ds['phangmom'][...] # units of hbar
@@ -191,10 +196,11 @@ class c_phonon_angmom:
 
             else:
 
-                # shape = [num_qpts, num_basis, num_modes]. units are angstrom
+                ### wrong ? shape = [num_qpts, num_basis, num_modes]. units are angstrom
+                # shape = [num_qpts, num_modes, num_basis]. units are angstrom
                 self.displacements = ds['phdispl_cart'][...,0] + 1j*ds['phdispl_cart'][...,1] 
                 self.displacements *= ang2bohr
-                self.freqs = ds['phfreqs'][...] * ev2meV
+                self.freqs = ds['phfreqs'][...] * ev2ha # ev2meV
 
     # ----------------------------------------------------------------------------------------------
 
@@ -208,16 +214,25 @@ class c_phonon_angmom:
         _mass_matrix = np.tile(_sqrt_m.reshape(self.num_atoms,1),reps=(1,3)).flatten()
         _mass_matrix = np.tile(_mass_matrix.reshape(1,self.num_basis),reps=(self.num_basis,1))
 
+        # print(_mass_matrix.round())
+        # exit()
+
+        # shape = [num_qpts, num_modes, num_basis]. units are angstrom
         self.eigenvectors = np.zeros( self.displacements.shape,dtype=complex)
         for qq in range( self.num_qpts):
 
             # convert disp. to eigs: eig_(q nu, a) = sqrt(m_a) disp_(q nu, a)
             self.eigenvectors[qq,...] = _mass_matrix *  self.displacements[qq,...]
 
+            # # normalize
+            # for vv in range( self.num_modes):
+            #     _eig =  self.eigenvectors[qq,:,vv]
+            #     self.eigenvectors[qq,:,vv] /= np.sqrt(_eig.conj() @ _eig) 
+
             # normalize
             for vv in range( self.num_modes):
-                _eig =  self.eigenvectors[qq,:,vv]
-                self.eigenvectors[qq,:,vv] /= np.sqrt(_eig.conj() @ _eig) 
+                _eig =  self.eigenvectors[qq,vv,:]
+                self.eigenvectors[qq,vv,:] /= np.sqrt(_eig.conj() @ _eig) 
 
         # # check normalization
         # _ovlp = np.zeros((self.num_modes,self.num_modes),dtype=float)
@@ -226,7 +241,7 @@ class c_phonon_angmom:
 
         #     for uu in range(self.num_modes):
         #         for vv in range(self.num_modes):
-        #             _ovlp[uu,vv] = self.eigenvectors[qq,:,uu].conj() @  self.eigenvectors[qq,:,vv]
+        #             _ovlp[uu,vv] = self.eigenvectors[qq,uu,:].conj() @  self.eigenvectors[qq,vv,:]
 
         #     print(_ovlp.round(6))
 
@@ -343,7 +358,7 @@ class c_phonon_angmom:
         for qq in range(self.num_qpts):
             
             for uu in range(self.num_modes):
-                _eu = self.eigenvectors[qq,:,uu].reshape(self.num_atoms,3)
+                _eu = self.eigenvectors[qq,uu,:].reshape(self.num_atoms,3)
 
                 _L = np.zeros(3,dtype=float)
                 for aa in range(self.num_atoms):
@@ -357,7 +372,7 @@ class c_phonon_angmom:
         """
         charges are the ionic charges (oxidation state) of the elements.
 
-        units are m=m_e, Z=e, and w=meV => convert B field to gauss ?
+        units are m=m_e, Z=e, and w=Ha => convert B field to gauss ?
         """
 
         self.charges = np.array(charges,dtype=float)[self.types-1]
@@ -373,38 +388,62 @@ class c_phonon_angmom:
             np.fill_diagonal(self.dynamical_matrix[qq,...],self.freqs[qq,:] ** 2)
 
             for uu in range(self.num_modes):
-                _eu = self.eigenvectors[qq,:,uu].conj().reshape(self.num_atoms,3)
+                _eu = self.eigenvectors[qq,uu,:].conj().reshape(self.num_atoms,3)
 
                 for vv in range(self.num_modes):
-                    _ev = self.eigenvectors[qq,:,vv].reshape(self.num_atoms,3)
+                    _ev = self.eigenvectors[qq,vv,:].reshape(self.num_atoms,3)
 
                     _L = 0.0+0.0j
                     for aa in range(self.num_atoms):
                         _L += self.charges[aa]/self.masses[aa] * np.cross( _eu[aa,:], _ev[aa,:])
 
-                    self.lorentz_matrix[qq,uu,vv] += -1j * ( self.B.dot(_L) )
+                    self.lorentz_matrix[qq,uu,vv] += -1j * self.B.dot(_L)
 
+            ### NOTE these evecs have the usual shape [..., num_basis, num_modes] right?
             _evals, _evecs = solve_QEP(M=np.eye(self.num_modes),C=-self.lorentz_matrix[qq,...],
                             K=-self.dynamical_matrix[qq,...])
                             
             self.evals[qq,:] = _evals
 
         ### DEV ###
-        fig, ax = plt.subplots(1,1,figsize=(4,4))
+        fig, ax = plt.subplots(1,1,figsize=(4.5,6))
+        
         for ii in range(self.num_modes*2):
 
-            _w = self.evals[:,ii].real
+            _w = self.evals[:,ii].real * ha2meV
+            
             flag = (_w <= 0.0)
             c = np.zeros((self.num_qpts,3))
             c[:,0] = 1.0
             c[flag,0] = 0.0
             c[flag,2] = 1.0
-                
-            ax.scatter(self.x_arr, np.abs(_w) ,lw=0,s=5,marker='o',c=c)
+
+            ax.scatter(self.x_arr, _w ,lw=0,s=5,marker='o',c=c)
+            # ax.plot(self.x_arr, _w ,lw=1,c='r')
 
         for ii in range(self.num_modes):
-            ax.plot(self.x_arr, self.freqs[:,ii],c='k')
+            ax.plot(self.x_arr, self.freqs[:,ii] * ha2meV,c='k')
 
+        for _ax in [ax]:
+            for axis in ['top','bottom','left','right']:
+                _ax.spines[axis].set_linewidth(1.5)
+            _ax.minorticks_on()
+            _ax.tick_params(which='both',width=1,labelsize=12)
+            _ax.tick_params(which='major',length=5)
+            _ax.tick_params(which='minor',length=2)
+            _ax.set_rasterization_zorder = 1200000000
+
+        ax.set_xticks([0,0.5,1])
+        ax.set_xticklabels([r'$\Gamma$','1/2 way to Z','Z'])
+
+        ax.axis([0,0.5,10,16.5])
+
+        ax.set_xlabel(r'$\bf{q} \parallel \bf{c}$',fontsize=16)
+        ax.set_ylabel(r'$\hbar \omega$ [meV]',color='k',fontsize=16)
+
+        ax.set_title(r'$\bf{B}$='+f'{B[-1]*au2T:g}'+r'$\bf{z}$ Tesla',fontsize=16)
+
+        plt.savefig(f'B_{B[-1]*au2T:g}_optical.png',dpi=300,bbox_inches='tight')
         plt.show()
         ### DEV ###
     
@@ -417,11 +456,17 @@ if __name__ == '__main__':
     phonon_angmom = c_phonon_angmom()
 
     # phonon_angmom.average_over_degenerate_modes() # DONT DO THIS
-    phonon_angmom.calculate_phonon_angmom()
-    phonon_angmom.plot_phonon_angmom()
 
-    # phonon_angmom.solve_lorentz_dynamical_equations(B=[0,0,0.1])
-    phonon_angmom.solve_lorentz_dynamical_equations(B=[0,0,100000])
+    # phonon_angmom.calculate_phonon_angmom()
+    # phonon_angmom.plot_phonon_angmom()
+
+    # units are 235 kT (kilo-Tesla) = 2.35e5 T
+    # phonon_angmom.solve_lorentz_dynamical_equations(B=[0,0,0.001])
+    
+    # earths field, fridge magnet, MRI, lab magnet, pulsed magnet, neutron star
+    tesla = [42]
+    for tt in tesla:
+        phonon_angmom.solve_lorentz_dynamical_equations(B=[0,0,tt*T2au])
 
 
 
