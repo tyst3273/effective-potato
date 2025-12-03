@@ -1,0 +1,91 @@
+
+### general
+ndtset      2
+#autoparal   1
+            
+### file I/O
+prtwf       0
+prtden      1
+getwfk_filepath "../gamma/runo_DS2_WFK"
+getden_filepath "../gamma/runo_DS1_DEN"
+
+### pp's
+#pp_dirpath          "/home/ty/pseudos/abi/paw_pbe"
+pp_dirpath          "/projects/tyst3273/pseudos/abi/paw_lda/"
+pseudos             "Ti.xml,O.xml"
+
+### lattice 
+ntypat      2
+natom       6
+typat       1 1 2 2 2 2
+znucl       22 8
+rprim       8.59948632686572E+00  0.00000000000000E+00  0.00000000000000E+00
+            0.00000000000000E+00  8.59948632686572E+00  0.00000000000000E+00
+            0.00000000000000E+00  0.00000000000000E+00  5.51940527538440E+00
+xred        5.00000000000000E-01  5.00000000000000E-01  5.00000000000000E-01
+            0.00000000000000E+00  0.00000000000000E+00  0.00000000000000E+00
+            1.96040705364406E-01  8.03959294635594E-01  5.00000000000000E-01
+            8.03959294635594E-01  1.96040705364406E-01  5.00000000000000E-01
+            3.03959294635594E-01  3.03959294635594E-01  0.00000000000000E+00
+            6.96040705364406E-01  6.96040705364406E-01  0.00000000000000E+00
+
+### scf control
+nstep       200
+ecut        750 eV
+occopt      7
+tsmear      0.05 eV
+tolvrs      1e-12
+pawecutdg   1500 eV
+pawxcdev    0
+
+### bands
+nband       36
+nbdbuf      6
+
+### mixing
+npulayit    10
+diemac      10.0
+diemix      0.7
+dielng      1.0
+
+### kpoints
+ngkpt       8 8 12
+nshiftk     1
+shiftk      0 0 0
+kptopt      3
+
+### qpoints -- 6x6x8=50 qpts
+ngqpt       6 6 8
+nshiftq     1
+shiftq      0 0 0
+qptopt      1
+
+### respfn
+nqpt        1
+rfphon      1
+rfatpol     1 6
+rfdir       1 1 1
+
+# ======== phonons ===========
+
+### nscf at q != 0,0,0
+tolwfr1     1e-20
+iscf1      -2
+prtwf1      1
+rfphon1     0
+iqpt1       !Qpt
+
+### pert at q != 0,0,0
+getwfq2    -1
+iqpt2       !Qpt
+
+
+
+
+
+
+
+
+
+
+

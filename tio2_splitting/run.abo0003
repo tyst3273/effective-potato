@@ -1,0 +1,157 @@
+
+.Version 10.4.7-d of ANADDB, released Sep 2025.
+.(MPI version, prepared for a x86_64_linux_gnu13.3 computer) 
+
+.Copyright (C) 1998-2025 ABINIT group . 
+ ANADDB comes with ABSOLUTELY NO WARRANTY.
+ It is free software, and you are welcome to redistribute it
+ under certain conditions (GNU General Public License,
+ see ~abinit/COPYING or http://www.gnu.org/copyleft/gpl.txt).
+
+ ABINIT is a project of the Universite Catholique de Louvain,
+ Corning Inc. and other collaborators, see ~abinit/doc/developers/contributors.txt .
+ Please read https://docs.abinit.org/theory/acknowledgments for suggested
+ acknowledgments of the ABINIT effort.
+ For more information, see https://www.abinit.org .
+
+.Starting date : Mon 10 Nov 2025.
+- ( at 15h32 )
+  
+
+================================================================================
+
+ -outvars_anaddb: echo values of input variables ----------------------
+
+ Flags :
+     ifcflag         1
+ Miscellaneous information :
+         asr         1
+ Interatomic Force Constants Inputs :
+      dipdip        -1
+      dipqua         1
+      quadqu         1
+      ifcana         0
+      ifcout         0
+ Description of grid 1 :
+        brav         1
+       ngqpt         4         4         6
+      nqshft         1
+      q1shft
+                     0.00000000E+00  0.00000000E+00  0.00000000E+00
+
+================================================================================
+
+ read the DDB information and perform some checks
+
+
+  ==== Info on the Cryst% object ====
+ Real(R)+Recip(G) space primitive vectors, cartesian coordinates (Bohr,Bohr^-1):
+ R(1)=  8.5994863  0.0000000  0.0000000  G(1)=  0.1162860  0.0000000  0.0000000
+ R(2)=  0.0000000  8.5994863  0.0000000  G(2)=  0.0000000  0.1162860  0.0000000
+ R(3)=  0.0000000  0.0000000  5.5194053  G(3)=  0.0000000  0.0000000  0.1811789
+ Unit cell volume ucvol=  4.0816645E+02 bohr^3
+ Angles (23,13,12)=  9.00000000E+01  9.00000000E+01  9.00000000E+01 degrees
+ Time-reversal symmetry is present
+ Reduced atomic positions [iatom, xred, symbol]:
+    1)    0.5000000  0.5000000  0.5000000  Ti
+    2)    0.0000000  0.0000000  0.0000000  Ti
+    3)    0.1960407  0.8039593  0.5000000   O
+    4)    0.8039593  0.1960407  0.5000000   O
+    5)    0.3039593  0.3039593  0.0000000   O
+    6)    0.6960407  0.6960407  0.0000000   O
+
+ DDB file with 52 blocks has been read.
+
+================================================================================
+
+ Dielectric Tensor and Effective Charges 
+
+
+ anaddb : Zero the imaginary part of the Dynamical Matrix at Gamma,
+   and impose the ASR on the effective charges 
+
+ The violation of the charge neutrality conditions
+ by the effective charges is as follows :
+    atom        electric field
+ displacement     direction
+       1               1        0.011022        0.000000
+       1               2       -0.000000        0.000000
+       1               3        0.000000        0.000000
+       2               1       -0.000000        0.000000
+       2               2        0.011022        0.000000
+       2               3        0.000000        0.000000
+       3               1        0.000000        0.000000
+       3               2        0.000000        0.000000
+       3               3        0.011386        0.000000
+
+ Effective charge tensors after 
+ imposition of the charge neutrality (if requested by user),
+ and eventual restriction to some part :
+   atom    displacement
+         1         1    6.303184E+00   -9.940396E-01   -2.478573E-23
+         1         2   -9.940396E-01    6.303184E+00   -2.703898E-23
+         1         3    1.203350E-23    4.375819E-24    7.612226E+00
+         2         1    6.303184E+00    9.940396E-01    1.577274E-23
+         2         2    9.940396E-01    6.303184E+00    5.407795E-24
+         2         3    5.469774E-24    4.375819E-24    7.612226E+00
+         3         1   -3.151592E+00    1.778032E+00   -1.031988E-22
+         3         2    1.778032E+00   -3.151592E+00    2.703897E-23
+         3         3   -7.329498E-23   -8.751640E-23   -3.806113E+00
+         4         1   -3.151592E+00    1.778032E+00    2.658833E-23
+         4         2    1.778032E+00   -3.151592E+00   -1.027481E-22
+         4         3   -8.642244E-23   -6.126148E-23   -3.806113E+00
+         5         1   -3.151592E+00   -1.778032E+00    8.607407E-23
+         5         2   -1.778032E+00   -3.151592E+00    9.193252E-23
+         5         3    6.782521E-23    7.001312E-23   -3.806113E+00
+         6         1   -3.151592E+00   -1.778032E+00   -4.506501E-25
+         6         2   -1.778032E+00   -3.151592E+00    5.407795E-24
+         6         3    7.438894E-23    7.001312E-23   -3.806113E+00
+ Now, the imaginary part of the dynamical matrix is zeroed
+
+================================================================================
+
+ Calculation of the interatomic forces 
+
+-begin at tcpu      0.049  and twall      0.049 sec
+
+ Warning : due to the use of quadrupolar fields, the width of the reciprocal space gaussians
+ in ewald9 has been set to eta=    0.9882 1/bohr and the real-space sums have been neglected.
+ One should check whether this choice leads to correct results for the specific system under study and q-point grid.
+ It is recommended to check that calculations with dipdip=1 and -1 (both with dipquad=0 and quadquad=0)
+ lead to identical results. Otherwise increase the resolution of the q-point grid and repeat this test.
+
+       Homogeneous q point set in the B.Z.
+ Grid q points  :       96
+ greater than 80, so only write 20 of them
+  1)   0.00000000E+00  0.00000000E+00  0.00000000E+00
+  2)   2.50000000E-01  0.00000000E+00  0.00000000E+00
+  3)   5.00000000E-01  0.00000000E+00  0.00000000E+00
+  4)  -2.50000000E-01  0.00000000E+00  0.00000000E+00
+  5)   0.00000000E+00  2.50000000E-01  0.00000000E+00
+  6)   2.50000000E-01  2.50000000E-01  0.00000000E+00
+  7)   5.00000000E-01  2.50000000E-01  0.00000000E+00
+  8)  -2.50000000E-01  2.50000000E-01  0.00000000E+00
+  9)   0.00000000E+00  5.00000000E-01  0.00000000E+00
+ 10)   2.50000000E-01  5.00000000E-01  0.00000000E+00
+ 11)   5.00000000E-01  5.00000000E-01  0.00000000E+00
+ 12)  -2.50000000E-01  5.00000000E-01  0.00000000E+00
+ 13)   0.00000000E+00 -2.50000000E-01  0.00000000E+00
+ 14)   2.50000000E-01 -2.50000000E-01  0.00000000E+00
+ 15)   5.00000000E-01 -2.50000000E-01  0.00000000E+00
+ 16)  -2.50000000E-01 -2.50000000E-01  0.00000000E+00
+ 17)   0.00000000E+00  0.00000000E+00  1.66666667E-01
+ 18)   2.50000000E-01  0.00000000E+00  1.66666667E-01
+ 19)   5.00000000E-01  0.00000000E+00  1.66666667E-01
+ 20)  -2.50000000E-01  0.00000000E+00  1.66666667E-01
+
+--- !ERROR
+src_file: m_ddb.F90
+src_line: 6928
+mpi_rank: 0
+message: |
+    Information is missing in the DDB file.
+    The dynamical matrix with iqpt= 2 cannot be built,
+    since no block with qpt:     2.500000E-01    0.000000E+00    0.000000E+00 has been found.
+    Action: add the required block in the DDB, or modify the q-mesh your input file.
+...
+
