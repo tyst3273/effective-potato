@@ -95,15 +95,15 @@ if __name__ == "__main__":
 
     # ----------------------------------------------------------------------------------------------
 
-    index = 0
-    bounds = [[3, 4, 58, 61],
-              [3, 4, 4, 10]]
-    plot_splitting(hdf5_file='phonon_angmom_all_calcs.hdf5', index=index, bounds=bounds)
+    # index = 0
+    # bounds = [[3, 4, 58, 61],
+    #           [3, 4, 4, 10]]
+    # plot_splitting(hdf5_file='phonon_angmom_all_calcs.hdf5', index=index, bounds=bounds)
 
-    index = 1
-    bounds = [[3, 4, 58, 61],
-              [3, 4, 4, 10]]
-    plot_splitting(hdf5_file='phonon_angmom_all_calcs.hdf5', index=index, bounds=bounds)
+    # index = 1
+    # bounds = [[3, 4, 58, 61],
+    #           [3, 4, 4, 10]]
+    # plot_splitting(hdf5_file='phonon_angmom_all_calcs.hdf5', index=index, bounds=bounds)
 
     index = 2
     bounds = [[3, 4, 58, 61],
@@ -112,20 +112,20 @@ if __name__ == "__main__":
 
     # ----------------------------------------------------------------------------------------------
 
-    index = 3
-    bounds = [[4, 6, 55, 62],
-              [7, 9, 55, 62]]
-    plot_splitting(hdf5_file='phonon_angmom_all_calcs.hdf5', index=index, bounds=bounds)
+    # index = 3
+    # bounds = [[4, 6, 55, 62],
+    #           [7, 9, 55, 62]]
+    # plot_splitting(hdf5_file='phonon_angmom_all_calcs.hdf5', index=index, bounds=bounds)
 
-    index = 4
-    bounds = [[4, 6, 55, 62],
-              [7, 9, 55, 62]]
-    plot_splitting(hdf5_file='phonon_angmom_all_calcs.hdf5', index=index, bounds=bounds)
+    # index = 4
+    # bounds = [[4, 6, 55, 62],
+    #           [7, 9, 55, 62]]
+    # plot_splitting(hdf5_file='phonon_angmom_all_calcs.hdf5', index=index, bounds=bounds)
 
-    index = 5
-    bounds = [[4, 6, 55, 62],
-              [7, 9, 55, 62]]
-    plot_splitting(hdf5_file='phonon_angmom_all_calcs.hdf5', index=index, bounds=bounds)
+    # index = 5
+    # bounds = [[4, 6, 55, 62],
+    #           [7, 9, 55, 62]]
+    # plot_splitting(hdf5_file='phonon_angmom_all_calcs.hdf5', index=index, bounds=bounds)
 
     # ----------------------------------------------------------------------------------------------
 
