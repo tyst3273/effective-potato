@@ -35,18 +35,21 @@ class c_bistable:
         
     # ----------------------------------------------------------------------------------------------
 
-    def _evaluate_func(self,x,y,z):
+    def _evaluate_Lx(self,x,y,z):
 
         _b = self.beta
         _g = self.gamma
 
-        return np.exp(1 / x ** _g) * (x**_b - y**_b) - z**2
+        return  -(z**2 * np.exp(-1 / x ** _g) + y**_b - x**_b)
 
     # ----------------------------------------------------------------------------------------------
 
     def _get_zeros(self,f):
-
-        return np.flatnonzero(np.diff(np.sign(f)))
+        
+        diff = np.diff(np.sign(f))
+        zeros = np.flatnonzero(diff)
+        
+        return zeros, diff
         
     # ----------------------------------------------------------------------------------------------
 
@@ -105,8 +108,8 @@ class c_bistable:
                 xlo = _y
 
             _x = np.linspace(xlo,xhi,nx)
-            _f = self._evaluate_func(_x,_y,_z)
-            _zeros = self._get_zeros(_f)
+            _f = self._evaluate_Lx(_x,_y,_z)
+            _zeros, _diff = self._get_zeros(_f)
 
             if _zeros.size > 1:
                 _my_bistable[ii] = 1
@@ -170,7 +173,7 @@ class c_bistable:
         plt.savefig(f'bistability_region_gamma_{self.gamma}_beta_{self.beta}.png',dpi=300, 
                     bbox_inches='tight')
         
-        plt.show()
+        # plt.show()
 
     # ----------------------------------------------------------------------------------------------
 
@@ -190,6 +193,7 @@ class c_bistable:
         _size = y.size
 
         solutions = [[] for _ in range(_size)]
+        slopes = [[] for _ in range(_size)]
         
         for ii in range(_size):
 
@@ -202,12 +206,14 @@ class c_bistable:
                 xlo = 0
 
             _x = np.linspace(xlo,xhi,nx)
-            _f = self._evaluate_func(x=_x,y=_y,z=_z)
-            _zeros = self._get_zeros(_f)
-
+            _f = self._evaluate_Lx(x=_x,y=_y,z=_z)
+            _zeros, _diff = self._get_zeros(_f)
+            
             solutions[ii].extend(_x[_zeros])
+            slopes[ii].extend(_diff[_zeros])
 
         self.solutions = solutions
+        self.slopes = slopes
         self.y = y
         self.z = _z
 
@@ -227,8 +233,13 @@ class c_bistable:
         for ii in range(_size):
 
             _sol = self.solutions[ii]
-            _yy = [self.y[ii]] * len(_sol)
-            ax.scatter(_yy,_sol,marker='o',s=5,c='k')
+            _y = self.y[ii]
+
+            for jj, _x in enumerate(_sol):
+                if self.slopes[ii][jj] > 0:
+                    ax.plot(_y,_x,marker='o',ms=1.5,c='k')
+                else:
+                    ax.plot(_y,_x,marker='o',ms=1.5,c='m')
 
             _ = min(_sol)
             if _ < _min:
@@ -314,6 +325,7 @@ class c_bistable:
         _size = z.size
 
         solutions = [[] for _ in range(_size)]
+        slopes = [[] for _ in range(_size)]
         
         for ii in range(_size):
 
@@ -326,12 +338,14 @@ class c_bistable:
                 xlo = 0
 
             _x = np.linspace(xlo,xhi,nx)
-            _f = self._evaluate_func(x=_x,y=_y,z=_z)
-            _zeros = self._get_zeros(_f)
-
+            _f = self._evaluate_Lx(x=_x,y=_y,z=_z)
+            _zeros, _diff = self._get_zeros(_f)
+            
             solutions[ii].extend(_x[_zeros])
+            slopes[ii].extend(_diff[_zeros])
 
         self.solutions = solutions
+        self.slopes = slopes
         self.y = _y
         self.z = z
 
@@ -351,8 +365,13 @@ class c_bistable:
         for ii in range(_size):
 
             _sol = self.solutions[ii]
-            _zz = [self.z[ii]] * len(_sol)
-            ax.scatter(_zz,_sol,marker='o',s=5,c='k')
+            _z = self.z[ii]
+
+            for jj, _x in enumerate(_sol):
+                if self.slopes[ii][jj] > 0:
+                    ax.plot(_z,_x,marker='o',ms=1.5,c='k')
+                else:
+                    ax.plot(_z,_x,marker='o',ms=1.5,c='m')
 
             _ = min(_sol)
             if _ < _min:
@@ -407,16 +426,18 @@ class c_bistable:
 
             _sol = self.solutions[ii]
             _z = self.z[ii]
-            _I = [ _z / np.exp(1/_x**self.gamma) for _x in _sol]
-            _zz = [_z] * len(_sol)
-            ax.scatter(_zz,_I,marker='o',s=5,c='k')
 
-            _ = min(_I)
-            if _ < _min:
-                _min = _
-            _ = max(_I)
-            if _ > _max:
-                _max = _
+            for jj, _x in enumerate(_sol): 
+                _I =  _z / np.exp(1/_x**self.gamma)
+                if self.slopes[ii][jj] > 0:
+                    ax.plot(_z,_I,marker='o',ms=1.5,c='k')
+                else:
+                    ax.plot(_z,_I,marker='o',ms=1.5,c='m')
+
+                if _I < _min:
+                    _min = _I
+                if _I > _max:
+                    _max = _I
 
         ax.axvline(self.z_critical,lw=1,c='r')
         
@@ -429,7 +450,7 @@ class c_bistable:
 
         ax.set_yscale('log')
 
-        # ax.axis([self.z.min(),self.z.max(),0,_max*1.05])
+        ax.axis([self.z.min(),self.z.max(),0,_max*1.05])
 
         ax.annotate(r'z$_{critical}$',xy=(self.z_critical*1.05,_max*1.1),
                     xycoords='data',c='r',annotation_clip=False)
@@ -447,6 +468,62 @@ class c_bistable:
         plt.savefig(f'bistability_IV_{self.gamma}_beta_{self.beta}_y0_{_frac:.3f}.png',
                     dpi=300, bbox_inches='tight')
         
+        plt.show()
+
+    # ----------------------------------------------------------------------------------------------
+
+    def plot_J(self):
+
+        print(self.y_critical)
+
+        if self.rank != 0:
+                    return
+        
+        fig, ax = plt.subplots(figsize=(4.5,4.5))
+
+        _b = self.beta
+        _g = self.gamma
+        z = 2*self.z_critical
+        y = 0.6*self.y_critical
+        x = np.linspace(y,0.5,100000)
+        _L = self._evaluate_Lx(x=x,y=y,z=z)
+        ax.plot(x,_L,lw=1.5,c='k')
+        ax.axhline(0,lw=1,c='k',ls='--')
+
+        # x = np.linspace(0,0.5,100000)
+        # _L = -(z**2 * np.exp(-1/x**_g) + y**_b - x**_b)
+        # ax.plot(x,_L,lw=1,c='k',ls=(0,(2,1,1,1)))
+
+        _zeros, _diff = self._get_zeros(_L)
+        _x0 = x[_zeros]
+
+        for _xx in _x0:
+            ax.plot(_xx,0,marker='o',ms=4,c='b')
+        
+        for axis in ['top','bottom','left','right']:
+            ax.spines[axis].set_linewidth(1.5)
+        ax.minorticks_on()
+        ax.tick_params(which='both',width=1) #,direction='in')
+        ax.tick_params(which='major',length=5)
+        ax.set_rasterization_zorder = 1000000000
+
+        ax.axis([0,0.5,-1e-8,1e-7])
+
+        # ax.annotate(r'z$_{critical}$',xy=(self.z_critical*1.05,_max*1.1),
+        #             xycoords='data',c='r',annotation_clip=False)
+        
+        ax.annotate(r'$\gamma$'+f'={self.gamma}, '+r'$\beta$'+f'={self.beta}',
+                    xy=(0.25,0.9),xycoords='axes fraction',c='r',annotation_clip=False)
+        ax.annotate(r'y=0.6$\times$y$_0$',xy=(0.25,0.85),xycoords='axes fraction',
+                    c='r',annotation_clip=False)
+        ax.annotate(r'z=2.0$\times$z$_0$',xy=(0.25,0.8),xycoords='axes fraction',
+                    c='r',annotation_clip=False)
+
+        ax.set_xlabel(r'x(T$_e$)')
+        ax.set_ylabel(r'L(x)')
+
+        plt.savefig(f'Udot.png',dpi=300, bbox_inches='tight')
+        
         # plt.show()
 
     # ----------------------------------------------------------------------------------------------
@@ -462,20 +539,40 @@ if __name__ == '__main__':
     
     # bistable.get_bistability_region(nx=10000,ny=1000,nz=1000)
     # bistable.plot_bistability_region()
-
+    
     # frac = [0.1, 0.5, 0.9, 0.99, 1.0, 1.01, 1.04, 1.05, 1.1, 1.5, 2.0, 10.0]
     # for _f in frac:
     #     bistable.solve_bistability_fixed_z(frac=_f,nx=100000,ny=500)
     #     bistable.plot_solutions_fixed_z()
 
-    frac = [0.1, 0.5, 0.9, 0.99, 1.0, 1.01, 1.04, 1.05, 1.1, 1.5, 2.0, 10.0]
-    for _f in frac:
-        bistable.solve_bistability_fixed_y(frac=_f,nx=100000,nz=500)
-        bistable.plot_solutions_fixed_y()
+    # frac = [0.1, 0.5, 0.9, 0.99, 1.0, 1.01, 1.04, 1.05, 1.1, 1.5, 2.0, 10.0]
+    # for _f in frac:
+    #     bistable.solve_bistability_fixed_y(frac=_f,nx=100000,nz=500)
+    #     bistable.plot_solutions_fixed_y()
 
-    frac = [0.1, 0.5, 0.9, 0.99, 1.0, 1.01, 1.04, 1.05, 1.1, 1.5, 2.0, 10.0]
-    for _f in frac:
-        bistable.solve_bistability_fixed_y(frac=_f,nx=100000,nz=500)
-        bistable.plot_IV_fixed_y()
+    # frac = [0.1, 0.5, 0.9, 0.99, 1.0, 1.01, 1.04, 1.05, 1.1, 1.5, 2.0, 10.0]
+    # for _f in frac:
+    #     bistable.solve_bistability_fixed_y(frac=_f,nx=100000,nz=500)
+    #     bistable.plot_IV_fixed_y()
+
+    # z0 = bistable.z_critical
+    # bistable.plot_J()
     
+    # frac = [0.3, 0.35, 0.4, 0.45, 0.5]
+    # for _f in frac:
+    #     bistable.solve_bistability_fixed_y(frac=_f,nx=100000,nz=1000,zhi=6)
+    #     bistable.plot_IV_fixed_y()
 
+
+    nx = 1000
+    x = np.linspace(0,2,nx)
+    arr = np.exp(-1/x)
+    alg = x**4
+
+    fig, ax = plt.subplots(figsize=(4.5,4.5))
+    ax.plot(x,arr,c='b',lw=1.5,label='Arrhenius')
+    ax.plot(x,alg,c='r',lw=1.5,label='algebraic')
+
+    # ax.set_yscale('log')
+
+    plt.show()
