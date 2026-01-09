@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 gamma = 5.0
 
 y = 0.1
-x = np.linspace(0,4,1000)
+x = np.linspace(0,gamma,1000)
 
 fig, ax = plt.subplots(1,2,figsize=(8,3))
 
