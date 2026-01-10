@@ -158,6 +158,7 @@ class c_bistable_defects:
         """
         simple mixing: n^(i+1)_in = alpha * n^i_out + (1-alpha) * n^i_in
         """ 
+        
         return alpha * n_out + (1-alpha) * n_in
 
     # ----------------------------------------------------------------------------------------------
@@ -170,8 +171,8 @@ if __name__ == '__main__':
     # bistable = c_bistable_defects()
     # bistable.solve()
 
-    y = np.linspace(0.0,5,500)
-    v = np.linspace(0.0,5,500)
+    y = np.linspace(0.0,5,501)
+    v = np.linspace(0.0,5,501)
 
     count = 0
     for yy in y:
