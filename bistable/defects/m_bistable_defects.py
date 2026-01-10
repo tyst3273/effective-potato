@@ -29,7 +29,7 @@ class c_bistable_defects:
 
     # ----------------------------------------------------------------------------------------------
 
-    def solve(self,n_lo=1e-3,n_hi=0.999,max_iter=1000,n_tol=1e-6,alpha=0.6):
+    def solve(self,n_lo=1e-3,n_hi=0.999,max_iter=1000,n_tol=1e-9,alpha=0.4,degeneracy_tol=1e-3):
 
         """
         we look for two solutions for n (there may be more that we miss!). we have to solve 
@@ -47,18 +47,21 @@ class c_bistable_defects:
         print(f'\nsolving for high n guess: n_in={n_hi:6.4f}')
         n_hi, x_hi = self._solve_self_consistent(n_hi,max_iter,n_tol,alpha)
 
-        if np.abs(n_lo-n_hi) > n_tol*10:
+        if np.abs(n_lo-n_hi) > degeneracy_tol:
             multistable = True
-            msg = '\nmultiple solutions found!'
-            msg += f'\n\n n_lo: {n_lo:6.4e}'
-            msg += f'\n x_lo: {x_lo:6.4e}'
-            msg += f'\n\n n_hi: {n_hi:6.4e}'
-            msg += f'\n x_hi: {x_hi:6.4e}'
         else:
             multistable = False
-            msg = '\nonly one solution:'
-            msg += f'\n n: {n_lo:6.4e}'
-            msg += f'\n x: {x_lo:6.4e}'
+
+        msg = '\n*** RESULTS ***'
+        msg += f'\n% multistable: {multistable}'
+        msg += f'\n% n_lo: {n_lo:9.6e}'
+        msg += f'\n% x_lo: {x_lo:9.6e}'
+        msg += f'\n% n_hi: {n_hi:9.6e}'
+        msg += f'\n% x_hi: {x_hi:9.6e}'
+        msg += f'\n% n_diff={n_hi-n_lo:9.6f}'
+        msg += f'\n% x_diff={x_hi-x_lo:9.6f}'
+        msg += f'\n% v: {self.v:9.6f}'
+        msg += f'\n% y: {self.y:9.6f}'
         print(msg)
 
     # ----------------------------------------------------------------------------------------------
@@ -167,13 +170,19 @@ if __name__ == '__main__':
     # bistable = c_bistable_defects()
     # bistable.solve()
 
-    y = np.linspace(0.01,5,500)
-    v = np.linspace(0.01,5,500)
-    
+    y = np.linspace(0.001,5,500)
+    v = np.linspace(0.001,5,500)
+
+    count = 0
     for yy in y:
         for vv in v:
-            bistable = c_bistable_defects(v,y)
+
+            print(f'\ncount: {count}')
+            
+            bistable = c_bistable_defects(vv,yy)
             bistable.solve()
+
+            count += 1
 
 
 

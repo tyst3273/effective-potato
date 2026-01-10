@@ -1,9 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-n = np.linspace(0,1,1000)
-vsq = 1.0
-x = 1.0
-y = 0.1
+T = np.linspace(0,10,1000)
+f = 1/(T+1/T)
 
-plt.plot(n,vsq*x*(x*4-y**4))
+
+plt.plot(T,f)
+plt.show()
