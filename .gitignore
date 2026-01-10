@@ -6,3 +6,4 @@ __pycache__
 *.xyz
 *.lammpstrj
 *log
+*.log
