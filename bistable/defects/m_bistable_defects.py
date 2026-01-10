@@ -29,7 +29,8 @@ class c_bistable_defects:
 
     # ----------------------------------------------------------------------------------------------
 
-    def solve(self,n_lo=1e-3,n_hi=0.999,max_iter=1000,n_tol=1e-9,alpha=0.4,degeneracy_tol=1e-3):
+    def solve(self,n_lo=1e-3,n_hi=0.999,max_iter=1000,n_tol=1e-9,alpha=0.4,degeneracy_tol=1e-3,
+              count=0):
 
         """
         we look for two solutions for n (there may be more that we miss!). we have to solve 
@@ -53,13 +54,14 @@ class c_bistable_defects:
             multistable = False
 
         msg = '\n*** RESULTS ***'
+        msg += f'\ncount: {count}'
         msg += f'\n% multistable: {multistable}'
         msg += f'\n% n_lo: {n_lo:9.6e}'
         msg += f'\n% x_lo: {x_lo:9.6e}'
         msg += f'\n% n_hi: {n_hi:9.6e}'
         msg += f'\n% x_hi: {x_hi:9.6e}'
-        msg += f'\n% n_diff={n_hi-n_lo:9.6f}'
-        msg += f'\n% x_diff={x_hi-x_lo:9.6f}'
+        msg += f'\n% n_diff: {n_hi-n_lo:9.6f}'
+        msg += f'\n% x_diff: {x_hi-x_lo:9.6f}'
         msg += f'\n% v: {self.v:9.6f}'
         msg += f'\n% y: {self.y:9.6f}'
         print(msg)
@@ -158,7 +160,7 @@ class c_bistable_defects:
         """
         simple mixing: n^(i+1)_in = alpha * n^i_out + (1-alpha) * n^i_in
         """ 
-        
+
         return alpha * n_out + (1-alpha) * n_in
 
     # ----------------------------------------------------------------------------------------------
@@ -181,7 +183,7 @@ if __name__ == '__main__':
             print(f'\ncount: {count}')
             
             bistable = c_bistable_defects(vv,yy)
-            bistable.solve()
+            bistable.solve(count=count)
 
             count += 1
 
