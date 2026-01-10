@@ -170,13 +170,8 @@ if __name__ == '__main__':
     # bistable = c_bistable_defects()
     # bistable.solve()
 
-<<<<<<< HEAD
     y = np.linspace(0.0,5,501)
     v = np.linspace(0.0,5,501)
-=======
-    y = np.linspace(0.0,5,500)
-    v = np.linspace(0.0,5,500)
->>>>>>> 0e3290e0c761c3020ce5427260afc1c172077c32
 
     count = 0
     for yy in y:
