@@ -8,7 +8,7 @@ class c_bistable_defects:
 
     # ----------------------------------------------------------------------------------------------
 
-    def __init__(self,v=0.2,y=0.1,j=1000,z=0.0,x_lo=None,x_hi=5,num_x=10001):
+    def __init__(self,v=0.2,y=0.1,x_lo=None,x_hi=5,num_x=10001):
 
         """
         dot U = 0 = v^2 n + x ( y^4 - x^4 )
@@ -22,15 +22,7 @@ class c_bistable_defects:
 
         self.v = v
         self.vsq = v**2
-
-        self.j = j
-        self.jsq = j
-
-        self.z = z
         self.y = y
-
-        if z > 1/v:
-            exit('it is required that z < 1/v')
 
         if x_lo is None:
             x_lo = y
@@ -51,12 +43,10 @@ class c_bistable_defects:
         # low n guess
         print(f'\nsolving for low n guess: n_in={n_lo_guess:6.4f}')
         n_lo, x_lo = self._solve_self_consistent(n_lo_guess,max_iter,n_tol,alpha)
-        j_lo = self._calculate_current(n_lo,x_lo) 
 
         # hi n guess
         print(f'\nsolving for high n guess: n_in={n_hi_guess:6.4f}')
         n_hi, x_hi = self._solve_self_consistent(n_hi_guess,max_iter,n_tol,alpha)
-        j_hi = self._calculate_current(n_hi,x_hi) 
 
         n_diff = n_hi-n_lo
         x_diff = x_hi-x_lo
@@ -66,10 +56,8 @@ class c_bistable_defects:
             msg += f'\ncount: {count}'
         msg += f'\n% n_lo: {n_lo:9.6e}'
         msg += f'\n% x_lo: {x_lo:9.6e}'
-        msg += f'\n% j_lo: {j_lo:9.6e}'
         msg += f'\n% n_hi: {n_hi:9.6e}'
         msg += f'\n% x_hi: {x_hi:9.6e}'
-        msg += f'\n% j_hi: {j_hi:9.6e}'
         msg += f'\n% n_diff: {n_diff:9.6f}'
         msg += f'\n% x_diff: {x_diff:9.6f}'
         msg += f'\n% v: {self.v:9.6f}'
@@ -152,16 +140,6 @@ class c_bistable_defects:
         """
 
         return np.exp(-1/x_0)
-    
-    # ----------------------------------------------------------------------------------------------
-
-    def _calculate_current(self,n,x):
-
-        """
-        solve v = j x/n => j = v n / x
-        """
-
-        return self.v * n / x
 
     # ----------------------------------------------------------------------------------------------
 
@@ -216,7 +194,7 @@ def run_sweep():
 
             print(f'\ncount: {count}')
             
-            bistable = c_bistable_defects(v=vv,y=yy)
+            bistable = c_bistable_defects(vv,yy)
             multistable[ii,jj], n_lo[ii,jj], x_lo[ii,jj], n_hi[ii,jj], x_hi[ii,jj], \
                 n_diff[ii,jj], x_diff[ii,jj] = bistable.solve(count=count)
 
@@ -258,7 +236,7 @@ def run_v_sweep(y=0.025):
 
         print(f'\ncount: {count}')
         
-        bistable = c_bistable_defects(v=vv,y=y,x_hi=2.0,num_x=10001)
+        bistable = c_bistable_defects(vv,y,x_hi=2.0,num_x=10001)
         n_lo[ii], x_lo[ii], n_hi[ii], x_hi[ii], n_diff[ii], x_diff[ii] = \
             bistable.solve(count=count)
 
@@ -281,13 +259,9 @@ def run_v_sweep(y=0.025):
 if __name__ == '__main__':
 
     # run_sweep()
-
-    # run_v_sweep(y=0.01)
-    # run_v_sweep(y=0.1)
-    # run_v_sweep(y=0.25)
-    # run_v_sweep(y=0.5)
-    # run_v_sweep(y=1.0)
-
-    bistable = c_bistable_defects(v=0.5,y=0.5)
-    bistable.solve()
+    run_v_sweep(y=0.01)
+    run_v_sweep(y=0.1)
+    run_v_sweep(y=0.25)
+    run_v_sweep(y=0.5)
+    run_v_sweep(y=1.0)
         
