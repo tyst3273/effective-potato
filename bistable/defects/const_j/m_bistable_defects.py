@@ -202,7 +202,7 @@ class c_bistable_defects:
     
     # ----------------------------------------------------------------------------------------------
 
-    def _calc_n_constant_j(self,x_0,n):
+    def _calc_n_constant_j(self,x,n):
 
         """
         solve n = e^(-1/x) e^(j*z/n)
@@ -211,11 +211,11 @@ class c_bistable_defects:
         _j = self.j
         _z = self.z
 
-        return np.exp(-1/x_0) * np.exp(_j*_z/n)
+        return np.exp(-1/x) * np.exp(_j*_z/n)
     
     # ----------------------------------------------------------------------------------------------
 
-    def _calc_n_constant_v(self,x_0):
+    def _calc_n_constant_v(self,x):
 
         """
         solve n = e^(-1/x) e^(j*z/n)
@@ -224,7 +224,7 @@ class c_bistable_defects:
         _v = self.v
         _z = self.z
 
-        return np.exp(-1/x_0) * np.exp( _v*_z / x_0 )
+        return np.exp(-1/x) * np.exp( _v*_z / x )
 
     # ----------------------------------------------------------------------------------------------
 
