@@ -1,4 +1,4 @@
-
+v
 import numpy as np
 import h5py
 
@@ -8,7 +8,9 @@ class c_bistable_defects:
 
     # ----------------------------------------------------------------------------------------------
 
-    def __init__(self,v=0.2,y=0.1,x_lo=None,x_hi=5,num_x=10001):
+    def __init__(self):
+        
+        ,v=0.2,y=0.1,x_lo=None,x_hi=5,num_x=10001):
 
         """
         dot U = 0 = v^2 n + x ( y^4 - x^4 )
@@ -30,7 +32,8 @@ class c_bistable_defects:
 
     # ----------------------------------------------------------------------------------------------
 
-    def solve(self,n_lo_guess=0.0,n_hi_guess=1.0,max_iter=1000,n_tol=1e-9,alpha=0.4,count=None):
+    def solve_constant_V(self,n_lo_guess=0.0,n_hi_guess=1.0,max_iter=1000,n_tol=1e-9,alpha=0.4,
+                         count=None):
 
         """
         we look for two solutions for n (there may be more that we miss!). we have to solve 
