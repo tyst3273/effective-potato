@@ -11,7 +11,7 @@ class c_bistable_defects:
     def __init__(self,y=0.1,z=0.0,x_lo=None,x_hi=5,num_x=10001):
 
         """
-        dot U = 0 = v^2 n + x ( y^4 - x^4 )
+        dot U = 0 = v^2 n / x + y^4 - x^4 
         dot n = 0 = e^(-1/x) - n
 
         v is dimensionless voltage, x is dimensionless sample temperature, y is 
