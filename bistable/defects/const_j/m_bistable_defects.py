@@ -224,7 +224,7 @@ class c_bistable_defects:
         _v = self.v
         _z = self.z
 
-        return np.exp(-1/x) * np.exp( _v*_z / x )
+        return np.exp(-1/x) * np.exp(_v*_z/x)
 
     # ----------------------------------------------------------------------------------------------
 
