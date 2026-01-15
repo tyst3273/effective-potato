@@ -15,7 +15,7 @@ def get_data(filename):
 
         n_lo = db['n_lo'][...]
         x_lo = db['x_lo'][...]
-
+        
         n_hi = db['n_hi'][...]
         x_hi = db['x_hi'][...]
 

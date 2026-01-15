@@ -334,13 +334,13 @@ def run_j_sweep(y=0.1,z=0.1):
 
 if __name__ == '__main__':
 
-    z=0.01
+    z=0.0
 
-    # run_v_sweep(y=0.01,z=z)
-    # run_v_sweep(y=0.1,z=z)
-    # run_v_sweep(y=0.25,z=z)
+    run_v_sweep(y=0.01,z=z)
+    run_v_sweep(y=0.1,z=z)
+    run_v_sweep(y=0.25,z=z)
 
-    run_j_sweep(y=0.1,z=z)
-    run_j_sweep(y=0.175,z=z)
-    run_j_sweep(y=0.25,z=z)
+    # run_j_sweep(y=0.1,z=z)
+    # run_j_sweep(y=0.175,z=z)
+    # run_j_sweep(y=0.25,z=z)
 
