@@ -25,26 +25,26 @@ def get_data(filename):
 
     return n_lo, x_lo, n_hi, x_hi, j, y, z
 
-fig, ax = plt.subplots(3,2,figsize=(4.5,6),gridspec_kw={'hspace':0.15,'wspace':0.1})
+fig, ax = plt.subplots(3,2,figsize=(4.5,6),gridspec_kw={'hspace':0.15,'wspace':0.2})
 
-n_lo, x_lo, n_hi, x_hi, j, y, z = get_data(f'results_j_sweep_y_0.100_z_{z:.3f}.h5')
+n_lo, x_lo, n_hi, x_hi, j, y, z = get_data(f'results_j_sweep_y_0.010_z_{z:.3f}.h5')
 
-ax[0,0].plot(j,n_lo,c='b',lw=0,marker='o',ms=1)
-ax[0,1].plot(j,x_lo,c='r',lw=0,marker='o',ms=1)
-ax[0,0].plot(j,n_hi,c='b',lw=0,marker='o',ms=1)
-ax[0,1].plot(j,x_hi,c='r',lw=0,marker='o',ms=1)
+ax[0,0].plot(j,n_lo,c='b',lw=1,ls=(0,(2,1)),marker='o',ms=1)
+ax[0,1].plot(j,x_lo,c='r',lw=1,ls=(0,(2,1)),marker='o',ms=1)
+ax[0,0].plot(j,n_hi,c='b',lw=1,ls=(0,(2,1)),marker='o',ms=1)
+ax[0,1].plot(j,x_hi,c='r',lw=1,ls=(0,(2,1)),marker='o',ms=1)
 
 ax[0,0].annotate('(a)',xy=(0.05,0.85),xycoords='axes fraction',c='k')
 ax[0,0].annotate(f'y={y:.2f}',xy=(0.4,0.85),xycoords='axes fraction',c='k')
 ax[0,1].annotate('(b)',xy=(0.05,0.85),xycoords='axes fraction',c='k')
 ax[0,1].annotate(f'y={y:.2f}',xy=(0.4,0.85),xycoords='axes fraction',c='k')
 
-n_lo, x_lo, n_hi, x_hi, j, y, z = get_data(f'results_j_sweep_y_0.175_z_{z:.3f}.h5')
+n_lo, x_lo, n_hi, x_hi, j, y, z = get_data(f'results_j_sweep_y_0.100_z_{z:.3f}.h5')
 
-ax[1,0].plot(j,n_lo,c='b',lw=0,marker='o',ms=1)
-ax[1,1].plot(j,x_lo,c='r',lw=0,marker='o',ms=1)
-ax[1,0].plot(j,n_hi,c='b',lw=0,marker='o',ms=1)
-ax[1,1].plot(j,x_hi,c='r',lw=0,marker='o',ms=1)
+ax[1,0].plot(j,n_lo,c='b',lw=1,ls=(0,(2,1)),marker='o',ms=1)
+ax[1,1].plot(j,x_lo,c='r',lw=1,ls=(0,(2,1)),marker='o',ms=1)
+ax[1,0].plot(j,n_hi,c='b',lw=1,ls=(0,(2,1)),marker='o',ms=1)
+ax[1,1].plot(j,x_hi,c='r',lw=1,ls=(0,(2,1)),marker='o',ms=1)
 
 ax[1,0].annotate('(a)',xy=(0.05,0.85),xycoords='axes fraction',c='k')
 ax[1,0].annotate(f'y={y:.2f}',xy=(0.4,0.85),xycoords='axes fraction',c='k')
@@ -53,10 +53,10 @@ ax[1,1].annotate(f'y={y:.2f}',xy=(0.4,0.85),xycoords='axes fraction',c='k')
 
 n_lo, x_lo, n_hi, x_hi, j, y, z = get_data(f'results_j_sweep_y_0.250_z_{z:.3f}.h5')
 
-ax[2,0].plot(j,n_lo,c='b',lw=0,marker='o',ms=1)
-ax[2,1].plot(j,x_lo,c='r',lw=0,marker='o',ms=1)
-ax[2,0].plot(j,n_hi,c='b',lw=0,marker='o',ms=1)
-ax[2,1].plot(j,x_hi,c='r',lw=0,marker='o',ms=1)
+ax[2,0].plot(j,n_lo,c='b',lw=1,ls=(0,(2,1)),marker='o',ms=1)
+ax[2,1].plot(j,x_lo,c='r',lw=1,ls=(0,(2,1)),marker='o',ms=1)
+ax[2,0].plot(j,n_hi,c='b',lw=1,ls=(0,(2,1)),marker='o',ms=1)
+ax[2,1].plot(j,x_hi,c='r',lw=1,ls=(0,(2,1)),marker='o',ms=1)
 
 ax[2,0].annotate('(a)',xy=(0.05,0.85),xycoords='axes fraction',c='k')
 ax[2,0].annotate(f'y={y:.2f}',xy=(0.4,0.85),xycoords='axes fraction',c='k')
@@ -73,8 +73,8 @@ fig.suptitle(f'z={z:.3f}',y=0.925)
 
 for ii in range(3):
 
-    # ax[ii,0].axis([0,0.5,-0.0175/2,0.175])
-    # ax[ii,1].axis([0,0.5,-0.06/2,0.6])
+    ax[ii,0].axis([0,0.025,-0.004/2,0.04])
+    ax[ii,1].axis([0,0.025,-0.04/2,0.4])
 
     ax[ii,0].axhline(0,lw=1,ls=(0,(1,1)),c='k')
     ax[ii,1].axhline(0,lw=1,ls=(0,(1,1)),c='k')

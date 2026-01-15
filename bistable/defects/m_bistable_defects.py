@@ -8,7 +8,7 @@ class c_bistable_defects:
 
     # ----------------------------------------------------------------------------------------------
 
-    def __init__(self,y=0.1,z=0.0,x_lo=None,x_hi=5,num_x=10001):
+    def __init__(self,y=0.1,z=0.0,x_lo=None,x_hi=1,num_x=100001):
 
         """
         dot U = 0 = v^2 n / x + y^4 - x^4 
@@ -26,6 +26,8 @@ class c_bistable_defects:
         if x_lo is None:
             x_lo = y
         self.x = np.linspace(x_lo,x_hi,num_x)
+
+        print('\n##############################################################')
 
     # ----------------------------------------------------------------------------------------------
 
@@ -268,9 +270,9 @@ def run_v_sweep(y=0.1,z=0.1):
     count = 0
     for ii, vv in enumerate(v):
 
-        print(f'\ncount: {count}')
+        print(f'\nnow doing count: {count}')
         
-        bistable = c_bistable_defects(y=y,z=z,x_hi=1.0,num_x=10001)
+        bistable = c_bistable_defects(y=y,z=z,x_hi=1.0,num_x=100001)
         _n, _x  = bistable.solve_constant_v(vv)
         
         if _n.size == 1:
@@ -300,8 +302,8 @@ def run_j_sweep(y=0.1,z=0.1):
     sweep over v
     """
 
-    num_j = 101
-    j = np.linspace(0.0,0.01,num_j)
+    num_j = 501
+    j = np.linspace(0.0,0.025,num_j)
 
     n_lo = np.zeros(num_j,dtype=float)
     x_lo = np.zeros(num_j,dtype=float)
@@ -311,10 +313,10 @@ def run_j_sweep(y=0.1,z=0.1):
     count = 0
     for ii, jj in enumerate(j):
 
-        print(f'\ncount: {count}')
+        print(f'\nnow doing count: {count}')
         
-        bistable = c_bistable_defects(y=y,z=z,x_hi=1.0,num_x=10001)
-        n_lo[ii], x_lo[ii], n_hi[ii], x_hi[ii] = bistable.solve_constant_j(jj)
+        bistable = c_bistable_defects(y=y,z=z,x_hi=1.0,num_x=100001)
+        n_lo[ii], x_lo[ii], n_hi[ii], x_hi[ii] = bistable.solve_constant_j(jj,n_tol=1e-5)
 
         count += 1
 
@@ -334,13 +336,52 @@ def run_j_sweep(y=0.1,z=0.1):
 
 if __name__ == '__main__':
 
-    z=0.0
+    # ---------------------------
 
-    run_v_sweep(y=0.01,z=z)
-    run_v_sweep(y=0.1,z=z)
-    run_v_sweep(y=0.25,z=z)
+    # z=0.0
 
+    # run_v_sweep(y=0.01,z=z)
+    # run_v_sweep(y=0.1,z=z)
+    # run_v_sweep(y=0.25,z=z)
+
+    # run_j_sweep(y=0.001,z=z)
+    # run_j_sweep(y=0.005,z=z)
+    # run_j_sweep(y=0.01,z=z)
     # run_j_sweep(y=0.1,z=z)
-    # run_j_sweep(y=0.175,z=z)
     # run_j_sweep(y=0.25,z=z)
+
+    # ---------------------------
+
+    # z=0.01
+
+    # run_v_sweep(y=0.01,z=z)
+    # run_v_sweep(y=0.1,z=z)
+    # run_v_sweep(y=0.25,z=z)
+
+    # run_j_sweep(y=0.001,z=z)
+    # run_j_sweep(y=0.005,z=z)
+    # run_j_sweep(y=0.01,z=z)
+    # run_j_sweep(y=0.1,z=z)
+    # run_j_sweep(y=0.25,z=z)
+
+    # ---------------------------
+
+    z=0.10
+
+    run_v_sweep(y=0.1,z=z)
+    run_v_sweep(y=0.15,z=z)
+    run_v_sweep(y=0.2,z=z)
+    run_v_sweep(y=0.25,z=z)
+    run_v_sweep(y=0.3,z=z)
+    run_v_sweep(y=0.35,z=z)
+    run_v_sweep(y=0.4,z=z)
+
+    run_j_sweep(y=0.1,z=z)
+    run_j_sweep(y=0.15,z=z)
+    run_j_sweep(y=0.2,z=z)
+    run_j_sweep(y=0.25,z=z)
+    run_j_sweep(y=0.3,z=z)
+    run_j_sweep(y=0.35,z=z)
+    run_j_sweep(y=0.4,z=z)
+
 
