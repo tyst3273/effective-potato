@@ -177,7 +177,7 @@ class c_bistable_defects:
         if _zeros.size > 1:
             print('fuck')
             print(_zeros)
-            
+
         x_0 = _zeros[0]
 
         return x_0
@@ -255,7 +255,7 @@ class c_bistable_defects:
 
 # --------------------------------------------------------------------------------------------------
 
-def run_v_sweep(y=0.1,z=0.1):
+def run_v(y=0.1,z=0.1):
 
     """
     sweep over v
@@ -285,7 +285,7 @@ def run_v_sweep(y=0.1,z=0.1):
         count += 1
 
     # write results to hdf5 file
-    with h5py.File(f'results_v_sweep_y_{y:.3f}_z_{z:.3f}.h5','w') as db:
+    with h5py.File(f'results_v_y_{y:.3f}_z_{z:.3f}.h5','w') as db:
 
         db.create_dataset('n',data=n)
         db.create_dataset('x',data=x)
@@ -296,14 +296,14 @@ def run_v_sweep(y=0.1,z=0.1):
 
 # --------------------------------------------------------------------------------------------------
 
-def run_j_sweep(y=0.1,z=0.1):
+def run_j(y=0.1,z=0.1):
 
     """
     sweep over v
     """
 
-    num_j = 501
-    j = np.linspace(0.0,0.025,num_j)
+    num_j = 251
+    j = np.linspace(0.0,0.001,num_j)
 
     n_lo = np.zeros(num_j,dtype=float)
     x_lo = np.zeros(num_j,dtype=float)
@@ -315,13 +315,14 @@ def run_j_sweep(y=0.1,z=0.1):
 
         print(f'\nnow doing count: {count}')
         
-        bistable = c_bistable_defects(y=y,z=z,x_hi=1.0,num_x=100001)
-        n_lo[ii], x_lo[ii], n_hi[ii], x_hi[ii] = bistable.solve_constant_j(jj,n_tol=1e-5)
+        bistable = c_bistable_defects(y=y,z=z,x_lo=0.0,x_hi=1.0,num_x=100001)
+        n_lo[ii], x_lo[ii], n_hi[ii], x_hi[ii] = bistable.solve_constant_j(jj,
+                                                    n_lo_guess=1.e-3,n_hi_guess=0.5,n_tol=1e-5)
 
         count += 1
 
     # write results to hdf5 file
-    with h5py.File(f'results_j_sweep_y_{y:.3f}_z_{z:.3f}.h5','w') as db:
+    with h5py.File(f'results_j_y_{y:.3f}_z_{z:.3f}.h5','w') as db:
 
         db.create_dataset('n_lo',data=n_lo)
         db.create_dataset('x_lo',data=x_lo)
@@ -334,54 +335,41 @@ def run_j_sweep(y=0.1,z=0.1):
 
 # --------------------------------------------------------------------------------------------------
 
+def run_j_sweep_over_y(y_list=[0.0,0.1],z=0.1):
+
+    """
+    sweep over j
+    """
+
+    import mpi4py.MPI as mpi
+    comm = mpi.COMM_WORLD
+    proc = comm.Get_rank()
+    num_procs = comm.Get_size()
+
+    my_y = np.array_split(y_list,num_procs)[proc]
+    for y in my_y:
+        print('proc:',proc,'\ty:',y)
+        run_j(y,z)
+
+# --------------------------------------------------------------------------------------------------
+
 if __name__ == '__main__':
-
-    # ---------------------------
-
-    # z=0.0
-
-    # run_v_sweep(y=0.01,z=z)
-    # run_v_sweep(y=0.1,z=z)
-    # run_v_sweep(y=0.25,z=z)
-
-    # run_j_sweep(y=0.001,z=z)
-    # run_j_sweep(y=0.005,z=z)
-    # run_j_sweep(y=0.01,z=z)
-    # run_j_sweep(y=0.1,z=z)
-    # run_j_sweep(y=0.25,z=z)
-
-    # ---------------------------
-
-    # z=0.01
-
-    # run_v_sweep(y=0.01,z=z)
-    # run_v_sweep(y=0.1,z=z)
-    # run_v_sweep(y=0.25,z=z)
-
-    # run_j_sweep(y=0.001,z=z)
-    # run_j_sweep(y=0.005,z=z)
-    # run_j_sweep(y=0.01,z=z)
-    # run_j_sweep(y=0.1,z=z)
-    # run_j_sweep(y=0.25,z=z)
-
-    # ---------------------------
 
     z=0.10
 
-    run_v_sweep(y=0.1,z=z)
-    run_v_sweep(y=0.15,z=z)
-    run_v_sweep(y=0.2,z=z)
-    run_v_sweep(y=0.25,z=z)
-    run_v_sweep(y=0.3,z=z)
-    run_v_sweep(y=0.35,z=z)
-    run_v_sweep(y=0.4,z=z)
+    # run_v(y=0.1,z=z)
+    # run_v(y=0.15,z=z)
+    # run_v(y=0.2,z=z)
+    # run_v(y=0.25,z=z)
+    # run_v(y=0.3,z=z)
+    # run_v(y=0.35,z=z)
+    # run_v(y=0.4,z=z)
 
-    run_j_sweep(y=0.1,z=z)
-    run_j_sweep(y=0.15,z=z)
-    run_j_sweep(y=0.2,z=z)
-    run_j_sweep(y=0.25,z=z)
-    run_j_sweep(y=0.3,z=z)
-    run_j_sweep(y=0.35,z=z)
-    run_j_sweep(y=0.4,z=z)
+    # run_j(0.1,z)
+
+    y_list = [0.001,0.005,0.010,0.050,0.100,0.500]
+    run_j_sweep_over_y(y_list,z)
+
+
 
 
