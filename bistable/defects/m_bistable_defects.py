@@ -1,10 +1,27 @@
 
 import numpy as np
+import matplotlib.pyplot as plt
 import h5py
+
+from scipy.optimize import root_scalar
 
 # --------------------------------------------------------------------------------------------------
 
-def find_zeros(func,x,args,x_tol=1e-9,max_iter=3,verbose=False):
+def _find_zeros_adaptive(func,x,args=(),x_tol=1e-16,max_iter=10,debug=False):
+
+    """
+    find the zeros of a function using an adaptive mesh. works for any number of zeros.
+
+    first, find all zeros on the given coarse mesh, x. then for each zero, divide the interval
+    containing the zero into x.size points and find the zeros again. repeat until the difference
+    in the numerical of the value of the zero is within x_tol or max_iter iterations is reached.
+    repeat for all zeros on the coarse mesh. 
+
+    nb. if the initial mesh is so coarse that multiple zeros are contained in the same interval, 
+    then some zeros will be missed.
+    """
+
+    root_scalar(lambda x: func(x,*args), method='bisect')
 
     num_x = x.size
 
@@ -25,29 +42,60 @@ def find_zeros(func,x,args,x_tol=1e-9,max_iter=3,verbose=False):
 
         for iter in range(max_iter):
 
-            print(iter)
-
             _x = np.linspace(x_lo,x_hi,num_x)
+            _arr = func(_x,*args)
 
-            arr = func(_x,*args)
+            if debug:
+                plt.plot(x,arr,c='k',lw=1)
+                plt.plot(_x,_arr,c='m',lw=1)
+                plt.axhline(0,lw=0.5,ls=(0,(2,1)))
+                plt.axis([x_lo,x_hi,_arr[0],_arr[-1]])
+                plt.show()
+                plt.clf()
 
-            diff = np.diff(np.sign(arr))
-            _ind = np.flatnonzero(diff).squeeze()
-            print(_ind)
+            _diff = np.diff(np.sign(_arr))
+            _ind = np.flatnonzero(_diff).squeeze()
 
-            x_lo = x[_ind]
-            x_hi = x[_ind+1]
+            x_lo = _x[_ind]
+            x_hi = _x[_ind+1]
             _x_0 = (x_lo + x_hi) / 2
 
             if np.abs(x_0-_x_0) < x_tol:
                 converged = True
                 break
 
-            x_0 = np.copy(_x_0)
+            x_0 = _x_0
 
-        zeros[ii] = _x_0.squeeze()
+        zeros[ii] = _x_0
 
-        return zeros.squeeze()
+    return zeros.squeeze()
+
+# --------------------------------------------------------------------------------------------------
+
+def find_zeros_adaptive(func,x,args=(),x_tol=1e-16,max_iter=10,debug=False):
+
+    """
+    ...
+    """
+
+    arr = func(x,*args)
+    diff = np.diff(np.sign(arr))
+    inds = np.flatnonzero(diff)
+    num_zeros = inds.size
+
+    zeros = np.zeros(num_zeros)
+        
+    for ii, ind in enumerate(inds):
+        
+        x_lo = x[ind]
+        x_hi = x[ind+1]
+        
+        res = root_scalar(lambda x: func(x,*args), method='bisect', bracket=[x_lo,x_hi], 
+                          xtol=1e-16)
+
+        zeros[ii] = res.root
+
+    return zeros.squeeze()
 
 # --------------------------------------------------------------------------------------------------
 
@@ -60,13 +108,8 @@ class c_bistable_defects:
     def __init__(self,y=0.1,z=0.0,x_lo=None,x_hi=1,num_x=100001):
 
         """
-        dot U = 0 = v^2 n / x + y^4 - x^4 
-        dot n = 0 = e^(-1/x) - n
-
-        v is dimensionless voltage, x is dimensionless sample temperature, y is 
-            dimensionless bath temperature. n is defect concentration.
-
-        v and y are "knobs" that we turn in the lab. x and n are variables we solve for. 
+        y is dimensionless bath temp, z is dimensionless field lowering parameter ... 
+        will explain better later when less lazy
         """
 
         self.y = y
@@ -76,8 +119,8 @@ class c_bistable_defects:
             x_lo = y
         self.x = np.linspace(x_lo,x_hi,num_x)
 
-        self.x_lo = x_lo
-        self.x_hi = x_hi
+        # self.x_lo = x_lo
+        # self.x_hi = x_hi
         self.num_x = num_x
 
         print('\n##############################################################')
@@ -92,16 +135,15 @@ class c_bistable_defects:
 
         self.v = v 
         self.v_sq = v**2
-        print(f'\nconstant v: {v:6.4f}')
+        print(f'\nconstant v: {v:9.6e}')
 
-        x_0 = find_zeros(self._calc_dot_U_constant_v, x=self.x, args=(self.y,self.v_sq))
-        print(x_0)
+        x_0 = find_zeros_adaptive(self._calc_dot_U_constant_v, x=self.x)
         n_0 = self._calc_n_constant_v(x_0)
 
         msg = '\n*** RESULTS ***'
-        msg += f'\n\n% v: {self.v:9.6f}'
-        msg += f'\n% y: {self.y:9.6f}'
-        msg += f'\n% z: {self.z:9.6f}' 
+        msg += f'\n\n% v: {self.v:9.6e}'
+        msg += f'\n% y: {self.y:9.6e}'
+        msg += f'\n% z: {self.z:9.6e}' 
         print(msg)
 
         print('\n% n:',n_0)
@@ -111,7 +153,7 @@ class c_bistable_defects:
 
     # ----------------------------------------------------------------------------------------------
 
-    def solve_constant_j(self,j,n_lo_guess=0.001,n_hi_guess=0.999,max_iter=200,n_tol=1e-6,
+    def solve_constant_j(self,j,n_lo_guess=0.001,n_hi_guess=0.999,max_iter=500,n_tol=1e-9,
                          alpha=0.4):
 
         """
@@ -123,44 +165,36 @@ class c_bistable_defects:
 
         self.j = j 
         self.j_sq = j**2
-        print(f'\nconstant j: {j:6.4f}')
+        print(f'\nconstant j: {j:9.6e}')
 
         # low n guess
-        print(f'\nsolving for low n guess: n_in={n_lo_guess:6.4f}')
+        print(f'\nsolving for low n guess: n_in={n_lo_guess:9.6e}')
         n_lo, x_lo, res_lo = \
             self._solve_self_consistent_constant_j(n_lo_guess,max_iter,n_tol,alpha)
-        cond_lo = n_lo / x_lo
-        v_lo = j / cond_lo
 
         # hi n guess
-        print(f'\nsolving for high n guess: n_in={n_hi_guess:6.4f}')
+        print(f'\nsolving for high n guess: n_in={n_hi_guess:9.6e}')
         n_hi, x_hi, res_hi = \
             self._solve_self_consistent_constant_j(n_hi_guess,max_iter,n_tol,alpha)
-        cond_hi = n_lo / x_lo
-        v_hi = j / cond_hi
 
         n_diff = n_hi-n_lo
         x_diff = x_hi-x_lo
 
         msg = '\n*** RESULTS ***'
-        msg += f'\n\n% j: {self.j:9.6f}'
-        msg += f'\n% y: {self.y:9.6f}'
-        msg += f'\n% z: {self.z:9.6f}' 
+        msg += f'\n\n% j: {self.j:9.6e}'
+        msg += f'\n% y: {self.y:9.6e}'
+        msg += f'\n% z: {self.z:9.6e}' 
 
         msg += f'\n\n% n_lo: {n_lo:9.6e}'
         msg += f'\n% x_lo: {x_lo:9.6e}'
-        msg += f'\n% cond_lo: {cond_lo:9.6e}'
-        msg += f'\n% v_lo: {v_lo:9.6e}'
         msg += f'\n% residual_lo: {res_lo:9.6e}'
 
         msg += f'\n\n% n_hi: {n_hi:9.6e}'
         msg += f'\n% x_hi: {x_hi:9.6e}'
-        msg += f'\n% cond_hi: {cond_lo:9.6e}'
-        msg += f'\n% v_hi: {v_hi:9.6e}'
         msg += f'\n% residual_hi: {res_hi:9.6e}'
 
-        msg += f'\n\n% n_diff: {n_diff:6.4f}'
-        msg += f'\n% x_diff: {x_diff:6.4f}'
+        msg += f'\n\n% n_diff: {n_diff:9.6e}'
+        msg += f'\n% x_diff: {x_diff:9.6e}'
         print(msg)
 
         return n_lo, x_lo, n_hi, x_hi
@@ -182,15 +216,15 @@ class c_bistable_defects:
         converged = False
         for iter in range(max_iter):
 
-            # solve for x(n). 
-            x_0 = find_zeros(self._calc_dot_U_constant_j,x=self.x,args=(n_in,self.j_sq,self.y))
+            # solve for x(n)
+            x_0 = find_zeros_adaptive(self._calc_dot_U_constant_j,x=self.x,args=(n_in,))
 
             # calculate n(x)
             n_out = self._calc_n_constant_j(x_0,n_in)
 
             residual = np.abs(n_out-n_in)
 
-            print(f'{iter:5d}   {n_out:6.4f}   {x_0:6.4f}   {residual:5.2e}')
+            print(f'{iter:5d}   {n_out:9.6e}   {x_0:9.6e}   {residual:9.6e}')
 
             # check convergence
             if residual <= n_tol:
@@ -207,24 +241,30 @@ class c_bistable_defects:
     
     # ----------------------------------------------------------------------------------------------
 
-    def _calc_dot_U_constant_j(self,x,n,j_sq,y):
+    def _calc_dot_U_constant_j(self,x,n):
 
         """
         energy balance is j^2 x / n + y^4 - x^4 
         """
 
-        return j_sq * x / n + y**4 - x**4
+        _j_sq = self.j_sq
+        _y = self.y
+
+        return _j_sq * x / n + _y**4 - x**4
     
     # ----------------------------------------------------------------------------------------------
 
-    def _calc_dot_U_constant_v(self,x,y,v_sq):
+    def _calc_dot_U_constant_v(self,x):
 
         """
         energy balance is v^2 * n / x + y^4 - x^4 
         """
 
+        _v_sq = self.v_sq
+        _y = self.y
+
         _n = self._calc_n_constant_v(x)
-        return v_sq * _n / x + y**4 - x**4
+        return _v_sq * _n / x + _y**4 - x**4
     
     # ----------------------------------------------------------------------------------------------
 
@@ -372,7 +412,7 @@ def run_j_sweep_over_y(y_list=[0.0,0.1],z=0.1):
 
     my_y = np.array_split(y_list,num_procs)[proc]
     for y in my_y:
-        print('proc:',proc,'\ty:',y)
+        print('\nproc:',proc,'\ty:',y)
         run_j(y,z)
 
 # --------------------------------------------------------------------------------------------------
@@ -381,7 +421,7 @@ if __name__ == '__main__':
 
     z=0.10
 
-    run_v(y=0.1,z=z)
+    # run_v(y=0.1,z=z)
     # run_v(y=0.15,z=z)
     # run_v(y=0.2,z=z)
     # run_v(y=0.25,z=z)
@@ -391,8 +431,8 @@ if __name__ == '__main__':
 
     # run_j(0.1,z)
 
-    # y_list = [0.001,0.005,0.010,0.050,0.100,0.500]
-    # run_j_sweep_over_y(y_list,z)
+    y_list = [0.001,0.005,0.010,0.050,0.100,0.500]
+    run_j_sweep_over_y(y_list,z)
 
 
 
