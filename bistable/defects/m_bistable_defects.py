@@ -27,11 +27,15 @@ class c_bistable_defects:
             x_lo = y
         self.x = np.linspace(x_lo,x_hi,num_x)
 
+        self.x_lo = x_lo
+        self.x_hi = x_hi
+        self.num_x = num_x
+
         print('\n##############################################################')
 
     # ----------------------------------------------------------------------------------------------
 
-    def solve_constant_v(self,v):
+    def solve_constant_v(self,v,num_iter=1):
 
         """
         ...
@@ -41,10 +45,7 @@ class c_bistable_defects:
         self.v_sq = v**2
         print(f'\nconstant v: {v:6.4f}')
 
-        _x = self.x
-        _n = self._calc_n_constant_v(_x)
-
-        x_0 = self._solve_dot_U_steady_state_constant_v(_n)
+        x_0 = self._solve_dot_U_steady_state_constant_v(num_iter)
         n_0 = self._calc_n_constant_v(x_0)
 
         msg = '\n*** RESULTS ***'
@@ -61,7 +62,7 @@ class c_bistable_defects:
     # ----------------------------------------------------------------------------------------------
 
     def solve_constant_j(self,j,n_lo_guess=0.001,n_hi_guess=0.999,max_iter=200,n_tol=1e-6,
-                               alpha=0.4):
+                               alpha=0.8,num_iter=1):
 
         """
         we look for two solutions for n. we have to solve self-consistently, so how we find 
@@ -80,14 +81,14 @@ class c_bistable_defects:
         # low n guess
         print(f'\nsolving for low n guess: n_in={n_lo_guess:6.4f}')
         n_lo, x_lo, res_lo = \
-            self._solve_self_consistent_constant_j(n_lo_guess,max_iter,n_tol,alpha)
+            self._solve_self_consistent_constant_j(n_lo_guess,max_iter,n_tol,alpha,num_iter)
         cond_lo = n_lo / x_lo
         v_lo = j / cond_lo
 
         # hi n guess
         print(f'\nsolving for high n guess: n_in={n_hi_guess:6.4f}')
         n_hi, x_hi, res_hi = \
-            self._solve_self_consistent_constant_j(n_hi_guess,max_iter,n_tol,alpha)
+            self._solve_self_consistent_constant_j(n_hi_guess,max_iter,n_tol,alpha,num_iter)
         cond_hi = n_lo / x_lo
         v_hi = j / cond_hi
 
@@ -119,7 +120,7 @@ class c_bistable_defects:
 
     # ----------------------------------------------------------------------------------------------
 
-    def _solve_self_consistent_constant_j(self,n_in,max_iter,n_tol,alpha):
+    def _solve_self_consistent_constant_j(self,n_in,max_iter,n_tol,alpha,num_iter):
         
         """
         solve for n self consistently: make a guess for n_in and calculate x from dot U = 0. 
@@ -135,7 +136,7 @@ class c_bistable_defects:
         for iter in range(max_iter):
 
             # solve for x(n). 
-            x_0 = self._solve_dot_U_steady_state_constant_j(n_in)
+            x_0 = self._solve_dot_U_steady_state_constant_j(n_in,num_iter)
 
             # calculate n(x)
             n_out = self._calc_n_constant_j(x_0,n_in)
@@ -159,7 +160,7 @@ class c_bistable_defects:
 
     # ----------------------------------------------------------------------------------------------
 
-    def _solve_dot_U_steady_state_constant_j(self,n):
+    def _solve_dot_U_steady_state_constant_j_bak(self,n):
 
         """
         solve 0 = j^2 x / n + y^4 - x^4 for x
@@ -183,8 +184,38 @@ class c_bistable_defects:
         return x_0
     
     # ----------------------------------------------------------------------------------------------
+    
+    def _solve_dot_U_steady_state_constant_j(self,n,num_iter):
 
-    def _solve_dot_U_steady_state_constant_v(self,n):
+        """
+        solve 0 = j^2 x / n + y^4 - x^4 for x
+        """
+
+        _x_lo = self.x_lo
+        _x_hi = self.x_hi
+        _num_x = self.num_x
+
+        _y = self.y
+        _j_sq = self.j_sq  
+
+        for _iter in range(num_iter):
+
+            _x = np.linspace(_x_lo,_x_hi,_num_x)
+            _f = _j_sq * _x / n + _y**4 - _x**4 
+
+            _ind, _ = self._find_zeros(_f)
+            _ind = _ind[0]
+
+            _x_lo = _x[_ind]
+            _x_hi = _x[_ind+1]
+
+        x_0 = (_x_lo + _x_hi) / 2
+
+        return x_0
+    
+    # ----------------------------------------------------------------------------------------------
+
+    def _solve_dot_U_steady_state_constant_v_bak(self,n):
 
         """
         solve 0 = v^2 n / x + y^4 - x^4 for x
@@ -201,6 +232,49 @@ class c_bistable_defects:
         x_0 = _x[_inds]
 
         return x_0
+    
+    # ----------------------------------------------------------------------------------------------
+    
+    def _solve_dot_U_steady_state_constant_v(self,num_iter):
+
+        """
+        solve 0 = v^2 n / x + y^4 - x^4 for x
+        """
+
+        _num_x = self.num_x
+
+        _y = self.y
+        _v_sq = self.v_sq  
+
+        _x = self.x
+        _n = self._calc_n_constant_v(_x)
+        _f = _v_sq * _n / _x + _y**4 - _x**4
+        _inds, _ = self._find_zeros(_f)
+        print(_inds)
+
+        zeros = np.zeros(_inds.size)
+
+        for ii, _ind in enumerate(_inds):
+            
+            _x_lo = _x[_ind]
+            _x_hi = _x[_ind+1]
+            
+            for _iter in range(1,num_iter):
+
+                _x = np.linspace(_x_lo,_x_hi,_num_x)
+                _n = self._calc_n_constant_v(_x)
+                _f = _v_sq * _n / _x + _y**4 - _x**4
+                _ind, _ = self._find_zeros(_f)
+                print(_ind)
+                _ind = _ind.squeeze()
+                _x_lo = _x[_ind]
+                _x_hi = _x[_ind+1]
+
+            x_0 = (_x_lo + _x_hi) / 2
+            # print(x_0)
+            zeros[ii] = x_0
+
+        return zeros
     
     # ----------------------------------------------------------------------------------------------
 
@@ -261,7 +335,7 @@ def run_v(y=0.1,z=0.1):
     sweep over v
     """
 
-    num_v = 1001
+    num_v = 501
     v = np.linspace(0.0,0.5,num_v)
 
     n = np.zeros((num_v,3),dtype=float)
@@ -272,8 +346,8 @@ def run_v(y=0.1,z=0.1):
 
         print(f'\nnow doing count: {count}')
         
-        bistable = c_bistable_defects(y=y,z=z,x_hi=1.0,num_x=100001)
-        _n, _x  = bistable.solve_constant_v(vv)
+        bistable = c_bistable_defects(y=y,z=z,x_hi=1.0,num_x=10001)
+        _n, _x  = bistable.solve_constant_v(vv,num_iter=6)
         
         if _n.size == 1:
             n[ii,0] = _n.squeeze()
@@ -302,7 +376,7 @@ def run_j(y=0.1,z=0.1):
     sweep over v
     """
 
-    num_j = 251
+    num_j = 501
     j = np.linspace(0.0,0.001,num_j)
 
     n_lo = np.zeros(num_j,dtype=float)
@@ -315,9 +389,9 @@ def run_j(y=0.1,z=0.1):
 
         print(f'\nnow doing count: {count}')
         
-        bistable = c_bistable_defects(y=y,z=z,x_lo=0.0,x_hi=1.0,num_x=100001)
-        n_lo[ii], x_lo[ii], n_hi[ii], x_hi[ii] = bistable.solve_constant_j(jj,
-                                                    n_lo_guess=1.e-3,n_hi_guess=0.5,n_tol=1e-5)
+        bistable = c_bistable_defects(y=y,z=z,x_hi=1.0,num_x=10001)
+        n_lo[ii], x_lo[ii], n_hi[ii], x_hi[ii] = bistable.solve_constant_j(jj,n_tol=1e-9,
+                                                                           num_iter=3)
 
         count += 1
 
@@ -357,7 +431,7 @@ if __name__ == '__main__':
 
     z=0.10
 
-    # run_v(y=0.1,z=z)
+    run_v(y=0.1,z=z)
     # run_v(y=0.15,z=z)
     # run_v(y=0.2,z=z)
     # run_v(y=0.25,z=z)
@@ -365,10 +439,10 @@ if __name__ == '__main__':
     # run_v(y=0.35,z=z)
     # run_v(y=0.4,z=z)
 
-    # run_j(0.1,z)
+    # run_j(0.25,z)
 
-    y_list = [0.001,0.005,0.010,0.050,0.100,0.500]
-    run_j_sweep_over_y(y_list,z)
+    # y_list = [0.001,0.005,0.010,0.050,0.100,0.500]
+    # run_j_sweep_over_y(y_list,z)
 
 
 
