@@ -2,80 +2,14 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import h5py
-
-from scipy.optimize import root_scalar
-
-# --------------------------------------------------------------------------------------------------
-
-def _find_zeros_adaptive(func,x,args=(),x_tol=1e-16,max_iter=10,debug=False):
-
-    """
-    find the zeros of a function using an adaptive mesh. works for any number of zeros.
-
-    first, find all zeros on the given coarse mesh, x. then for each zero, divide the interval
-    containing the zero into x.size points and find the zeros again. repeat until the difference
-    in the numerical of the value of the zero is within x_tol or max_iter iterations is reached.
-    repeat for all zeros on the coarse mesh. 
-
-    nb. if the initial mesh is so coarse that multiple zeros are contained in the same interval, 
-    then some zeros will be missed.
-    """
-
-    root_scalar(lambda x: func(x,*args), method='bisect')
-
-    num_x = x.size
-
-    arr = func(x,*args)
-    diff = np.diff(np.sign(arr))
-    inds = np.flatnonzero(diff)
-    num_zeros = inds.size
-
-    zeros = np.zeros(num_zeros)
-        
-    for ii, ind in enumerate(inds):
-
-        converged = False
-
-        x_lo = x[ind]
-        x_hi = x[ind+1]
-        x_0 = (x_lo + x_hi) / 2
-
-        for iter in range(max_iter):
-
-            _x = np.linspace(x_lo,x_hi,num_x)
-            _arr = func(_x,*args)
-
-            if debug:
-                plt.plot(x,arr,c='k',lw=1)
-                plt.plot(_x,_arr,c='m',lw=1)
-                plt.axhline(0,lw=0.5,ls=(0,(2,1)))
-                plt.axis([x_lo,x_hi,_arr[0],_arr[-1]])
-                plt.show()
-                plt.clf()
-
-            _diff = np.diff(np.sign(_arr))
-            _ind = np.flatnonzero(_diff).squeeze()
-
-            x_lo = _x[_ind]
-            x_hi = _x[_ind+1]
-            _x_0 = (x_lo + x_hi) / 2
-
-            if np.abs(x_0-_x_0) < x_tol:
-                converged = True
-                break
-
-            x_0 = _x_0
-
-        zeros[ii] = _x_0
-
-    return zeros.squeeze()
+import scipy
 
 # --------------------------------------------------------------------------------------------------
 
-def find_zeros_adaptive(func,x,args=(),x_tol=1e-16,max_iter=10,debug=False):
+def find_zeros_adaptive(func,x,args=(),x_tol=1e-16,max_iter=100,verbose=False):
 
     """
-    ...
+    find multiple zeros of a function to high precision. uses scipy.optimize.root_scalar
     """
 
     arr = func(x,*args)
@@ -90,8 +24,13 @@ def find_zeros_adaptive(func,x,args=(),x_tol=1e-16,max_iter=10,debug=False):
         x_lo = x[ind]
         x_hi = x[ind+1]
         
-        res = root_scalar(lambda x: func(x,*args), method='bisect', bracket=[x_lo,x_hi], 
-                          xtol=1e-16)
+        res = scipy.optimize.root_scalar(lambda x: func(x,*args), method='bisect', 
+                                         bracket=[x_lo,x_hi], xtol=x_tol, maxiter=max_iter)
+        
+        if verbose:
+            print('')
+            print(res)
+            print('')
 
         zeros[ii] = res.root
 
@@ -153,7 +92,7 @@ class c_bistable_defects:
 
     # ----------------------------------------------------------------------------------------------
 
-    def solve_constant_j(self,j,n_lo_guess=0.001,n_hi_guess=0.999,max_iter=500,n_tol=1e-9,
+    def solve_constant_j(self,j,n_lo_guess=0.001,n_hi_guess=0.999,max_iter=200,n_tol=1e-9,
                          alpha=0.4):
 
         """
@@ -168,12 +107,12 @@ class c_bistable_defects:
         print(f'\nconstant j: {j:9.6e}')
 
         # low n guess
-        print(f'\nsolving for low n guess: n_in={n_lo_guess:9.6e}')
+        print(f'\nsolving for low n guess: n_in = {n_lo_guess:9.6e}')
         n_lo, x_lo, res_lo = \
             self._solve_self_consistent_constant_j(n_lo_guess,max_iter,n_tol,alpha)
 
         # hi n guess
-        print(f'\nsolving for high n guess: n_in={n_hi_guess:9.6e}')
+        print(f'\nsolving for high n guess: n_in = {n_hi_guess:9.6e}')
         n_hi, x_hi, res_hi = \
             self._solve_self_consistent_constant_j(n_hi_guess,max_iter,n_tol,alpha)
 
@@ -210,8 +149,8 @@ class c_bistable_defects:
             within tolerances.
         """
 
-        print('\n  iter  n_out    x_0      convergence')
-        print('--------------------------------------')
+        print('\n  iter   n_out          x_0           convergence')
+        print('------------------------------------------------------')
 
         converged = False
         for iter in range(max_iter):
@@ -291,19 +230,6 @@ class c_bistable_defects:
         _z = self.z
 
         return np.exp(-1/x) * np.exp(_v*_z/x)
-
-    # ----------------------------------------------------------------------------------------------
-
-    def _find_zeros(self,arr):
-
-        """
-        find the 0's in the array arr.
-        """
-        
-        diff = np.diff(np.sign(arr))
-        zeros = np.flatnonzero(diff)
-        
-        return zeros, diff
     
     # ----------------------------------------------------------------------------------------------
 
@@ -322,7 +248,7 @@ class c_bistable_defects:
 def run_v(y=0.1,z=0.1):
 
     """
-    sweep over v
+    run calculation for an array of v
     """
 
     num_v = 501
@@ -363,11 +289,11 @@ def run_v(y=0.1,z=0.1):
 def run_j(y=0.1,z=0.1):
 
     """
-    sweep over v
+    run a calculation for an array of j
     """
 
     num_j = 1001
-    j = np.linspace(0.0,0.1,num_j)
+    j = np.linspace(0.0,0.01,num_j)
 
     n_lo = np.zeros(num_j,dtype=float)
     x_lo = np.zeros(num_j,dtype=float)
@@ -381,7 +307,7 @@ def run_j(y=0.1,z=0.1):
         
         bistable = c_bistable_defects(y=y,z=z,x_hi=1.0,num_x=10001)
         n_lo[ii], x_lo[ii], n_hi[ii], x_hi[ii] = bistable.solve_constant_j(jj,
-                                    n_lo_guess=1e-3,n_hi_guess=0.5,n_tol=1e-9,alpha=0.4)
+                                    n_lo_guess=0.1,n_hi_guess=0.5,n_tol=1e-9,alpha=0.1)
 
         count += 1
 
@@ -402,7 +328,7 @@ def run_j(y=0.1,z=0.1):
 def run_j_sweep_over_y(y_list=[0.0,0.1],z=0.1):
 
     """
-    sweep over j
+    sweep over multiple y for the same j 
     """
 
     import mpi4py.MPI as mpi
@@ -434,10 +360,9 @@ if __name__ == '__main__':
     # y_list = [0.001,0.005,0.010,0.050,0.100,0.500]
     # run_j_sweep_over_y(y_list,z)
 
-    z = 0.0
     y_list = [0.001,0.005,0.010,0.050,0.100,0.500]
-    run_j_sweep_over_y(y_list,z)
 
-
-
+    z_list = [0.0,0.001,0.005,0.010,0.050,0.100]
+    for zz in z_list:
+        run_j_sweep_over_y(y_list,zz)
 
