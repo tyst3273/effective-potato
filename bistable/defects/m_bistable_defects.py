@@ -366,8 +366,8 @@ def run_j(y=0.1,z=0.1):
     sweep over v
     """
 
-    num_j = 501
-    j = np.linspace(0.0,0.001,num_j)
+    num_j = 1001
+    j = np.linspace(0.0,0.1,num_j)
 
     n_lo = np.zeros(num_j,dtype=float)
     x_lo = np.zeros(num_j,dtype=float)
@@ -419,7 +419,7 @@ def run_j_sweep_over_y(y_list=[0.0,0.1],z=0.1):
 
 if __name__ == '__main__':
 
-    z=0.10
+    # z=0.10
 
     # run_v(y=0.1,z=z)
     # run_v(y=0.15,z=z)
@@ -431,6 +431,10 @@ if __name__ == '__main__':
 
     # run_j(0.1,z)
 
+    # y_list = [0.001,0.005,0.010,0.050,0.100,0.500]
+    # run_j_sweep_over_y(y_list,z)
+
+    z = 0.0
     y_list = [0.001,0.005,0.010,0.050,0.100,0.500]
     run_j_sweep_over_y(y_list,z)
 
