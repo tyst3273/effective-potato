@@ -44,13 +44,15 @@ try:
     _hi = np.nanargmin(x[:,1])
 except ValueError:
     _hi = 0
+ax[0,0].plot([v[_lo],v[_lo]],[n[_lo,0],n[_lo,2]],ms=0,lw=1,ls=(0,(2,1)),c='b')
+ax[0,0].plot([v[_hi],v[_hi]],[n[_hi,0],n[_hi,2]],ms=0,lw=1,ls=(0,(2,1)),c='b')
 ax[0,1].plot([v[_lo],v[_lo]],[x[_lo,0],x[_lo,2]],ms=0,lw=1,ls=(0,(2,1)),c='r')
 ax[0,1].plot([v[_hi],v[_hi]],[x[_hi,0],x[_hi,2]],ms=0,lw=1,ls=(0,(2,1)),c='r')
 
 ax[0,0].annotate('(a)',xy=(0.05,0.85),xycoords='axes fraction',c='k')
-ax[0,0].annotate(f'y={y:.2f}',xy=(0.4,0.85),xycoords='axes fraction',c='k')
+ax[0,0].annotate(f'y={y:.2f}',xy=(0.55,0.4),xycoords='axes fraction',c='k')
 ax[0,1].annotate('(b)',xy=(0.05,0.85),xycoords='axes fraction',c='k')
-ax[0,1].annotate(f'y={y:.2f}',xy=(0.4,0.85),xycoords='axes fraction',c='k')
+ax[0,1].annotate(f'y={y:.2f}',xy=(0.55,0.4),xycoords='axes fraction',c='k')
 
 n, x, v, y, z = get_data(f'results_v_sweep_y_0.100_z_{z:.3f}.h5')
 
@@ -69,13 +71,15 @@ try:
     _hi = np.nanargmin(x[:,1])
 except ValueError:
     _hi = 0
+ax[1,0].plot([v[_lo],v[_lo]],[n[_lo,0],n[_lo,2]],ms=0,lw=1,ls=(0,(2,1)),c='b')
+ax[1,0].plot([v[_hi],v[_hi]],[n[_hi,0],n[_hi,2]],ms=0,lw=1,ls=(0,(2,1)),c='b')
 ax[1,1].plot([v[_lo],v[_lo]],[x[_lo,0],x[_lo,2]],ms=0,lw=1,ls=(0,(2,1)),c='r')
 ax[1,1].plot([v[_hi],v[_hi]],[x[_hi,0],x[_hi,2]],ms=0,lw=1,ls=(0,(2,1)),c='r')
 
 ax[1,0].annotate('(a)',xy=(0.05,0.85),xycoords='axes fraction',c='k')
-ax[1,0].annotate(f'y={y:.2f}',xy=(0.4,0.85),xycoords='axes fraction',c='k')
+ax[1,0].annotate(f'y={y:.2f}',xy=(0.6,0.5),xycoords='axes fraction',c='k')
 ax[1,1].annotate('(b)',xy=(0.05,0.85),xycoords='axes fraction',c='k')
-ax[1,1].annotate(f'y={y:.2f}',xy=(0.4,0.85),xycoords='axes fraction',c='k')
+ax[1,1].annotate(f'y={y:.2f}',xy=(0.6,0.5),xycoords='axes fraction',c='k')
 
 n, x, v, y, z = get_data(f'results_v_sweep_y_0.250_z_{z:.3f}.h5')
 
@@ -94,13 +98,15 @@ try:
     _hi = np.nanargmin(x[:,1])
 except ValueError:
     _hi = 0
+ax[2,0].plot([v[_lo],v[_lo]],[n[_lo,0],n[_lo,2]],ms=0,lw=1,ls=(0,(2,1)),c='b')
+ax[2,0].plot([v[_hi],v[_hi]],[n[_hi,0],n[_hi,2]],ms=0,lw=1,ls=(0,(2,1)),c='b')
 ax[2,1].plot([v[_lo],v[_lo]],[x[_lo,0],x[_lo,2]],ms=0,lw=1,ls=(0,(2,1)),c='r')
 ax[2,1].plot([v[_hi],v[_hi]],[x[_hi,0],x[_hi,2]],ms=0,lw=1,ls=(0,(2,1)),c='r')
 
 ax[2,0].annotate('(a)',xy=(0.05,0.85),xycoords='axes fraction',c='k')
-ax[2,0].annotate(f'y={y:.2f}',xy=(0.4,0.85),xycoords='axes fraction',c='k')
+ax[2,0].annotate(f'y={y:.2f}',xy=(0.075,0.5),xycoords='axes fraction',c='k')
 ax[2,1].annotate('(b)',xy=(0.05,0.85),xycoords='axes fraction',c='k')
-ax[2,1].annotate(f'y={y:.2f}',xy=(0.4,0.85),xycoords='axes fraction',c='k')
+ax[2,1].annotate(f'y={y:.2f}',xy=(0.075,0.5),xycoords='axes fraction',c='k')
 
 ax[2,0].set_xlabel('v')
 ax[0,0].set_ylabel('n')
@@ -112,8 +118,11 @@ fig.suptitle(f'z={z:.3f}',y=0.925)
 
 for ii in range(3):
 
-    ax[ii,0].axis([0,0.4,-0.0175/2,0.175])
-    ax[ii,1].axis([0,0.4,-0.06/2,0.6])
+    # ax[ii,0].axis([0,0.4,-0.0175/2,0.175])
+    # ax[ii,1].axis([0,0.4,-0.06/2,0.6])
+
+    ax[ii,0].set_yscale('log')
+    ax[ii,1].set_yscale('log')
 
     ax[ii,0].axhline(0,lw=1,ls=(0,(1,1)),c='k')
     ax[ii,1].axhline(0,lw=1,ls=(0,(1,1)),c='k')

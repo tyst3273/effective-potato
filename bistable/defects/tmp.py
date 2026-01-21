@@ -2,14 +2,12 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-nn = 1001
-n = np.linspace(0,1,nn)
 
-x = 0.01
-j = 0.1
-z = 0.01
+start = -6
+end = 1
+num = 1000
 
-f = np.exp(-1/x) * np.exp(j*z/n) - n
+x = np.logspace(start,end,num=num)
 
-plt.plot(n,f)
+plt.plot(np.arange(num),x,c='r')
 plt.show()

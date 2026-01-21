@@ -27,8 +27,12 @@ def get_data(filename):
 
 fig, ax = plt.subplots(1,2,figsize=(8,3),gridspec_kw={'hspace':0.15,'wspace':0.2})
 
-y_list = [0.001,0.005,0.010,0.050,0.100]
-colors = ['r','g','b','c','m']
+y_list = [0.001,0.005,0.010,0.050,0.100,0.250,0.500]
+
+cmap = plt.get_cmap('magma')
+norm = np.linspace(0,1,10)
+colors = cmap(norm)
+
 for ii, y in enumerate(y_list):
 
     print(y)

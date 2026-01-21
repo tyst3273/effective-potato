@@ -183,7 +183,7 @@ class c_bistable_defects:
     def _calc_dot_U_constant_j(self,x,n):
 
         """
-        energy balance is j^2 x / n + y^4 - x^4 
+        energy balance is j^2 * x / n + y^4 - x^4 
         """
 
         _j_sq = self.j_sq
@@ -251,7 +251,7 @@ def run_v(y=0.1,z=0.1):
     run calculation for an array of v
     """
 
-    num_v = 501
+    num_v = 1001
     v = np.linspace(0.0,0.5,num_v)
 
     n = np.zeros((num_v,3),dtype=float)
@@ -286,6 +286,24 @@ def run_v(y=0.1,z=0.1):
 
 # --------------------------------------------------------------------------------------------------
 
+def run_v_sweep_over_y(y_list=[0.0,0.1],z=0.0):
+
+    """
+    sweep over multiple y for the same j 
+    """
+
+    import mpi4py.MPI as mpi
+    comm = mpi.COMM_WORLD
+    proc = comm.Get_rank()
+    num_procs = comm.Get_size()
+
+    my_y = np.array_split(y_list,num_procs)[proc]
+    for y in my_y:
+        print('\nproc:',proc,'\ty:',y)
+        run_v(y,z)
+
+# --------------------------------------------------------------------------------------------------
+
 def run_j(y=0.1,z=0.1):
 
     """
@@ -293,7 +311,8 @@ def run_j(y=0.1,z=0.1):
     """
 
     num_j = 1001
-    j = np.linspace(0.0,0.01,num_j)
+    # j = np.linspace(0.0,0.01,num_j)
+    j = np.logspace(-9,-1,num=num_j)
 
     n_lo = np.zeros(num_j,dtype=float)
     x_lo = np.zeros(num_j,dtype=float)
@@ -325,7 +344,7 @@ def run_j(y=0.1,z=0.1):
 
 # --------------------------------------------------------------------------------------------------
 
-def run_j_sweep_over_y(y_list=[0.0,0.1],z=0.1):
+def run_j_sweep_over_y(y_list=[0.0,0.1],z=0.0):
 
     """
     sweep over multiple y for the same j 
@@ -346,23 +365,14 @@ def run_j_sweep_over_y(y_list=[0.0,0.1],z=0.1):
 if __name__ == '__main__':
 
     # z=0.10
-
-    # run_v(y=0.1,z=z)
-    # run_v(y=0.15,z=z)
-    # run_v(y=0.2,z=z)
-    # run_v(y=0.25,z=z)
-    # run_v(y=0.3,z=z)
-    # run_v(y=0.35,z=z)
-    # run_v(y=0.4,z=z)
-
     # run_j(0.1,z)
+    # run_v(y=0.1,z=z)
 
-    # y_list = [0.001,0.005,0.010,0.050,0.100,0.500]
-    # run_j_sweep_over_y(y_list,z)
-
-    y_list = [0.001,0.005,0.010,0.050,0.100,0.500]
-
+    y_list = [0.001,0.005,0.010,0.050,0.100,0.250,0.500]
     z_list = [0.0,0.001,0.005,0.010,0.050,0.100]
+    z = 0.001
+    # for zz in z_list:
+    #     run_v_sweep_over_y(y_list,zz)
     for zz in z_list:
         run_j_sweep_over_y(y_list,zz)
 

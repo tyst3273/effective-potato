@@ -41,66 +41,32 @@ def get_j_data(filename):
 
     return n_lo, x_lo, n_hi, x_hi, j, y, z
     
+cmap = plt.get_cmap('magma')
+norm = np.linspace(0,1,10)
+colors = cmap(norm)
 
 fig, ax = plt.subplots(figsize=(4.5,4.5))
 
-# n_lo, x_lo, n_hi, x_hi, j, y, z = get_j_data(f'results_j_sweep_y_0.100_z_{z:.3f}.h5')
-# ax.plot(x_lo,n_lo,c='r',lw=0,marker='o',ms=1)
+y_list = [0.001,0.005,0.010,0.050,0.100,0.250,0.500]
+z = 0.1
 
-# n_lo, x_lo, n_hi, x_hi, j, y, z = get_j_data(f'results_j_sweep_y_0.150_z_{z:.3f}.h5')
-# ax.plot(x_lo,n_lo,c='r',lw=0,marker='o',ms=1)
+for ii, y in enumerate(y_list):
+    n, x, v, y, z = get_v_data(f'results_v_y_{y:.3f}_z_{z:.3f}.h5')
+    ax.plot(x,n,c='r',lw=0,marker='o',ms=0.5)
 
-# n_lo, x_lo, n_hi, x_hi, j, y, z = get_j_data(f'results_j_sweep_y_0.200_z_{z:.3f}.h5')
-# ax.plot(x_lo,n_lo,c='r',lw=0,marker='o',ms=1)
-
-# n_lo, x_lo, n_hi, x_hi, j, y, z = get_j_data(f'results_j_sweep_y_0.250_z_{z:.3f}.h5')
-# ax.plot(x_lo,n_lo,c='r',lw=0,marker='o',ms=1)
-
-# n_lo, x_lo, n_hi, x_hi, j, y, z = get_j_data(f'results_j_sweep_y_0.300_z_{z:.3f}.h5')
-# ax.plot(x_lo,n_lo,c='r',lw=0,marker='o',ms=1)
-
-# n_lo, x_lo, n_hi, x_hi, j, y, z = get_j_data(f'results_j_sweep_y_0.350_z_{z:.3f}.h5')
-# ax.plot(x_lo,n_lo,c='r',lw=0,marker='o',ms=1)
-
-# n_lo, x_lo, n_hi, x_hi, j, y, z = get_j_data(f'results_j_sweep_y_0.400_z_{z:.3f}.h5')
-# ax.plot(x_lo,n_lo,c='r',lw=0,marker='o',ms=1)
-
-
-n, x, v, y, z = get_v_data(f'results_v_sweep_y_0.100_z_{z:.3f}.h5')
-ax.plot(x,n,c='r',lw=0,marker='o',ms=0.5)
-
-n, x, v, y, z = get_v_data(f'results_v_sweep_y_0.150_z_{z:.3f}.h5')
-ax.plot(x,n,c='g',lw=0,marker='o',ms=0.5)
-
-n, x, v, y, z = get_v_data(f'results_v_sweep_y_0.200_z_{z:.3f}.h5')
-ax.plot(x,n,c='b',lw=0,marker='o',ms=0.5)
-
-n, x, v, y, z = get_v_data(f'results_v_sweep_y_0.250_z_{z:.3f}.h5')
-ax.plot(x,n,c='m',lw=0,marker='o',ms=0.5)
-
-n, x, v, y, z = get_v_data(f'results_v_sweep_y_0.300_z_{z:.3f}.h5')
-ax.plot(x,n,c='k',lw=0,marker='o',ms=0.5)
-
-n, x, v, y, z = get_v_data(f'results_v_sweep_y_0.350_z_{z:.3f}.h5')
-ax.plot(x,n,c='c',lw=0,marker='o',ms=0.5)
-
-n, x, v, y, z = get_v_data(f'results_v_sweep_y_0.400_z_{z:.3f}.h5')
-ax.plot(x,n,c='orange',lw=0,marker='o',ms=0.5)
-
-# n, x, v, y, z = get_v_data(f'results_v_sweep_y_0.010_z_{z:.3f}.h5')
-# ax.plot(x,n,c='b',lw=0,marker='o',ms=0.5)
-
-# ax.plot(x_hi,n_hi,c='k',lw=0,marker='o',ms=0.5)
-
+for ii, y in enumerate(y_list):
+    n_lo, x_lo, n_hi, x_hi, j, y, z = get_j_data(f'results_j_y_{y:.3f}_z_{z:.3f}.h5')
+    ax.plot(x_lo,n_lo,c='b',lw=0,marker='o',ms=0.5)
+    ax.plot(x_hi,n_hi,c='b',lw=0,marker='o',ms=0.5)
 
 # ax.annotate('y=0.01',xy=(0.4,0.9),xycoords='axes fraction',c='k')
 
 ax.set_xlabel('x')
 ax.set_ylabel('n')
 
-# ax.set_yscale('log')
+ax.set_yscale('log')
 
-ax.axis([0,0.5,-0.01/2,0.1])
+# ax.axis([0,0.5,-0.01/2,0.1])
 ax.axhline(0,lw=1,ls=(0,(1,1)),c='k')
 
 
