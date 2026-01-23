@@ -44,7 +44,7 @@ class _c_anderson_mixer:
 
     # ----------------------------------------------------------------------------------------------
 
-    def __init__(self):
+    def __init__(self,num_history):
 
         """
         find multiple zeros of a function to high precision. uses scipy.optimize.root_scalar
@@ -121,6 +121,9 @@ class c_bistable_defects:
         """
 
         self.mixing = mixing
+        self.alpha = alpha
+        self.max_iter = max_iter
+        self.n_tol = n_tol
 
         self.j = j 
         self.j_sq = j**2
@@ -129,12 +132,12 @@ class c_bistable_defects:
         # low n guess
         print(f'\nsolving for low n guess: n_in = {n_lo_guess:9.6e}')
         n_lo, x_lo, res_lo = \
-            self._solve_self_consistent_constant_j(n_lo_guess,max_iter,n_tol,alpha)
+            self._solve_self_consistent_constant_j(n_lo_guess)
 
         # hi n guess
         print(f'\nsolving for high n guess: n_in = {n_hi_guess:9.6e}')
         n_hi, x_hi, res_hi = \
-            self._solve_self_consistent_constant_j(n_hi_guess,max_iter,n_tol,alpha)
+            self._solve_self_consistent_constant_j(n_hi_guess)
 
         n_diff = n_hi-n_lo
         x_diff = x_hi-x_lo
@@ -160,7 +163,7 @@ class c_bistable_defects:
 
     # ----------------------------------------------------------------------------------------------
 
-    def _solve_self_consistent_constant_j(self,n_in,max_iter,n_tol,alpha):
+    def _solve_self_consistent_constant_j(self,n_in):
         
         """
         solve for n self consistently: make a guess for n_in and calculate x from dot U = 0. 
@@ -169,6 +172,9 @@ class c_bistable_defects:
             within tolerances.
         """
 
+        _max_iter = self.max_iter
+        _n_tol = self.n_tol
+
         if self.mixing == 'anderson':
             _mixer = _c_anderson_mixer()
 
@@ -176,7 +182,7 @@ class c_bistable_defects:
         print('------------------------------------------------------')
 
         converged = False
-        for iter in range(max_iter):
+        for iter in range(_max_iter):
 
             # solve for x(n)
             x_0 = find_zeros_adaptive(self._calc_dot_U_constant_j,x=self.x,args=(n_in,))
@@ -184,12 +190,12 @@ class c_bistable_defects:
             # calculate n(x)
             n_out = self._calc_n_constant_j(x_0,n_in)
 
-            residual = np.abs(n_out-n_in)
+            residual = n_out-n_in
 
             print(f'{iter:5d}   {n_out:9.6e}   {x_0:9.6e}   {residual:9.6e}')
 
             # check convergence
-            if residual <= n_tol:
+            if np.abs(residual) <= _n_tol:
                 converged = True
                 break
 
@@ -197,7 +203,7 @@ class c_bistable_defects:
             if self.mixing == 'anderson':
                 n_in = _mixer.mix()
             else:
-                n_in = self._simple_mixing(n_in,n_out,alpha)
+                n_in = self._simple_mixing(n_in,n_out)
 
         if not converged:
             print('\n*** WARNING ***\nfailed to converge!\n')
@@ -259,13 +265,15 @@ class c_bistable_defects:
     
     # ----------------------------------------------------------------------------------------------
 
-    def _simple_mixing(self,n_in,n_out,alpha):
+    def _simple_mixing(self,n_in,n_out):
 
         """
         simple mixing: n^(i+1)_in = alpha * n^i_out + (1-alpha) * n^i_in
         """ 
 
-        return alpha * n_out + (1-alpha) * n_in
+        _a = self.alpha
+
+        return _a * n_out + (1-_a) * n_in
 
     # ----------------------------------------------------------------------------------------------
 
@@ -352,7 +360,8 @@ def run_j(y=0.1,z=0.1):
         
         bistable = c_bistable_defects(y=y,z=z,x_hi=1.0,num_x=10001)
         n_lo[ii], x_lo[ii], n_hi[ii], x_hi[ii] = bistable.solve_constant_j(jj,
-                                    n_lo_guess=0.1,n_hi_guess=0.5,n_tol=1e-9,alpha=0.1)
+                                    n_lo_guess=0.1,n_hi_guess=0.5,n_tol=1e-9,alpha=0.1,
+                                    mixing='anderson')
 
         count += 1
 
@@ -390,15 +399,15 @@ def run_j_sweep_over_y(y_list=[0.0,0.1],z=0.0):
 
 if __name__ == '__main__':
 
-    # z=0.10
-    # run_j(0.1,z)
+    z=0.10
+    run_j(0.1,z)
     # run_v(y=0.1,z=z)
 
-    y_list = [0.001,0.005,0.010,0.050,0.100,0.250,0.500]
-    z_list = [0.0,0.001,0.005,0.010,0.050,0.100]
-    z = 0.001
+    # y_list = [0.001,0.005,0.010,0.050,0.100,0.250,0.500]
+    # z_list = [0.0,0.001,0.005,0.010,0.050,0.100]
+    # z = 0.001
+    # # for zz in z_list:
+    # #     run_v_sweep_over_y(y_list,zz)
     # for zz in z_list:
-    #     run_v_sweep_over_y(y_list,zz)
-    for zz in z_list:
-        run_j_sweep_over_y(y_list,zz)
+    #     run_j_sweep_over_y(y_list,zz)
 
