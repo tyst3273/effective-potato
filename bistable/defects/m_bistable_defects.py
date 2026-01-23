@@ -6,6 +6,21 @@ import scipy
 
 # --------------------------------------------------------------------------------------------------
 
+def get_mpi():
+
+    """
+    self explanatory
+    """
+
+    import mpi4py.MPI as mpi
+    comm = mpi.COMM_WORLD
+    proc = comm.Get_rank()
+    num_procs = comm.Get_size()
+
+    return comm, proc, num_procs
+
+# --------------------------------------------------------------------------------------------------
+
 def find_zeros_adaptive(func,x,args=(),x_tol=1e-16,max_iter=100,verbose=False):
 
     """
@@ -38,8 +53,6 @@ def find_zeros_adaptive(func,x,args=(),x_tol=1e-16,max_iter=100,verbose=False):
 
 # --------------------------------------------------------------------------------------------------
 
-# --------------------------------------------------------------------------------------------------
-
 class _c_anderson_mixer:
 
     # ----------------------------------------------------------------------------------------------
@@ -53,8 +66,6 @@ class _c_anderson_mixer:
         pass
     
     # ----------------------------------------------------------------------------------------------
-
-# --------------------------------------------------------------------------------------------------
 
 # --------------------------------------------------------------------------------------------------
 
@@ -186,6 +197,8 @@ class c_bistable_defects:
 
             # solve for x(n)
             x_0 = find_zeros_adaptive(self._calc_dot_U_constant_j,x=self.x,args=(n_in,))
+            if x_0.size > 1:
+                exit('fuck')
 
             # calculate n(x)
             n_out = self._calc_n_constant_j(x_0,n_in)
@@ -326,10 +339,7 @@ def run_v_sweep_over_y(y_list=[0.0,0.1],z=0.0):
     sweep over multiple y for the same j 
     """
 
-    import mpi4py.MPI as mpi
-    comm = mpi.COMM_WORLD
-    proc = comm.Get_rank()
-    num_procs = comm.Get_size()
+    comm, proc, num_procs = get_mpi()
 
     my_y = np.array_split(y_list,num_procs)[proc]
     for y in my_y:
@@ -385,10 +395,7 @@ def run_j_sweep_over_y(y_list=[0.0,0.1],z=0.0):
     sweep over multiple y for the same j 
     """
 
-    import mpi4py.MPI as mpi
-    comm = mpi.COMM_WORLD
-    proc = comm.Get_rank()
-    num_procs = comm.Get_size()
+    comm, proc, num_procs = get_mpi()
 
     my_y = np.array_split(y_list,num_procs)[proc]
     for y in my_y:
