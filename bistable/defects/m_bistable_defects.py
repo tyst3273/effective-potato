@@ -40,6 +40,24 @@ def find_zeros_adaptive(func,x,args=(),x_tol=1e-16,max_iter=100,verbose=False):
 
 # --------------------------------------------------------------------------------------------------
 
+class _c_anderson_mixer:
+
+    # ----------------------------------------------------------------------------------------------
+
+    def __init__(self):
+
+        """
+        find multiple zeros of a function to high precision. uses scipy.optimize.root_scalar
+        """
+
+        pass
+    
+    # ----------------------------------------------------------------------------------------------
+
+# --------------------------------------------------------------------------------------------------
+
+# --------------------------------------------------------------------------------------------------
+
 class c_bistable_defects:
 
     # ----------------------------------------------------------------------------------------------
@@ -93,7 +111,7 @@ class c_bistable_defects:
     # ----------------------------------------------------------------------------------------------
 
     def solve_constant_j(self,j,n_lo_guess=0.001,n_hi_guess=0.999,max_iter=200,n_tol=1e-9,
-                         alpha=0.4):
+                         alpha=0.4,mixing='anderson'):
 
         """
         we look for two solutions for n. we have to solve self-consistently, so how we find 
@@ -101,6 +119,8 @@ class c_bistable_defects:
             we just pick n->0 and n->1 and solve for each. if they converge to the same solution, 
             there is only one. if they are different, there is multistability!
         """
+
+        self.mixing = mixing
 
         self.j = j 
         self.j_sq = j**2
@@ -149,6 +169,9 @@ class c_bistable_defects:
             within tolerances.
         """
 
+        if self.mixing == 'anderson':
+            _mixer = _c_anderson_mixer()
+
         print('\n  iter   n_out          x_0           convergence')
         print('------------------------------------------------------')
 
@@ -171,7 +194,10 @@ class c_bistable_defects:
                 break
 
             # make new guess
-            n_in = self._simple_mixing(n_in,n_out,alpha)
+            if self.mixing == 'anderson':
+                n_in = _mixer.mix()
+            else:
+                n_in = self._simple_mixing(n_in,n_out,alpha)
 
         if not converged:
             print('\n*** WARNING ***\nfailed to converge!\n')
