@@ -122,7 +122,7 @@ class c_bistable_defects:
     # ----------------------------------------------------------------------------------------------
 
     def solve_constant_j(self,j,n_lo_guess=0.001,n_hi_guess=0.999,max_iter=200,n_tol=1e-9,
-                         alpha=0.4,mixing='anderson'):
+                         alpha=0.4,method='anderson'):
 
         """
         we look for two solutions for n. we have to solve self-consistently, so how we find 
@@ -131,7 +131,7 @@ class c_bistable_defects:
             there is only one. if they are different, there is multistability!
         """
 
-        self.mixing = mixing
+        self.method = method
         self.alpha = alpha
         self.max_iter = max_iter
         self.n_tol = n_tol
@@ -140,15 +140,42 @@ class c_bistable_defects:
         self.j_sq = j**2
         print(f'\nconstant j: {j:9.6e}')
 
-        # low n guess
-        print(f'\nsolving for low n guess: n_in = {n_lo_guess:9.6e}')
-        n_lo, x_lo, res_lo = \
-            self._solve_self_consistent_constant_j(n_lo_guess)
+        # newtons method
+        if self.method == 'newton':
 
-        # hi n guess
-        print(f'\nsolving for high n guess: n_in = {n_hi_guess:9.6e}')
-        n_hi, x_hi, res_hi = \
-            self._solve_self_consistent_constant_j(n_hi_guess)
+            n_lo, _result = scipy.optimize.newton(func=self._const_j_kernel,x0=n_lo_guess,
+                                                    tol=n_tol,disp=False,full_output=True,
+                                                    maxiter=max_iter)
+            x_lo = find_zeros_adaptive(self._calc_dot_U_constant_j,x=self.x,args=(n_lo,))
+
+            _conv = _result.converged
+            if not _conv:
+                print('\n*** WARNING ***\nscipy.newton failed to converge for n_lo_guess')
+            print('')
+            print(_result)
+
+            n_hi, _result = scipy.optimize.newton(func=self._const_j_kernel,x0=n_hi_guess,
+                                                    tol=n_tol,disp=False,full_output=True,
+                                                    maxiter=max_iter)
+            x_hi = find_zeros_adaptive(self._calc_dot_U_constant_j,x=self.x,args=(n_hi,))
+
+            _conv = _result.converged
+            if not _conv:
+                print('\n*** WARNING ***\nscipy.newton failed to converge for n_hi_guess')
+            print('')
+            print(_result)
+
+        else:
+
+            # low n guess
+            print(f'\nsolving for low n guess: n_in = {n_lo_guess:9.6e}')
+            n_lo, x_lo, res_lo = \
+                self._solve_self_consistent_constant_j(n_lo_guess)
+
+            # hi n guess
+            print(f'\nsolving for high n guess: n_in = {n_hi_guess:9.6e}')
+            n_hi, x_hi, res_hi = \
+                self._solve_self_consistent_constant_j(n_hi_guess)
 
         n_diff = n_hi-n_lo
         x_diff = x_hi-x_lo
@@ -160,17 +187,37 @@ class c_bistable_defects:
 
         msg += f'\n\n% n_lo: {n_lo:9.6e}'
         msg += f'\n% x_lo: {x_lo:9.6e}'
-        msg += f'\n% residual_lo: {res_lo:9.6e}'
+        # msg += f'\n% residual_lo: {res_lo:9.6e}'
 
         msg += f'\n\n% n_hi: {n_hi:9.6e}'
         msg += f'\n% x_hi: {x_hi:9.6e}'
-        msg += f'\n% residual_hi: {res_hi:9.6e}'
+        # msg += f'\n% residual_hi: {res_hi:9.6e}'
 
         msg += f'\n\n% n_diff: {n_diff:9.6e}'
         msg += f'\n% x_diff: {x_diff:9.6e}'
         print(msg)
 
         return n_lo, x_lo, n_hi, x_hi
+    
+    # ----------------------------------------------------------------------------------------------
+
+    def _const_j_kernel(self,n_in):
+
+        """
+        a kernel for newton method
+        """
+
+        if n_in < 1e-16:
+            n_in = 1e-16
+
+        _x_0 = find_zeros_adaptive(self._calc_dot_U_constant_j,x=self.x,args=(n_in,))
+
+        if _x_0.size == 0:
+            msg = '\n*** ERROR ***\nno solution for x_0. increase x_max.'
+            print(msg)
+            exit()
+    
+        return self._calc_n_constant_j(_x_0,n_in)-n_in
 
     # ----------------------------------------------------------------------------------------------
 
@@ -186,7 +233,7 @@ class c_bistable_defects:
         _max_iter = self.max_iter
         _n_tol = self.n_tol
 
-        if self.mixing == 'anderson':
+        if self.method == 'anderson':
             _mixer = _c_anderson_mixer()
 
         print('\n  iter   n_out          x_0           convergence')
@@ -213,7 +260,7 @@ class c_bistable_defects:
                 break
 
             # make new guess
-            if self.mixing == 'anderson':
+            if self.method == 'anderson':
                 n_in = _mixer.mix()
             else:
                 n_in = self._simple_mixing(n_in,n_out)
@@ -368,10 +415,9 @@ def run_j(y=0.1,z=0.1):
 
         print(f'\nnow doing count: {count}')
         
-        bistable = c_bistable_defects(y=y,z=z,x_hi=1.0,num_x=10001)
+        bistable = c_bistable_defects(y=y,z=z,x_hi=10.0,num_x=10001)
         n_lo[ii], x_lo[ii], n_hi[ii], x_hi[ii] = bistable.solve_constant_j(jj,
-                                    n_lo_guess=0.1,n_hi_guess=0.5,n_tol=1e-9,alpha=0.1,
-                                    mixing='anderson')
+                                    n_lo_guess=0.001,n_hi_guess=0.6,n_tol=1e-9,method='newton')
 
         count += 1
 
@@ -406,15 +452,18 @@ def run_j_sweep_over_y(y_list=[0.0,0.1],z=0.0):
 
 if __name__ == '__main__':
 
-    z=0.10
-    run_j(0.1,z)
+    # z=0.10
+    # run_j(0.1,z)
     # run_v(y=0.1,z=z)
 
-    # y_list = [0.001,0.005,0.010,0.050,0.100,0.250,0.500]
-    # z_list = [0.0,0.001,0.005,0.010,0.050,0.100]
-    # z = 0.001
-    # # for zz in z_list:
-    # #     run_v_sweep_over_y(y_list,zz)
-    # for zz in z_list:
-    #     run_j_sweep_over_y(y_list,zz)
+    y_list = [0.001,0.005,0.010,0.050,0.100,0.250,0.500]
+    z_list = [0.0,0.001,0.005,0.010,0.050,0.100]
 
+    y_list = [0.1]
+    # z_list = [0.1]
+
+    # for zz in z_list:
+    #     run_v_sweep_over_y(y_list,zz)
+
+    for zz in z_list:
+        run_j_sweep_over_y(y_list,zz)

@@ -39,7 +39,7 @@ for ii, y in enumerate(y_list):
 
     n_lo, x_lo, n_hi, x_hi, j, y, z = get_data(f'results_j_y_{y:.3f}_z_{z:.3f}.h5')
 
-    ax[0].plot(j,n_lo,c=colors[ii],lw=1,ls=(0,(2,1)),marker='o',ms=1)
+    ax[0].plot(j,n_lo,c=colors[ii],lw=1,ls=(0,(2,1)),marker='o',ms=1,label=f'y={y:.3f}')
     ax[1].plot(j,x_lo,c=colors[ii],lw=1,ls=(0,(2,1)),marker='o',ms=1)
     ax[0].plot(j,n_hi,c=colors[ii],lw=1,ls=(0,(2,1)),marker='o',ms=1)
     ax[1].plot(j,x_hi,c=colors[ii],lw=1,ls=(0,(2,1)),marker='o',ms=1)
@@ -76,6 +76,8 @@ ax[1].yaxis.tick_right()
 # for ii in range(2):
 #     ax[ii,0].set_xticklabels([])
 #     ax[ii,1].set_xticklabels([])
+
+fig.legend()
 
 plt.savefig(f'j_sweep_all_in_one.png',dpi=200,format='png',bbox_inches='tight')
 plt.show()
