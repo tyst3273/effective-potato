@@ -118,6 +118,63 @@ class c_bistable_defects:
         print('% x:',x_0)
 
         return n_0, x_0
+    
+    # ----------------------------------------------------------------------------------------------
+
+    def _solve_constant_j(self,n_in):
+
+        """
+        ...
+        """
+
+        n_out, _result = scipy.optimize.newton(func=self._const_j_kernel,x0=n_in,
+                                                    tol=self.n_tol,disp=False,full_output=True,
+                                                    maxiter=self.max_iter)
+        x_out = find_zeros_adaptive(self._calc_dot_U_constant_j,x=self.x,args=(n_in,))
+
+        _conv = _result.converged
+        if not _conv:
+            print('\n*** WARNING ***\nscipy.optimize newton failed to converge')
+        print('')
+        print(_result)
+
+        return n_out, x_out
+    
+    # ----------------------------------------------------------------------------------------------
+
+    def solve_constant_j_for_guess_array(self,j,n_lo=0.001,n_hi=0.999,num_n=11,max_iter=200,
+                                         n_tol=1e-9,alpha=0.4,method='anderson'):
+        
+        """
+        ...
+        """
+
+        self.method = method
+        self.alpha = alpha
+        self.max_iter = max_iter
+        self.n_tol = n_tol
+
+        self.j = j 
+        self.j_sq = j**2
+        print(f'\nconstant j: {j:9.6e}')
+
+        _n_array = np.linspace(n_lo,n_hi,num_n)
+        n_solutions = np.zeros(num_n)
+        x_solutions = np.zeros(num_n)
+
+        for ii, _nn in enumerate(_n_array):
+
+            print(f'\nsolving for n guess: n = {_nn:9.6e}')
+            _n_out, _x_out = self._solve_constant_j(_nn)
+            print(_x_out)
+
+            n_solutions[ii] = _n_out
+            x_solutions[ii] = _x_out
+
+        _prec = np.abs(np.floor(np.log10(n_tol))).astype(int)
+        _n_unique, _inds = np.unique(np.round(n_solutions,_prec+1),return_index=True)
+        n_solutions = n_solutions[_inds]
+        x_solutions = x_solutions[_inds]
 
     # ----------------------------------------------------------------------------------------------
 
@@ -142,28 +199,12 @@ class c_bistable_defects:
 
         # newtons method
         if self.method == 'newton':
+            
+            print(f'\nsolving for low n guess: n_in = {n_lo_guess:9.6e}')
+            n_lo, x_lo = self._solve_constant_j(n_lo_guess)
 
-            n_lo, _result = scipy.optimize.newton(func=self._const_j_kernel,x0=n_lo_guess,
-                                                    tol=n_tol,disp=False,full_output=True,
-                                                    maxiter=max_iter)
-            x_lo = find_zeros_adaptive(self._calc_dot_U_constant_j,x=self.x,args=(n_lo,))
-
-            _conv = _result.converged
-            if not _conv:
-                print('\n*** WARNING ***\nscipy.newton failed to converge for n_lo_guess')
-            print('')
-            print(_result)
-
-            n_hi, _result = scipy.optimize.newton(func=self._const_j_kernel,x0=n_hi_guess,
-                                                    tol=n_tol,disp=False,full_output=True,
-                                                    maxiter=max_iter)
-            x_hi = find_zeros_adaptive(self._calc_dot_U_constant_j,x=self.x,args=(n_hi,))
-
-            _conv = _result.converged
-            if not _conv:
-                print('\n*** WARNING ***\nscipy.newton failed to converge for n_hi_guess')
-            print('')
-            print(_result)
+            print(f'\nsolving for high n guess: n_in = {n_hi_guess:9.6e}')
+            n_hi, x_hi = self._solve_constant_j(n_hi_guess)
 
         else:
 
@@ -402,8 +443,8 @@ def run_j(y=0.1,z=0.1):
     """
 
     num_j = 1001
-    # j = np.linspace(0.0,0.01,num_j)
-    j = np.logspace(-9,-1,num=num_j)
+    j = np.linspace(0.0,0.1,num_j)
+    # j = np.logspace(-6,0,num=num_j)
 
     n_lo = np.zeros(num_j,dtype=float)
     x_lo = np.zeros(num_j,dtype=float)
@@ -416,8 +457,12 @@ def run_j(y=0.1,z=0.1):
         print(f'\nnow doing count: {count}')
         
         bistable = c_bistable_defects(y=y,z=z,x_hi=10.0,num_x=10001)
-        n_lo[ii], x_lo[ii], n_hi[ii], x_hi[ii] = bistable.solve_constant_j(jj,
-                                    n_lo_guess=0.001,n_hi_guess=0.6,n_tol=1e-9,method='newton')
+
+        # n_lo[ii], x_lo[ii], n_hi[ii], x_hi[ii] = bistable.solve_constant_j(jj,
+        #                             n_lo_guess=0.001,n_hi_guess=0.2,n_tol=1e-9,method='newton')
+        
+        n_lo[ii], x_lo[ii], n_hi[ii], x_hi[ii] = \
+                        bistable.solve_constant_j_for_guess_array(jj,n_tol=1e-9,method='newton')
 
         count += 1
 
@@ -459,7 +504,7 @@ if __name__ == '__main__':
     y_list = [0.001,0.005,0.010,0.050,0.100,0.250,0.500]
     z_list = [0.0,0.001,0.005,0.010,0.050,0.100]
 
-    y_list = [0.1]
+    y_list = [0.05,0.075,0.1,0.125,0.15]
     # z_list = [0.1]
 
     # for zz in z_list:
