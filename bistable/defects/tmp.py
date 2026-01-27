@@ -1,13 +1,22 @@
 
-import matplotlib.pyplot as plt
+
 import numpy as np
 
+v = 0.218**2
+y = 0.01
+x = np.linspace(y,10.0,1001)
 
-start = -6
-end = 1
-num = 1000
+n = np.exp(-1/x)
 
-x = np.logspace(start,end,num=num)
+a = v * n[0] / x[0]
+b = y**4 - x[0]**4
+c = a+b
+d = a+y**4
+print(d-x[0]**4)
 
-plt.plot(np.arange(num),x,c='r')
-plt.show()
+f = v * n / x + (y**4 - x**4)
+print(a+y**4)
+print(a,b)
+print(a+b)
+print((v * n / x)[0])
+print(repr(f[0]))

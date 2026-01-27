@@ -21,16 +21,34 @@ def get_mpi():
 
 # --------------------------------------------------------------------------------------------------
 
+def find_zeros_inds(arr):
+
+    """
+    find the indices where zeros (roots) occur. root is bracketed by ind, ind+1
+    """
+    
+    diff = np.diff(np.sign(arr))
+    inds = np.flatnonzero(diff)
+
+    return inds
+
+# --------------------------------------------------------------------------------------------------
+
 def find_zeros_adaptive(func,x,args=(),x_tol=1e-16,max_iter=100,verbose=False):
 
     """
     find multiple zeros of a function to high precision. uses scipy.optimize.root_scalar
     """
 
+    # print(x)
+
     arr = func(x,*args)
-    diff = np.diff(np.sign(arr))
-    inds = np.flatnonzero(diff)
+    inds = find_zeros_inds(arr)
     num_zeros = inds.size
+
+    if verbose:
+        msg = f'\nfound {num_zeros} zeros'
+        print(msg)
 
     zeros = np.zeros(num_zeros)
         
@@ -41,15 +59,15 @@ def find_zeros_adaptive(func,x,args=(),x_tol=1e-16,max_iter=100,verbose=False):
         
         res = scipy.optimize.root_scalar(lambda x: func(x,*args), method='bisect', 
                                          bracket=[x_lo,x_hi], xtol=x_tol, maxiter=max_iter)
-        
         if verbose:
             print('')
             print(res)
             print('')
-
         zeros[ii] = res.root
 
     return zeros.squeeze()
+
+# --------------------------------------------------------------------------------------------------
 
 # --------------------------------------------------------------------------------------------------
 
@@ -57,7 +75,7 @@ class c_bistable_defects:
 
     # ----------------------------------------------------------------------------------------------
 
-    def __init__(self,y=0.1,z=0.0,x_lo=None,x_hi=1,num_x=100001):
+    def __init__(self,y=0.1,z=0.0,x_lo=None,x_hi=1e9,num_x=1001):
 
         """
         y is dimensionless bath temp, z is dimensionless field lowering parameter ... 
@@ -71,11 +89,51 @@ class c_bistable_defects:
             x_lo = y
         self.x = np.linspace(x_lo,x_hi,num_x)
 
-        # self.x_lo = x_lo
-        # self.x_hi = x_hi
         self.num_x = num_x
 
         print('\n##############################################################')
+
+    # ----------------------------------------------------------------------------------------------
+
+    def _find_n_root(self,n):
+
+        """
+        ...
+        """
+
+        x0 = np.zeros(n.size)
+        for ii, nn in enumerate(n):
+
+            _x0 = find_zeros_adaptive(self._calc_dot_U_constant_j,x=self.x,args=(nn,))
+            if _x0.size == 0:
+                msg = '\n*** ERROR ***\nno solution for x_0. try increasing x_hi.\n'
+                msg += f'n: {nn}'
+                print(msg)
+                exit()
+
+            x0[ii] = _x0
+
+        arr = np.exp( -1/x0 ) * np.exp( self.j*self.z / n ) - n
+        inds = find_zeros_inds(arr)
+        n0 = n[inds]
+
+        return n0
+
+    # ----------------------------------------------------------------------------------------------
+
+    def solve_constant_j_n_grid(self,j,num_n=1001):
+
+        """
+        ...
+        """
+
+        self.j = j 
+        self.j_sq = j**2
+
+        n_arr = np.logspace(-6,0,num_n)
+        n0 = find_zeros_adaptive(func=self._find_n_root,x_tol=1e-6,x=n_arr,verbose=True)
+        
+        print(n0)
 
     # ----------------------------------------------------------------------------------------------
 
@@ -292,13 +350,43 @@ def run_v_sweep_over_y(y_list=[0.0,0.1],z=0.0):
 
 # --------------------------------------------------------------------------------------------------
 
+def run_j_n_grid(y=0.1,z=0.1):
+
+    """
+    run a calculation for an array of j
+    """
+
+    bistable = c_bistable_defects(y=y,z=z,x_hi=1e9,num_x=1001)
+
+    num_j = 1001
+    j = np.linspace(0.0,0.1,num_j)
+
+    count = 0
+    for ii, _j in enumerate(j):
+
+        print(f'\nnow doing count: {count}')
+        bistable.solve_n_grid(j=_j,num_n=1001)
+        count += 1
+
+    # # write results to hdf5 file
+    # with h5py.File(f'results_j_y_{y:.3f}_z_{z:.3f}_n_sweep.h5','w') as db:
+
+    #     db.create_dataset('n',data=n_solutions)
+    #     db.create_dataset('x',data=x_solutions)
+    #     db.create_dataset('j',data=j)
+    #     db.create_dataset('y',data=y)
+    #     db.create_dataset('z',data=z)
+
+# --------------------------------------------------------------------------------------------------
+
 def run_j_guess_array(y=0.1,z=0.1):
 
     """
     run a calculation for an array of j
     """
 
-    bistable = c_bistable_defects(y=y,z=z,x_hi=5.0,num_x=1001)
+    _n = int(1e4+1)
+    bistable = c_bistable_defects(y=y,z=z,x_hi=1e6,num_x=_n)
 
     num_j = 1001
     j = np.linspace(0.0,0.01,num_j)
@@ -347,15 +435,20 @@ def run_j_sweep_over_y(y_list=[0.0,0.1],z=0.0):
 
 if __name__ == '__main__':
 
+    # run_j_n_grid(y=0.1,z=0.0)
+
+    bistable = c_bistable_defects(y=0.1,z=0.0)
+    bistable.solve_constant_j_n_grid(j=0.05)
+
     # z=0.10
     # run_j(0.1,z)
     # run_v(y=0.1,z=z)
 
-    y_list = [0.001,0.005,0.010,0.050,0.100,0.250,0.500]
-    # z_list = [0.0,0.001,0.005,0.010,0.050,0.100]
+    # y_list = [0.001,0.005,0.010,0.050,0.100,0.250,0.500]
+    # # z_list = [0.0,0.001,0.005,0.010,0.050,0.100]
 
-    y_list = [0.1]
-    z_list = [0.1]
+    # y_list = [0.1]
+    # z_list = [0.1]
 
-    for zz in z_list:
-        run_j_sweep_over_y(y_list,zz)
+    # for zz in z_list:
+    #     run_j_sweep_over_y(y_list,zz)

@@ -27,7 +27,7 @@ def get_data(filename):
 
 fig, ax = plt.subplots(3,2,figsize=(4.5,6),gridspec_kw={'hspace':0.15,'wspace':0.15})
 
-n, x, v, y, z = get_data(f'results_v_sweep_y_0.010_z_{z:.3f}.h5')
+n, x, v, y, z = get_data(f'results_v_y_0.010_z_{z:.3f}.h5')
 
 ax[0,0].plot(v,n[:,0],c='b',lw=0,marker='o',ms=0.5)
 ax[0,1].plot(v,x[:,0],c='r',lw=0,marker='o',ms=0.5)
@@ -54,7 +54,7 @@ ax[0,0].annotate(f'y={y:.2f}',xy=(0.55,0.4),xycoords='axes fraction',c='k')
 ax[0,1].annotate('(b)',xy=(0.05,0.85),xycoords='axes fraction',c='k')
 ax[0,1].annotate(f'y={y:.2f}',xy=(0.55,0.4),xycoords='axes fraction',c='k')
 
-n, x, v, y, z = get_data(f'results_v_sweep_y_0.100_z_{z:.3f}.h5')
+n, x, v, y, z = get_data(f'results_v_y_0.100_z_{z:.3f}.h5')
 
 ax[1,0].plot(v,n[:,0],c='b',lw=0,marker='o',ms=0.5)
 ax[1,1].plot(v,x[:,0],c='r',lw=0,marker='o',ms=0.5)
@@ -81,7 +81,7 @@ ax[1,0].annotate(f'y={y:.2f}',xy=(0.6,0.5),xycoords='axes fraction',c='k')
 ax[1,1].annotate('(b)',xy=(0.05,0.85),xycoords='axes fraction',c='k')
 ax[1,1].annotate(f'y={y:.2f}',xy=(0.6,0.5),xycoords='axes fraction',c='k')
 
-n, x, v, y, z = get_data(f'results_v_sweep_y_0.250_z_{z:.3f}.h5')
+n, x, v, y, z = get_data(f'results_v_y_0.250_z_{z:.3f}.h5')
 
 ax[2,0].plot(v,n[:,0],c='b',lw=0,marker='o',ms=0.5)
 ax[2,1].plot(v,x[:,0],c='r',lw=0,marker='o',ms=0.5)
