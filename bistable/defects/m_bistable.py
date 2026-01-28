@@ -469,7 +469,7 @@ def run_v(y=0.1,z=0.1):
 
         print(f'\nnow doing count: {count}')
         
-        bistable = c_bistable(y=y,z=z,x_hi=10,num_x=1001)
+        bistable = c_bistable(y=y,z=z,x_hi=10,num_x=10001)
         _n, _x  = bistable.solve_constant_v(vv)
         
         if _n.size == 1:
@@ -503,7 +503,9 @@ def run_v_sweep_over_y(y_list=[0.01,0.1,0.25],z=0.0):
 
     my_y = np.array_split(y_list,num_procs)[proc]
     for y in my_y:
+
         print('\nproc:',proc,'\ty:',y)
+
         run_v(y,z)
 
 # --------------------------------------------------------------------------------------------------
@@ -514,7 +516,7 @@ def run_j(y=0.1,z=0.1):
     run calculation for an array of v
     """
 
-    num_j = 251
+    num_j = 10001
     j = np.linspace(0.0,0.1,num_j)
 
     n = np.zeros((num_j,3),dtype=float)
@@ -600,7 +602,9 @@ def run_j_sweep_over_y(y_list=[0.01,0.1,0.25],z=0.0):
 
     my_y = np.array_split(y_list,num_procs)[proc]
     for y in my_y:
+
         print('\nproc:',proc,'\ty:',y)
+
         run_j(y,z)
         # run_j_newton(y,z)
 
@@ -617,9 +621,9 @@ if __name__ == '__main__':
     # bistable = c_bistable(y=0.01,z=0.0,x_hi=1e3,num_x=1001)
     # bistable.solve_constant_j_newton(j=0.0004,n_guess=0.1)
 
-    y_list = [0.01,0.05,0.1,0.25,0.5]
-    z_list = [0.0,0.001,0.01,0.1,0.25,0.5,0.75,1.0,2.5,5.0]
+    y_list = [0.01,0.1,0.25]
+    z_list = [0.0,0.1,1.0,5.0]
 
     for zz in z_list:
-        # run_j_sweep_over_y(y_list,zz)
-        run_v_sweep_over_y(y_list,zz)
+        run_j_sweep_over_y(y_list,zz)
+        # run_v_sweep_over_y(y_list,zz)

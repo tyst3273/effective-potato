@@ -30,7 +30,7 @@ fig, ax = plt.subplots(1,2,figsize=(8,3),gridspec_kw={'hspace':0.15,'wspace':0.2
 # y_list = [0.05,0.075,0.1,0.125,0.15] 
 # y_list = [0.001,0.005,0.010,0.050,0.100,0.250,0.500]
 # y_list = [0.1]
-y_list = [0.001,0.005,0.01,0.05,0.1,0.25,0.5]
+y_list = [0.01,0.1,0.25]
 
 cmap = plt.get_cmap('magma')
 norm = np.linspace(0,1,9)
