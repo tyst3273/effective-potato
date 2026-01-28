@@ -17,7 +17,7 @@ class _c_zeros:
         self.num_zeros = 0
         self.queue = []
         self.num_queue = 0
-        self.iter = 0
+        self.queue_iter = 0
 
     # ----------------------------------------------------------------------------------------------
 
@@ -39,9 +39,6 @@ class _c_zeros:
         for ind in inds:
             self._add_to_queue([x[ind],x[ind+1]])
 
-        self.iter += 1
-        np.savetxt(f'bounds_iter_{self.iter}',np.array(self.queue),fmt='%.24f')
-
     # ----------------------------------------------------------------------------------------------
 
     def _add_to_queue(self,bounds):
@@ -60,9 +57,10 @@ class _c_zeros:
 
     def print(self):
 
-        print('\nqueue:\n',np.array(self.queue))
-        print('zeros:',np.array(self.zeros))
-    
+        print('\nqueue_iter:',self.queue_iter)
+        print('queue:\n',np.array(self.queue))
+        print('zeros:',np.array(self.zeros),'\n')
+
     # ----------------------------------------------------------------------------------------------
 
 # --------------------------------------------------------------------------------------------------
@@ -83,7 +81,7 @@ def get_mpi():
 
 # --------------------------------------------------------------------------------------------------
 
-def _find_zeros_adaptive(func,x,args=(),x_tol=1e-16,max_iter=100,verbose=False):
+def find_zeros_adaptive(func,x,args=(),x_tol=1e-16,max_iter=100):
 
     """
     find all of the zeros in an array to high precision. find the indices of zeros in rough array
@@ -96,12 +94,10 @@ def _find_zeros_adaptive(func,x,args=(),x_tol=1e-16,max_iter=100,verbose=False):
     inds = find_zeros_inds(arr)
     num_zeros = inds.size
 
-    if verbose:
-
-        msg = f'\nfound {num_zeros} zeros'
-        for ii in range(num_zeros):
-            msg += f'\n  {ii}: x0 = {x[inds[ii]]}'
+    if num_zeros == 0:
+        msg = '\n*** ERROR ***\nno zeros found'
         print(msg)
+        exit()
 
     zeros = np.zeros(num_zeros)
     
@@ -113,13 +109,10 @@ def _find_zeros_adaptive(func,x,args=(),x_tol=1e-16,max_iter=100,verbose=False):
         
         res = scipy.optimize.root_scalar(lambda x: func(x,*args), method='bisect', 
                                          bracket=[x_lo,x_hi], xtol=x_tol, maxiter=max_iter)
-        if verbose:
-            print('')
-            print(res)
-            print('')
+
         zeros[ii] = res.root
 
-    return zeros
+    return np.atleast_1d(zeros)
 
 # --------------------------------------------------------------------------------------------------
 
@@ -128,11 +121,11 @@ def find_zeros_inds(arr):
     """
     find the indices of all the zeros in the array. nb: the zeros are bounded by ind, ind+1
     """
+        
+    # diff = np.diff(np.sign(arr))
+    # return np.flatnonzero(diff)
 
-    _sign = np.sign(arr)
-    inds = np.flatnonzero( np.sign(arr[:-1]) * np.sign(arr[1:]) < 0 )
-
-    return inds
+    return np.flatnonzero( np.sign(arr[:-1]) * np.sign(arr[1:]) < 0 )
 
 # --------------------------------------------------------------------------------------------------
 
@@ -142,6 +135,8 @@ def bisect(func,x_lo,x_hi,args,zeros,x_tol,max_iter,num_x=1001,r_tol=None):
     ...
     """
 
+    x_ref = (x_lo+x_hi) / 2.0
+
     if r_tol is None:
         r_tol = x_tol
 
@@ -149,10 +144,14 @@ def bisect(func,x_lo,x_hi,args,zeros,x_tol,max_iter,num_x=1001,r_tol=None):
 
         x = np.linspace(x_lo,x_hi,num_x)
         arr = func(x,*args)
-        # plt.plot(x,arr)
-        # plt.show()
 
         ind = find_zeros_inds(arr)
+
+        if ind.size == 0:
+            msg = '\n*** ERROR ***\nbisection failed, no zeros found'
+            print(msg)
+            zeros.print()
+            exit()
 
         # if found multiple zeros, add the new bounds to queue and start over
         if ind.size > 1:
@@ -161,12 +160,14 @@ def bisect(func,x_lo,x_hi,args,zeros,x_tol,max_iter,num_x=1001,r_tol=None):
                 
         ind = ind.squeeze()
         
-        x_0 = x[ind]
         x_lo = x[ind]
         x_hi = x[ind+1]
+        x_0 = (x_lo + x_hi) / 2.0
 
-        if np.abs(x_hi-x_lo) <= x_tol + r_tol * max(x_lo,x_hi):
+        if np.isclose(x_0,x_ref,atol=x_tol,rtol=r_tol):
             return x_0
+        
+        x_ref = x_0
         
     msg = '\n*** WARNING ***\nfailed to converge!'
     print(msg)
@@ -175,7 +176,7 @@ def bisect(func,x_lo,x_hi,args,zeros,x_tol,max_iter,num_x=1001,r_tol=None):
 
 # --------------------------------------------------------------------------------------------------
 
-def find_zeros_adaptive(func,x,args=(),x_tol=1e-12,max_iter=100,verbose=False):
+def find_zeros_adaptive_custom(func,x,args=(),x_tol=1e-12,max_iter=100,verbose=False):
 
     """
     ...
@@ -229,7 +230,7 @@ class c_bistable:
 
     # ----------------------------------------------------------------------------------------------
 
-    def __init__(self,y,z,x_lo=None,x_hi=1,num_x=1001):
+    def __init__(self,y,z,x_lo=None,x_hi=1e9,num_x=1001):
 
         """
         const v:
@@ -264,29 +265,33 @@ class c_bistable:
         self.v = v 
         self.v_sq = v**2
 
-        print(f'doing constant v: v = {v}')
-
+        msg = f'\ndoing constant v'
+        msg += f'\nj: {self.v}'
+        msg += f'\ny: {self.y}'
+        msg += f'\nz: {self.z}' 
+        print(msg)
+        
+        # # old version
         # x_0 = _find_zeros_adaptive(self._calc_dot_U_const_v, x=self.x)
         # n_0 = self._calc_n_const_v(x_0)
 
+        # solve x(n)
         if self.v == 0.0:
             x_0 = np.array([self.y])
         else:
-            x_0 = find_zeros_adaptive(self._calc_dot_U_const_v, x=self.x)
+            x_0 = find_zeros_adaptive(self._calc_dot_U_const_v, x=self.x) 
             
+        # plug x(n) into dot n = 0
         n_0 = self._calc_n_const_v(x_0)
 
+        # print results
         _num_zeros = n_0.size
-        msg = '\n*** RESULTS ***'
-        msg += f'\n\nv: {self.v}'
-        msg += f'\ny: {self.y}'
-        msg += f'\nz: {self.z}' 
-        msg += f'\n\nnum_zeros: {_num_zeros}\n'
+        msg = f'\nnum_zeros: {_num_zeros}'
         for ii in range(_num_zeros):
-            msg += f'\n solution {ii} :'
-            msg += f'\n    n = {n_0[ii]}'
-            msg += f'\n    x = {x_0[ii]}\n'
-        print(msg)
+            msg += f'\n\n solution {ii} :'
+            msg += f'\n    n: {n_0[ii]}'
+            msg += f'\n    x: {x_0[ii]}'
+        print(msg,flush=True)  
             
         return n_0, x_0
 
@@ -300,44 +305,114 @@ class c_bistable:
         with x(n) given by the solution of
             0 = j^2 x / n + y^4 - x^4
         """
+        
+        self.j = j
+        self.j_sq = j**2
 
-        print(f'doing constant j: j = {j}')
+        msg = f'\ndoing constant j'
+        msg += f'\nj: {self.j}'
+        msg += f'\ny: {self.y}'
+        msg += f'\nz: {self.z}' 
+        print(msg)
+
+        if self.j == 0.0:
+            x_0 = np.array([self.y])
+            self.v = 0.0
+            n_0 = self._calc_n_const_v(x_0)
+        else:        
+            n_lo = max(self.j*self.z*self.y,1e-24)
+            n = np.linspace(n_lo,1,num_n)
+            # n_0 = find_zeros_adaptive_custom(func=self._calc_n_balance_const_j,x=n)
+            n_0 = find_zeros_adaptive(func=self._calc_n_balance_const_j,x=n)
+            x_0 = find_zeros_adaptive(self._calc_dot_U_const_j,x=self.x,args=(n_0,))
+
+        # print results
+        _num_zeros = n_0.size
+        msg = f'\nnum_zeros: {_num_zeros}'
+        for ii in range(_num_zeros):
+            msg += f'\n\n solution {ii} :'
+            msg += f'\n    n: {n_0[ii]}'
+            msg += f'\n    x: {x_0[ii]}'
+        print(msg,flush=True)   
+
+        return n_0, x_0
+    
+    # ----------------------------------------------------------------------------------------------
+
+    def solve_constant_j_newton(self,j,n_guess,n_tol=1e-9,max_iter=5000):
+
+        """
+        need to solve
+            n = e^(-1/x(n)) e^(jz/n)
+        with x(n) given by the solution of
+            0 = j^2 x / n + y^4 - x^4
+        """
 
         self.j = j
         self.j_sq = j**2
 
+        msg = f'\ndoing constant j'
+        msg += f'\nj: {self.j}'
+        msg += f'\ny: {self.y}'
+        msg += f'\nz: {self.z}' 
+        msg += '\n\nusing newton-raphson method'
+        msg += f'\nn_guess: {n_guess}'
+        print(msg)
+
         if self.j == 0.0:
-            x_0 = np.array([self.y])
+
+            x_0 = self.y
+            self.v = 0.0
             n_0 = self._calc_n_const_v(x_0)
+
         else:
-            n = np.logspace(-24,0,num_n)
-            n0 = find_zeros_adaptive(func=self._calc_n_balance_const_j,x=n)
-            print(n0)
+
+            n_0, _result = scipy.optimize.newton(func=self._calc_n_balance_const_j,x0=n_guess,
+                                                tol=n_tol,disp=False,full_output=True,
+                                                maxiter=max_iter,rtol=n_tol)
+            x_0 = find_zeros_adaptive(self._calc_dot_U_const_j,x=self.x,args=(n_0,)).squeeze()
+
+            if not _result.converged:
+                print('\n*** WARNING ***\nscipy.optimize newton failed to converge')
+                n_0 = np.atleast_1d(np.nan)
+                x_0 = np.atleast_1d(np.nan)
+
+            print('')
+            print(_result)
+
+        # print results
+        msg = f'\nn: {n_0}'
+        msg += f'\nx: {x_0}'
+        print(msg,flush=True)   
+
+        return n_0, x_0
         
     # ----------------------------------------------------------------------------------------------
 
     def _calc_n_balance_const_j(self,n):
 
         """
-        fill the x(n) array and find the zeros of 
+        fill the x(n) array and calculate 
             f(n) = e^(-1/x(n)) e^(jz/n) - n
         """
 
-        x = np.zeros(n.size)
-        for ii, nn in enumerate(n):
+        _n = np.atleast_1d(n)
 
+        _x0 = np.zeros(_n.size)
+        for ii, nn in enumerate(_n):
+
+            # fill x(n)
             _x = find_zeros_adaptive(self._calc_dot_U_const_j,x=self.x,args=(nn,)).squeeze()
 
             if _x.size > 1:
                 msg = '\n*** ERROR ***\nfound multiple zeros'
                 print(msg)
                 exit()
-            else:
-                _x = np.nan
 
-            x[ii] = _x
+            _x0[ii] = _x
 
-        return np.exp(-1/x) * np.exp(self.j * self.z / n) - n
+        _x0 = _x0.squeeze()
+        return np.exp(-1/_x0) * np.exp(self.j * self.z / n) - n
     
     # ----------------------------------------------------------------------------------------------
 
@@ -346,6 +421,9 @@ class c_bistable:
         """
         0 = j^2 x / n + y^4 - x^4
         """
+
+        if n < np.exp(-1/self.y):
+            n = np.exp(-1/self.y)
 
         return self.j_sq * x / n + (self.y**4 - x**4)
 
@@ -380,7 +458,7 @@ def run_v(y=0.1,z=0.1):
     run calculation for an array of v
     """
 
-    num_v = 1001
+    num_v = 10001
     v = np.linspace(0.0,0.5,num_v)
 
     n = np.zeros((num_v,3),dtype=float)
@@ -391,7 +469,7 @@ def run_v(y=0.1,z=0.1):
 
         print(f'\nnow doing count: {count}')
         
-        bistable = c_bistable(y=y,z=z,x_hi=1.0,num_x=10001)
+        bistable = c_bistable(y=y,z=z,x_hi=10,num_x=1001)
         _n, _x  = bistable.solve_constant_v(vv)
         
         if _n.size == 1:
@@ -430,12 +508,118 @@ def run_v_sweep_over_y(y_list=[0.01,0.1,0.25],z=0.0):
 
 # --------------------------------------------------------------------------------------------------
 
+def run_j(y=0.1,z=0.1):
+
+    """
+    run calculation for an array of v
+    """
+
+    num_j = 251
+    j = np.linspace(0.0,0.1,num_j)
+
+    n = np.zeros((num_j,3),dtype=float)
+    x = np.zeros((num_j,3),dtype=float)
+
+    count = 0
+    for ii, jj in enumerate(j):
+
+        print(f'\nnow doing count: {count}')
+        
+        bistable = c_bistable(y=y,z=z,x_hi=1e9,num_x=1001)
+        _n, _x  = bistable.solve_constant_j(jj)
+        
+        if _n.size == 1:
+            n[ii,0] = _n.squeeze()
+            x[ii,0] = _x.squeeze()
+        else:
+            n[ii,:] = _n
+            x[ii,:] = _x
+            
+        count += 1
+
+    # write results to hdf5 file
+    with h5py.File(f'results_j_y_{y:.3f}_z_{z:.3f}.h5','w') as db:
+
+        db.create_dataset('n',data=n)
+        db.create_dataset('x',data=x)
+        
+        db.create_dataset('j',data=j)
+        db.create_dataset('y',data=y)
+        db.create_dataset('z',data=z)
+
+# --------------------------------------------------------------------------------------------------
+
+def run_j_newton(y=0.1,z=0.1):
+
+    """
+    run calculation for an array of v
+    """
+
+    num_j = 251
+    j = np.linspace(0.0,0.1,num_j)
+
+    n_guess = [1e-9,1e-6,1e-3,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,0.999]
+    num_n = len(n_guess)
+
+    n = np.zeros((num_j,num_n),dtype=float)
+    x = np.zeros((num_j,num_n),dtype=float)
+
+    count = 0
+    for ii, jj in enumerate(j):
+        for kk, nn in enumerate(n_guess):
+                
+            print(f'\nnow doing count: {count}')
+            
+            bistable = c_bistable(y=y,z=z,x_hi=1e9,num_x=1001)
+            _n, _x  = bistable.solve_constant_j_newton(jj,nn)
+            
+            n[ii,kk] = _n
+            x[ii,kk] = _x
+            
+            count += 1
+
+    # write results to hdf5 file
+    with h5py.File(f'results_j_y_{y:.3f}_z_{z:.3f}_newton.h5','w') as db:
+
+        db.create_dataset('n',data=n)
+        db.create_dataset('x',data=x)
+        
+        db.create_dataset('j',data=j)
+        db.create_dataset('y',data=y)
+        db.create_dataset('z',data=z)
+
+# --------------------------------------------------------------------------------------------------
+
+def run_j_sweep_over_y(y_list=[0.01,0.1,0.25],z=0.0):
+
+    """
+    sweep over multiple y for the same j 
+    """
+
+    comm, proc, num_procs = get_mpi()
+
+    my_y = np.array_split(y_list,num_procs)[proc]
+    for y in my_y:
+        print('\nproc:',proc,'\ty:',y)
+        run_j(y,z)
+        # run_j_newton(y,z)
+
+# --------------------------------------------------------------------------------------------------
+
+# --------------------------------------------------------------------------------------------------
+
 if __name__ == '__main__':
 
-    bistable = c_bistable(y=0.1,z=0.1)
-    bistable.solve_constant_j(0.05)
+    # run_j(y=0.1,z=0.1)
+    # run_j_newton(y=0.1,z=0.1)
+    # run_j_sweep_over_y()
 
-    # bistable = c_bistable(y=0.01,z=0.0)
-    # bistable.solve_constant_v(0.218)
+    # bistable = c_bistable(y=0.01,z=0.0,x_hi=1e3,num_x=1001)
+    # bistable.solve_constant_j_newton(j=0.0004,n_guess=0.1)
 
-    # run_v_sweep_over_y()
+    y_list = [0.01,0.05,0.1,0.25,0.5]
+    z_list = [0.0,0.001,0.01,0.1,0.25,0.5,0.75,1.0,2.5,5.0]
+
+    for zz in z_list:
+        # run_j_sweep_over_y(y_list,zz)
+        run_v_sweep_over_y(y_list,zz)
