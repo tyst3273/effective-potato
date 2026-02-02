@@ -81,11 +81,11 @@ x_min = 1e9
 x_max = 0
 
 ax0_ins = ax[0,0].inset_axes([0.05,0.4,0.5,0.55],
-                           xlim=(0.1,0.15),ylim=(0,0.001),yticklabels=[],xticklabels=[])
+                           xlim=(0.1,0.125),ylim=(3e-5,4e-4),yticklabels=[],xticklabels=[])
 ax[0,0].indicate_inset_zoom(ax0_ins,edgecolor='black',alpha=1)
 
 ax1_ins = ax[0,1].inset_axes([0.05,0.4,0.5,0.55],
-                           xlim=(0.1,0.15),ylim=(0,0.01),yticklabels=[],xticklabels=[])
+                           xlim=(0.1,0.125),ylim=(3e-4,3e-3),yticklabels=[],xticklabels=[])
 ax[0,1].indicate_inset_zoom(ax1_ins,edgecolor='black',alpha=1)
 
 for ii, zz in enumerate(z_list):
@@ -99,41 +99,42 @@ for ii, zz in enumerate(z_list):
     if np.nanmax(x) > x_max:
         x_max = np.nanmax(x)
     
-    ax[0,0].plot(x[:,0],n[:,0],c=colors[ii],lw=0,marker='o',ms=0.25)
-    ax[0,0].plot(x[:,2],n[:,2],c=colors[ii],lw=0,marker='o',ms=0.25)
+    ax[0,0].plot(x[:,0],n[:,0],c=colors[ii],lw=0,marker='o',ms=1)
+    ax[0,0].plot(x[:,2],n[:,2],c=colors[ii],lw=0,marker='o',ms=1)
 
-    ax0_ins.plot(x[:,0],n[:,0],c=colors[ii],lw=0,marker='o',ms=0.25)
-    ax0_ins.plot(x[:,2],n[:,2],c=colors[ii],lw=0,marker='o',ms=0.25)
+    ax[0,0].plot(x[:,0],n[:,0],c=colors[ii],lw=0,marker='o',ms=1)
+    ax[0,0].plot(x[:,2],n[:,2],c=colors[ii],lw=0,marker='o',ms=1)
+
+    ax0_ins.plot(x[:,0],n[:,0],c=colors[ii],lw=0,marker='o',ms=1)
+    ax0_ins.plot(x[:,2],n[:,2],c=colors[ii],lw=0,marker='o',ms=1)
 
     g = n/x
-    ax[0,1].plot(x[:,0],g[:,0],c=colors[ii],lw=0,marker='o',ms=0.25)
-    ax[0,1].plot(x[:,2],g[:,2],c=colors[ii],lw=0,marker='o',ms=0.25)
+    ax[0,1].plot(x[:,0],g[:,0],c=colors[ii],lw=0,marker='o',ms=1)
+    ax[0,1].plot(x[:,2],g[:,2],c=colors[ii],lw=0,marker='o',ms=1)
 
-    ax1_ins.plot(x[:,0],g[:,0],c=colors[ii],lw=0,marker='o',ms=0.25)
-    ax1_ins.plot(x[:,2],g[:,2],c=colors[ii],lw=0,marker='o',ms=0.25)
+    ax1_ins.plot(x[:,0],g[:,0],c=colors[ii],lw=0,marker='o',ms=1)
+    ax1_ins.plot(x[:,2],g[:,2],c=colors[ii],lw=0,marker='o',ms=1)
 
 
 for ii, zz in enumerate(z_list):
 
     n, x, j, y, z = get_j_data(f'results_j_y_{y:.3f}_z_{zz:.3f}.h5')
 
-    ax[1,0].plot(x[:,0],n[:,0],c=colors[ii],lw=0,marker='o',ms=0.25)
-    ax[1,0].plot(x[:,2],n[:,2],c=colors[ii],lw=0,marker='o',ms=0.25)
+    ax[1,0].plot(x[:,0],n[:,0],c=colors[ii],lw=0,marker='o',ms=1)
+    ax[1,0].plot(x[:,2],n[:,2],c=colors[ii],lw=0,marker='o',ms=1)
 
     g = n/x
-    ax[1,1].plot(x[:,0],g[:,0],c=colors[ii],lw=0,marker='o',ms=0.25)
-    ax[1,1].plot(x[:,2],g[:,2],c=colors[ii],lw=0,marker='o',ms=0.25)
+    ax[1,1].plot(x[:,0],g[:,0],c=colors[ii],lw=0,marker='o',ms=1)
+    ax[1,1].plot(x[:,2],g[:,2],c=colors[ii],lw=0,marker='o',ms=1)
 
-
-y = 0.25
 ax[0,0].annotate('(a)',xy=(0.65,0.15),xycoords='axes fraction',c='k')
 ax[0,0].annotate(f'y={y:.2f}',xy=(0.65,0.05),xycoords='axes fraction',c='k')
 ax[0,1].annotate('(b)',xy=(0.65,0.15),xycoords='axes fraction',c='k')
 ax[0,1].annotate(f'y={y:.2f}',xy=(0.65,0.05),xycoords='axes fraction',c='k')
-ax[1,0].annotate('(c)',xy=(0.65,0.15),xycoords='axes fraction',c='k')
-ax[1,0].annotate(f'y={y:.2f}',xy=(0.65,0.05),xycoords='axes fraction',c='k')
-ax[1,1].annotate('(d)',xy=(0.65,0.15),xycoords='axes fraction',c='k')
-ax[1,1].annotate(f'y={y:.2f}',xy=(0.65,0.05),xycoords='axes fraction',c='k')
+ax[1,0].annotate('(c)',xy=(0.05,0.85),xycoords='axes fraction',c='k')
+ax[1,0].annotate(f'y={y:.2f}',xy=(0.055,0.75),xycoords='axes fraction',c='k')
+ax[1,1].annotate('(d)',xy=(0.05,0.85),xycoords='axes fraction',c='k')
+ax[1,1].annotate(f'y={y:.2f}',xy=(0.055,0.75),xycoords='axes fraction',c='k')
 
 fig.legend(frameon=False,ncol=3,loc='upper left',bbox_to_anchor=(0.1,0.975))
 

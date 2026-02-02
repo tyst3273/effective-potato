@@ -33,69 +33,69 @@ for ii, zz in enumerate(z_list):
 
     n, x, j, y, z = get_data(f'results_j_y_0.010_z_{zz:.3f}.h5')
 
-    ax[0,0].plot(j,n[:,0],c=c,lw=0,marker='o',ms=0.5)
-    ax[0,1].plot(j,x[:,0],c=c,lw=0,marker='o',ms=0.5)
+    ax[0,0].plot(j,n[:,0],c=c,lw=0,marker='o',ms=1)
+    ax[0,1].plot(j,x[:,0],c=c,lw=0,marker='o',ms=1)
     # ax[0,0].plot(j,n[:,1],c=c,lw=0,marker='o',ms=0.5)
     # ax[0,1].plot(j,x[:,1],c=c,lw=0,marker='o',ms=0.5)
     # ax[0,0].plot(j,n[:,2],c=c,lw=0,marker='o',ms=0.5)
     # ax[0,1].plot(j,x[:,2],c=c,lw=0,marker='o',ms=0.5)
 
-    try:
-        _lo = np.nanargmax(x[:,1])
-    except ValueError:
-        _lo = 0
-    try:
-        _hi = np.nanargmin(x[:,1])
-    except ValueError:
-        _hi = 0
-    ax[0,0].plot([j[_lo],j[_lo]],[n[_lo,0],n[_lo,2]],ms=0,lw=1,ls=(0,(2,1)),c=c)
-    ax[0,0].plot([j[_hi],j[_hi]],[n[_hi,0],n[_hi,2]],ms=0,lw=1,ls=(0,(2,1)),c=c)
-    ax[0,1].plot([j[_lo],j[_lo]],[x[_lo,0],x[_lo,2]],ms=0,lw=1,ls=(0,(2,1)),c=c)
-    ax[0,1].plot([j[_hi],j[_hi]],[x[_hi,0],x[_hi,2]],ms=0,lw=1,ls=(0,(2,1)),c=c)
+    # try:
+    #     _lo = np.nanargmax(x[:,1])
+    # except ValueError:
+    #     _lo = 0
+    # try:
+    #     _hi = np.nanargmin(x[:,1])
+    # except ValueError:
+    #     _hi = 0
+    # ax[0,0].plot([j[_lo],j[_lo]],[n[_lo,0],n[_lo,2]],ms=0,lw=1,ls=(0,(2,1)),c=c)
+    # ax[0,0].plot([j[_hi],j[_hi]],[n[_hi,0],n[_hi,2]],ms=0,lw=1,ls=(0,(2,1)),c=c)
+    # ax[0,1].plot([j[_lo],j[_lo]],[x[_lo,0],x[_lo,2]],ms=0,lw=1,ls=(0,(2,1)),c=c)
+    # ax[0,1].plot([j[_hi],j[_hi]],[x[_hi,0],x[_hi,2]],ms=0,lw=1,ls=(0,(2,1)),c=c)
 
     n, x, j, y, z = get_data(f'results_j_y_0.100_z_{zz:.3f}.h5')
 
-    ax[1,0].plot(j,n[:,0],c=c,lw=0,marker='o',ms=0.5)
-    ax[1,1].plot(j,x[:,0],c=c,lw=0,marker='o',ms=0.5)
+    ax[1,0].plot(j,n[:,0],c=c,lw=0,marker='o',ms=1)
+    ax[1,1].plot(j,x[:,0],c=c,lw=0,marker='o',ms=1)
     # ax[1,0].plot(j,n[:,1],c=c,lw=0,marker='o',ms=0.5)
     # ax[1,1].plot(j,x[:,1],c=c,lw=0,marker='o',ms=0.5)
     # ax[1,0].plot(j,n[:,2],c=c,lw=0,marker='o',ms=0.5)
     # ax[1,1].plot(j,x[:,2],c=c,lw=0,marker='o',ms=0.5)
 
-    try:
-        _lo = np.nanargmax(x[:,1])
-    except ValueError:
-        _lo = 0
-    try:
-        _hi = np.nanargmin(x[:,1])
-    except ValueError:
-        _hi = 0
-    ax[1,0].plot([j[_lo],j[_lo]],[n[_lo,0],n[_lo,2]],ms=0,lw=1,ls=(0,(2,1)),c=c)
-    ax[1,0].plot([j[_hi],j[_hi]],[n[_hi,0],n[_hi,2]],ms=0,lw=1,ls=(0,(2,1)),c=c)
-    ax[1,1].plot([j[_lo],j[_lo]],[x[_lo,0],x[_lo,2]],ms=0,lw=1,ls=(0,(2,1)),c=c)
-    ax[1,1].plot([j[_hi],j[_hi]],[x[_hi,0],x[_hi,2]],ms=0,lw=1,ls=(0,(2,1)),c=c)
+    # try:
+    #     _lo = np.nanargmax(x[:,1])
+    # except ValueError:
+    #     _lo = 0
+    # try:
+    #     _hi = np.nanargmin(x[:,1])
+    # except ValueError:
+    #     _hi = 0
+    # ax[1,0].plot([j[_lo],j[_lo]],[n[_lo,0],n[_lo,2]],ms=0,lw=1,ls=(0,(2,1)),c=c)
+    # ax[1,0].plot([j[_hi],j[_hi]],[n[_hi,0],n[_hi,2]],ms=0,lw=1,ls=(0,(2,1)),c=c)
+    # ax[1,1].plot([j[_lo],j[_lo]],[x[_lo,0],x[_lo,2]],ms=0,lw=1,ls=(0,(2,1)),c=c)
+    # ax[1,1].plot([j[_hi],j[_hi]],[x[_hi,0],x[_hi,2]],ms=0,lw=1,ls=(0,(2,1)),c=c)
 
     n, x, j, y, z = get_data(f'results_j_y_0.250_z_{zz:.3f}.h5')
 
-    ax[2,0].plot(j,n[:,0],c=c,lw=0,marker='o',ms=0.5)
-    ax[2,1].plot(j,x[:,0],c=c,lw=0,marker='o',ms=0.5)
+    ax[2,0].plot(j,n[:,0],c=c,lw=0,marker='o',ms=1)
+    ax[2,1].plot(j,x[:,0],c=c,lw=0,marker='o',ms=1)
     # ax[2,0].plot(j,n[:,1],c=c,lw=0,marker='o',ms=0.5)
     # ax[2,1].plot(j,x[:,1],c=c,lw=0,marker='o',ms=0.5)
     # ax[2,0].plot(j,n[:,2],c=c,lw=0,marker='o',ms=0.5)
     # ax[2,1].plot(j,x[:,2],c=c,lw=0,marker='o',ms=0.5)
 
-    try:
-        _lo = np.nanargmax(x[:,1])
-    except ValueError:
-        _lo = 0
-    try:
-        _hi = np.nanargmin(x[:,1])
-    except ValueError:
-        _hi = 0
-    ax[2,0].plot([j[_lo],j[_lo]],[n[_lo,0],n[_lo,2]],ms=0,lw=1,ls=(0,(2,1)),c=c)
-    ax[2,0].plot([j[_hi],j[_hi]],[n[_hi,0],n[_hi,2]],ms=0,lw=1,ls=(0,(2,1)),c=c)
-    ax[2,1].plot([j[_lo],j[_lo]],[x[_lo,0],x[_lo,2]],ms=0,lw=1,ls=(0,(2,1)),c=c)
-    ax[2,1].plot([j[_hi],j[_hi]],[x[_hi,0],x[_hi,2]],ms=0,lw=1,ls=(0,(2,1)),c=c)
+    # try:
+    #     _lo = np.nanargmax(x[:,1])
+    # except ValueError:
+    #     _lo = 0
+    # try:
+    #     _hi = np.nanargmin(x[:,1])
+    # except ValueError:
+    #     _hi = 0
+    # ax[2,0].plot([j[_lo],j[_lo]],[n[_lo,0],n[_lo,2]],ms=0,lw=1,ls=(0,(2,1)),c=c)
+    # ax[2,0].plot([j[_hi],j[_hi]],[n[_hi,0],n[_hi,2]],ms=0,lw=1,ls=(0,(2,1)),c=c)
+    # ax[2,1].plot([j[_lo],j[_lo]],[x[_lo,0],x[_lo,2]],ms=0,lw=1,ls=(0,(2,1)),c=c)
+    # ax[2,1].plot([j[_hi],j[_hi]],[x[_hi,0],x[_hi,2]],ms=0,lw=1,ls=(0,(2,1)),c=c)
 
 fig.legend(frameon=False,ncol=3,loc='upper left',bbox_to_anchor=(0.1,0.95))
 
@@ -106,15 +106,15 @@ ax[0,1].annotate('(b)',xy=(0.05,0.85),xycoords='axes fraction',c='k')
 ax[0,1].annotate(f'y={y:.2f}',xy=(0.6,0.25),xycoords='axes fraction',c='k')
 
 y = 0.1
-ax[1,0].annotate('(a)',xy=(0.05,0.85),xycoords='axes fraction',c='k')
+ax[1,0].annotate('(c)',xy=(0.05,0.85),xycoords='axes fraction',c='k')
 ax[1,0].annotate(f'y={y:.2f}',xy=(0.6,0.25),xycoords='axes fraction',c='k')
-ax[1,1].annotate('(b)',xy=(0.05,0.85),xycoords='axes fraction',c='k')
+ax[1,1].annotate('(d)',xy=(0.05,0.85),xycoords='axes fraction',c='k')
 ax[1,1].annotate(f'y={y:.2f}',xy=(0.6,0.25),xycoords='axes fraction',c='k')
 
 y = 0.25
-ax[2,0].annotate('(a)',xy=(0.05,0.85),xycoords='axes fraction',c='k')
+ax[2,0].annotate('(e)',xy=(0.05,0.85),xycoords='axes fraction',c='k')
 ax[2,0].annotate(f'y={y:.2f}',xy=(0.6,0.25),xycoords='axes fraction',c='k')
-ax[2,1].annotate('(b)',xy=(0.05,0.85),xycoords='axes fraction',c='k')
+ax[2,1].annotate('(f)',xy=(0.05,0.85),xycoords='axes fraction',c='k')
 ax[2,1].annotate(f'y={y:.2f}',xy=(0.6,0.25),xycoords='axes fraction',c='k')
 
 ax[2,0].set_xlabel('j')

@@ -33,12 +33,12 @@ for ii, zz in enumerate(z_list):
 
     n, x, v, y, z = get_data(f'results_v_y_0.010_z_{zz:.3f}.h5')
 
-    ax[0,0].plot(v,n[:,0],c=c,lw=0,marker='o',ms=0.5)
-    ax[0,1].plot(v,x[:,0],c=c,lw=0,marker='o',ms=0.5)
-    # ax[0,0].plot(v,n[:,1],c=c,lw=0,marker='o',ms=0.5)
-    # ax[0,1].plot(v,x[:,1],c=c,lw=0,marker='o',ms=0.5)
-    ax[0,0].plot(v,n[:,2],c=c,lw=0,marker='o',ms=0.5)
-    ax[0,1].plot(v,x[:,2],c=c,lw=0,marker='o',ms=0.5)
+    ax[0,0].plot(v,n[:,0],c=c,lw=0,marker='o',ms=1.5)
+    ax[0,1].plot(v,x[:,0],c=c,lw=0,marker='o',ms=1.5)
+    ax[0,0].plot(v,n[:,1],c=c,lw=1,marker='o',ms=0)
+    ax[0,1].plot(v,x[:,1],c=c,lw=1,marker='o',ms=0)
+    ax[0,0].plot(v,n[:,2],c=c,lw=0,marker='o',ms=1.5)
+    ax[0,1].plot(v,x[:,2],c=c,lw=0,marker='o',ms=1.5)
 
     try:
         _lo = np.nanargmax(x[:,1])
@@ -55,12 +55,12 @@ for ii, zz in enumerate(z_list):
 
     n, x, v, y, z = get_data(f'results_v_y_0.100_z_{zz:.3f}.h5')
 
-    ax[1,0].plot(v,n[:,0],c=c,lw=0,marker='o',ms=0.5)
-    ax[1,1].plot(v,x[:,0],c=c,lw=0,marker='o',ms=0.5)
-    # ax[1,0].plot(v,n[:,1],c=c,lw=0,marker='o',ms=0.5)
-    # ax[1,1].plot(v,x[:,1],c=c,lw=0,marker='o',ms=0.5)
-    ax[1,0].plot(v,n[:,2],c=c,lw=0,marker='o',ms=0.5)
-    ax[1,1].plot(v,x[:,2],c=c,lw=0,marker='o',ms=0.5)
+    ax[1,0].plot(v,n[:,0],c=c,lw=0,marker='o',ms=1.5)
+    ax[1,1].plot(v,x[:,0],c=c,lw=0,marker='o',ms=1.5)
+    ax[1,0].plot(v,n[:,1],c=c,lw=1,marker='o',ms=0)
+    ax[1,1].plot(v,x[:,1],c=c,lw=1,marker='o',ms=0)
+    ax[1,0].plot(v,n[:,2],c=c,lw=0,marker='o',ms=1.5)
+    ax[1,1].plot(v,x[:,2],c=c,lw=0,marker='o',ms=1.5)
 
     try:
         _lo = np.nanargmax(x[:,1])
@@ -77,12 +77,12 @@ for ii, zz in enumerate(z_list):
 
     n, x, v, y, z = get_data(f'results_v_y_0.250_z_{zz:.3f}.h5')
 
-    ax[2,0].plot(v,n[:,0],c=c,lw=0,marker='o',ms=0.5)
-    ax[2,1].plot(v,x[:,0],c=c,lw=0,marker='o',ms=0.5)
-    # ax[2,0].plot(v,n[:,1],c=c,lw=0,marker='o',ms=0.5)
-    # ax[2,1].plot(v,x[:,1],c=c,lw=0,marker='o',ms=0.5)
-    ax[2,0].plot(v,n[:,2],c=c,lw=0,marker='o',ms=0.5)
-    ax[2,1].plot(v,x[:,2],c=c,lw=0,marker='o',ms=0.5)
+    ax[2,0].plot(v,n[:,0],c=c,lw=0,marker='o',ms=1.5)
+    ax[2,1].plot(v,x[:,0],c=c,lw=0,marker='o',ms=1.5)
+    ax[2,0].plot(v,n[:,1],c=c,lw=1,marker='o',ms=0)
+    ax[2,1].plot(v,x[:,1],c=c,lw=1,marker='o',ms=0)
+    ax[2,0].plot(v,n[:,2],c=c,lw=0,marker='o',ms=1.5)
+    ax[2,1].plot(v,x[:,2],c=c,lw=0,marker='o',ms=1.5)
 
     try:
         _lo = np.nanargmax(x[:,1])
@@ -106,16 +106,16 @@ ax[0,1].annotate('(b)',xy=(0.05,0.85),xycoords='axes fraction',c='k')
 ax[0,1].annotate(f'y={y:.2f}',xy=(0.05,0.7),xycoords='axes fraction',c='k')
 
 y = 0.1
-ax[1,0].annotate('(a)',xy=(0.05,0.85),xycoords='axes fraction',c='k')
+ax[1,0].annotate('(c)',xy=(0.05,0.85),xycoords='axes fraction',c='k')
 ax[1,0].annotate(f'y={y:.2f}',xy=(0.05,0.7),xycoords='axes fraction',c='k')
-ax[1,1].annotate('(b)',xy=(0.05,0.85),xycoords='axes fraction',c='k')
+ax[1,1].annotate('(d)',xy=(0.05,0.85),xycoords='axes fraction',c='k')
 ax[1,1].annotate(f'y={y:.2f}',xy=(0.05,0.7),xycoords='axes fraction',c='k')
 
 y = 0.25
-ax[2,0].annotate('(a)',xy=(0.05,0.85),xycoords='axes fraction',c='k')
-ax[2,0].annotate(f'y={y:.2f}',xy=(0.05,0.7),xycoords='axes fraction',c='k')
-ax[2,1].annotate('(b)',xy=(0.05,0.85),xycoords='axes fraction',c='k')
-ax[2,1].annotate(f'y={y:.2f}',xy=(0.05,0.7),xycoords='axes fraction',c='k')
+ax[2,0].annotate('(e)',xy=(0.05,0.85),xycoords='axes fraction',c='k')
+ax[2,0].annotate(f'y={y:.2f}',xy=(0.05,0.2),xycoords='axes fraction',c='k')
+ax[2,1].annotate('(f)',xy=(0.05,0.85),xycoords='axes fraction',c='k')
+ax[2,1].annotate(f'y={y:.2f}',xy=(0.05,0.2),xycoords='axes fraction',c='k')
 
 ax[2,0].set_xlabel('v')
 ax[0,0].set_ylabel('n')
@@ -137,9 +137,9 @@ for ii in range(3):
     ax[ii,1].yaxis.tick_right()
 
     v_lo = 0.0
-    v_hi = 0.4
-    ax[ii,0].axis([v_lo,v_hi,-0.005,0.1])
-    ax[ii,1].axis([v_lo,v_hi,-0.04,0.5])
+    v_hi = 0.3
+    ax[ii,0].axis([v_lo,v_hi,-0.0025,0.04])
+    ax[ii,1].axis([v_lo,v_hi,-0.02,0.4])
 
 for ii in range(2):
     ax[ii,0].set_xticklabels([])

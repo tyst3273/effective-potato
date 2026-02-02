@@ -288,7 +288,7 @@ class c_bistable:
         _num_zeros = n_0.size
         msg = f'\nnum_zeros: {_num_zeros}'
         for ii in range(_num_zeros):
-            msg += f'\n\n solution {ii} :'
+            msg += f'\n\n solution {ii}:'
             msg += f'\n    n: {n_0[ii]}'
             msg += f'\n    x: {x_0[ii]}'
         print(msg,flush=True)  
@@ -330,7 +330,7 @@ class c_bistable:
         _num_zeros = n_0.size
         msg = f'\nnum_zeros: {_num_zeros}'
         for ii in range(_num_zeros):
-            msg += f'\n\n solution {ii} :'
+            msg += f'\n\n solution {ii}:'
             msg += f'\n    n: {n_0[ii]}'
             msg += f'\n    x: {x_0[ii]}'
         print(msg,flush=True)   
@@ -422,8 +422,8 @@ class c_bistable:
         0 = j^2 x / n + y^4 - x^4
         """
 
-        if n < np.exp(-1/self.y):
-            n = np.exp(-1/self.y)
+        # if n < np.exp(-1/self.y):
+        #     n = np.exp(-1/self.y)
 
         return self.j_sq * x / n + (self.y**4 - x**4)
 
@@ -446,7 +446,7 @@ class c_bistable:
         n = e^(-1/x) e^( v * z / x)
         """
 
-        return np.exp( - (1 - self.v*self.z) / x )
+        return np.exp( -(1 - self.v*self.z) / x )
 
     # ----------------------------------------------------------------------------------------------
 
@@ -469,7 +469,7 @@ def run_v(y=0.1,z=0.1):
 
         print(f'\nnow doing count: {count}')
         
-        bistable = c_bistable(y=y,z=z,x_hi=10,num_x=10001)
+        bistable = c_bistable(y=y,z=z,x_hi=10,num_x=1001)
         _n, _x  = bistable.solve_constant_v(vv)
         
         if _n.size == 1:
@@ -621,9 +621,12 @@ if __name__ == '__main__':
     # bistable = c_bistable(y=0.01,z=0.0,x_hi=1e3,num_x=1001)
     # bistable.solve_constant_j_newton(j=0.0004,n_guess=0.1)
 
+    # y_list = [0.01,0.1,0.25]
+    # z_list = [0.0,0.1,1.0,5.0]
+
     y_list = [0.01,0.1,0.25]
-    z_list = [0.0,0.1,1.0,5.0]
+    z_list = [0.0,0.1,1.0]
 
     for zz in z_list:
         run_j_sweep_over_y(y_list,zz)
-        # run_v_sweep_over_y(y_list,zz)
+        run_v_sweep_over_y(y_list,zz)
