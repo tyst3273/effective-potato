@@ -4,6 +4,11 @@ import matplotlib.pyplot as plt
 import h5py
 import sys
 
+
+blue = '#377eb8' # k
+orange = '#ff7f00' # b
+green = '#4daf4a' # r
+
 # --------------------------------------------------------------------------------------------------
 
 def get_v_data(filename):
@@ -152,8 +157,8 @@ tax = [ax[0].twinx(),ax[1].twinx(),ax[2].twinx()]
 y = 0.1
 z = 0.1
 time, v, n, x, j = get_time_series(y,z)
-tax[0].plot(time,v,c='b',lw=2,ls='-')
-ax[0].plot(time,j,c='r',lw=2,ls='-')
+tax[0].plot(time,v,c=blue,lw=2,ls='-')
+ax[0].plot(time,j,c=orange,lw=2,ls='-')
 ax[0].annotate(f'y={y:.3f}',xy=(0.45,0.9),xycoords='axes fraction',c='k')
 ax[0].annotate(f'z={z:.3f}',xy=(0.45,0.825),xycoords='axes fraction',c='k')
 ax[0].annotate(f'(a)',xy=(0.05,0.9),xycoords='axes fraction',c='k')
@@ -161,8 +166,8 @@ ax[0].annotate(f'(a)',xy=(0.05,0.9),xycoords='axes fraction',c='k')
 y = 0.1
 z = 1.0
 time, v, n, x, j = get_time_series(y,z)
-tax[1].plot(time,v,c='b',lw=2,ls='-')
-ax[1].plot(time,j,c='r',lw=2,ls='-')
+tax[1].plot(time,v,c=blue,lw=2,ls='-')
+ax[1].plot(time,j,c=orange,lw=2,ls='-')
 ax[1].annotate(f'y={y:.3f}',xy=(0.45,0.9),xycoords='axes fraction',c='k')
 ax[1].annotate(f'z={z:.3f}',xy=(0.45,0.825),xycoords='axes fraction',c='k')
 ax[1].annotate(f'(b)',xy=(0.05,0.9),xycoords='axes fraction',c='k')
@@ -170,14 +175,14 @@ ax[1].annotate(f'(b)',xy=(0.05,0.9),xycoords='axes fraction',c='k')
 y = 0.25
 z = 0.1
 time, v, n, x, j = get_time_series(y,z)
-tax[2].plot(time,v,c='b',lw=2,ls='-')
-ax[2].plot(time,j,c='r',lw=2,ls='-')
+tax[2].plot(time,v,c=blue,lw=2,ls='-')
+ax[2].plot(time,j,c=orange,lw=2,ls='-')
 ax[2].annotate(f'y={y:.3f}',xy=(0.45,0.9),xycoords='axes fraction',c='k')
 ax[2].annotate(f'z={z:.3f}',xy=(0.45,0.825),xycoords='axes fraction',c='k')
 ax[2].annotate(f'(c)',xy=(0.05,0.9),xycoords='axes fraction',c='k')
 
-tax[0].set_ylabel('v',color='b')
-ax[2].set_ylabel('j',color='r')
+tax[0].set_ylabel('v',color=blue)
+ax[2].set_ylabel('j',color=orange)
 
 # tax[0].axis([0,1,0.0,0.25])
 # ax[0].axis([0,1,0,0.01])
@@ -189,8 +194,8 @@ for ii in range(3):
 
     ax[ii].set_xlabel('t')
 
-    tax[ii].tick_params(axis='y', colors='b')
-    ax[ii].tick_params(axis='y', colors='r')
+    tax[ii].tick_params(axis='y', colors=blue)
+    ax[ii].tick_params(axis='y', colors=orange)
 
     ax[ii].axhline(0,lw=1,ls=(0,(1,1)),c='k')
     tax[ii].axhline(0,lw=1,ls=(0,(1,1)),c='k')

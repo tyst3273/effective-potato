@@ -4,6 +4,11 @@ import matplotlib.pyplot as plt
 import h5py
 import sys
 
+
+blue = '#377eb8' # k
+orange = '#ff7f00' # b
+green = '#4daf4a' # r
+
 # --------------------------------------------------------------------------------------------------
 
 if len(sys.argv) > 1:
@@ -75,7 +80,7 @@ fig, ax = plt.subplots(figsize=(4.5,4.5),gridspec_kw={'wspace':0.15,'hspace':0.1
 
 y = 0.1
 z_list = [0,0.1,1.0]
-colors = ['k','b','r']
+colors = [blue,orange,green]
 
 x_min = 1e9
 x_max = 0
@@ -95,7 +100,7 @@ for ii, zz in enumerate(z_list):
     ax.plot(x[:,0],r[:,0],c=colors[ii],lw=2,marker='o',ms=0)
     ax.plot(x[:,2],r[:,2],c=colors[ii],lw=2,marker='o',ms=0)
 
-# ax.annotate('(a)',xy=(0.05,0.9),xycoords='axes fraction',c='k')
+# ax.annotate('(a)',xy=(0.05,0.9),xycoords='axes fraction',c=blue)
 ax.annotate(f'y={y:.2f}',xy=(0.05,0.1),xycoords='axes fraction',c='k')
 
 fig.legend(frameon=False,ncol=3,loc='upper left',bbox_to_anchor=(0.1,0.975))
@@ -108,7 +113,7 @@ ax.set_xlabel('x')
 ax.set_ylabel('r')
 
 ax.set_yscale('log')
-ax.axis([0.0,0.5,2,3000])
+ax.axis([0.075,0.5,2,3000])
 
 plt.savefig(f'resistivity.png',dpi=200,format='png',bbox_inches='tight')
 plt.show()

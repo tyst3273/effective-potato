@@ -4,6 +4,11 @@ import matplotlib.pyplot as plt
 import h5py
 import sys
 
+
+blue = '#377eb8' # k
+orange = '#ff7f00' # b
+green = '#4daf4a' # r
+
 # --------------------------------------------------------------------------------------------------
 
 if len(sys.argv) > 1:
@@ -75,7 +80,7 @@ fig, ax = plt.subplots(2,2,figsize=(4.5,4.5),gridspec_kw={'wspace':0.15,'hspace'
 
 y = 0.1
 z_list = [0,0.1,1.0]
-colors = ['k','b','r']
+colors = [blue,orange,green]
 
 x_min = 1e9
 x_max = 0

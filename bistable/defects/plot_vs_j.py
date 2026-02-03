@@ -5,6 +5,10 @@ import h5py
 import sys
 
 
+blue = '#377eb8' # k
+orange = '#ff7f00' # b
+green = '#4daf4a' # r
+
 def get_data(filename):
         
     with h5py.File(filename,'r') as db:
@@ -24,7 +28,7 @@ def get_data(filename):
 fig, ax = plt.subplots(3,2,figsize=(4.5,6),gridspec_kw={'hspace':0.15,'wspace':0.25})
 
 z_list = [0.0,0.1,1.0]
-colors = ['k','b','r']
+colors = [blue,orange,green]
 
 for ii, zz in enumerate(z_list):
     
