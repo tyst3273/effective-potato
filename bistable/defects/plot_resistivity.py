@@ -100,17 +100,26 @@ for ii, zz in enumerate(z_list):
     ax.plot(x[:,0],r[:,0],c=colors[ii],lw=2,marker='o',ms=0)
     ax.plot(x[:,2],r[:,2],c=colors[ii],lw=2,marker='o',ms=0)
 
+_ax = ax
+for axis in ['top','bottom','left','right']:
+    _ax.spines[axis].set_linewidth(1.5)
+_ax.minorticks_on()
+_ax.tick_params(which='both',width=1,labelsize=12)
+_ax.tick_params(which='major',length=5)
+_ax.tick_params(which='minor',length=2)
+_ax.set_rasterization_zorder = 1000000000
+
 # ax.annotate('(a)',xy=(0.05,0.9),xycoords='axes fraction',c=blue)
-ax.annotate(f'y={y:.2f}',xy=(0.05,0.1),xycoords='axes fraction',c='k')
+ax.annotate(f'y={y:.2f}',xy=(0.05,0.1),xycoords='axes fraction',c='k',fontsize=12)
 
 fig.legend(frameon=False,ncol=3,loc='upper left',bbox_to_anchor=(0.1,0.975))
 
 x = np.linspace(x_min,x_max,10001)
 r_eq = x / np.exp(-1/x) 
-ax.plot(x,r_eq,c='m',ls=(0,(2,1,1,1)),zorder=100)
+ax.plot(x,r_eq,c='k',ls=(0,(2,1,1,1)),zorder=100)
 
-ax.set_xlabel('x')
-ax.set_ylabel('r')
+ax.set_xlabel('x',fontsize=16)
+ax.set_ylabel('r',fontsize=16)
 
 ax.set_yscale('log')
 ax.axis([0.075,0.5,2,3000])

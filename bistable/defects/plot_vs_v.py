@@ -26,7 +26,7 @@ def get_data(filename):
 
     return n, x, v, y, z
 
-fig, ax = plt.subplots(3,2,figsize=(4.5,6),gridspec_kw={'hspace':0.15,'wspace':0.15})
+fig, ax = plt.subplots(3,2,figsize=(4.5,6),gridspec_kw={'hspace':0.15,'wspace':0.2})
 
 z_list = [0.0,0.1,1.0]
 colors = [blue,orange,green]
@@ -134,10 +134,7 @@ ax[2,1].annotate('(f)',xy=(0.05,0.85),xycoords='axes fraction',c='k',fontsize=12
 ax[2,1].annotate(f'y={y:.2f}',xy=(0.05,0.2),xycoords='axes fraction',c='k',fontsize=12)
 
 ax[2,0].set_xlabel('v',fontsize=16)
-ax[0,0].set_ylabel('n',fontsize=16,labelpad=5)
-
 ax[2,1].set_xlabel('v',fontsize=16)
-ax[0,1].set_ylabel('x',fontsize=16,labelpad=5)
 
 for ii in range(3):
 
@@ -147,8 +144,8 @@ for ii in range(3):
     ax[ii,0].axhline(0,lw=1,ls=(0,(1,1)),c='k')
     ax[ii,1].axhline(0,lw=1,ls=(0,(1,1)),c='k')
 
-    ax[ii,1].set_ylabel('x')
-    ax[ii,0].set_ylabel('n')
+    ax[ii,1].set_ylabel('x',fontsize=16)
+    ax[ii,0].set_ylabel('n',fontsize=16)
     ax[ii,1].yaxis.set_label_position("right")
     ax[ii,1].yaxis.tick_right()
 

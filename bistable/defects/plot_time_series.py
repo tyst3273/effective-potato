@@ -159,40 +159,60 @@ z = 0.1
 time, v, n, x, j = get_time_series(y,z)
 tax[0].plot(time,v,c=blue,lw=2,ls='-')
 ax[0].plot(time,j,c=orange,lw=2,ls='-')
-ax[0].annotate(f'y={y:.3f}',xy=(0.45,0.9),xycoords='axes fraction',c='k')
-ax[0].annotate(f'z={z:.3f}',xy=(0.45,0.825),xycoords='axes fraction',c='k')
-ax[0].annotate(f'(a)',xy=(0.05,0.9),xycoords='axes fraction',c='k')
+ax[0].annotate(f'y={y:.3f}',xy=(0.45,0.91),xycoords='axes fraction',c='k',fontsize=12)
+ax[0].annotate(f'z={z:.3f}',xy=(0.45,0.835),xycoords='axes fraction',c='k',fontsize=12)
+ax[0].annotate(f'(a)',xy=(0.05,0.91),xycoords='axes fraction',c='k',fontsize=12)
 
 y = 0.1
 z = 1.0
 time, v, n, x, j = get_time_series(y,z)
 tax[1].plot(time,v,c=blue,lw=2,ls='-')
 ax[1].plot(time,j,c=orange,lw=2,ls='-')
-ax[1].annotate(f'y={y:.3f}',xy=(0.45,0.9),xycoords='axes fraction',c='k')
-ax[1].annotate(f'z={z:.3f}',xy=(0.45,0.825),xycoords='axes fraction',c='k')
-ax[1].annotate(f'(b)',xy=(0.05,0.9),xycoords='axes fraction',c='k')
+ax[1].annotate(f'y={y:.3f}',xy=(0.45,0.91),xycoords='axes fraction',c='k',fontsize=12)
+ax[1].annotate(f'z={z:.3f}',xy=(0.45,0.835),xycoords='axes fraction',c='k',fontsize=12)
+ax[1].annotate(f'(b)',xy=(0.05,0.91),xycoords='axes fraction',c='k',fontsize=12)
 
 y = 0.25
 z = 0.1
 time, v, n, x, j = get_time_series(y,z)
 tax[2].plot(time,v,c=blue,lw=2,ls='-')
 ax[2].plot(time,j,c=orange,lw=2,ls='-')
-ax[2].annotate(f'y={y:.3f}',xy=(0.45,0.9),xycoords='axes fraction',c='k')
-ax[2].annotate(f'z={z:.3f}',xy=(0.45,0.825),xycoords='axes fraction',c='k')
-ax[2].annotate(f'(c)',xy=(0.05,0.9),xycoords='axes fraction',c='k')
+ax[2].annotate(f'y={y:.3f}',xy=(0.45,0.91),xycoords='axes fraction',c='k',fontsize=12)
+ax[2].annotate(f'z={z:.3f}',xy=(0.45,0.835),xycoords='axes fraction',c='k',fontsize=12)
+ax[2].annotate(f'(c)',xy=(0.05,0.91),xycoords='axes fraction',c='k',fontsize=12)
 
-tax[0].set_ylabel('v',color=blue)
-ax[2].set_ylabel('j',color=orange)
+tax[0].set_ylabel('v',color=blue,fontsize=16)
+ax[2].set_ylabel('j',color=orange,fontsize=16)
 
 # tax[0].axis([0,1,0.0,0.25])
 # ax[0].axis([0,1,0,0.01])
+
+for ii in range(3):
+        
+        _ax = ax[ii]
+        for axis in ['top','bottom','left','right']:
+            _ax.spines[axis].set_linewidth(1.5)
+        _ax.minorticks_on()
+        _ax.tick_params(which='both',width=1,labelsize=12)
+        _ax.tick_params(which='major',length=5)
+        _ax.tick_params(which='minor',length=2)
+        _ax.set_rasterization_zorder = 1000000000   
+
+        _ax = tax[ii]
+        for axis in ['top','bottom','left','right']:
+            _ax.spines[axis].set_linewidth(1.5)
+        _ax.minorticks_on()
+        _ax.tick_params(which='both',width=1,labelsize=12)
+        _ax.tick_params(which='major',length=5)
+        _ax.tick_params(which='minor',length=2)
+        _ax.set_rasterization_zorder = 1000000000
 
 for ii in range(3):
 
     tax[ii].axis([0,1,0.0,0.25])
     ax[ii].axis([0,1,0,0.01])
 
-    ax[ii].set_xlabel('t')
+    ax[ii].set_xlabel('time',fontsize=16)
 
     tax[ii].tick_params(axis='y', colors=blue)
     ax[ii].tick_params(axis='y', colors=orange)
