@@ -1,0 +1,16 @@
+
+ddb_filepath = "out_DDB"
+
+ifcflag 1
+
+brav    1
+ngqpt   1 1 1   
+
+eivec   1
+nph1l   1
+qph1l   0.0 0.0 0.0 1.0
+
+dipdip  0
+asr     1
+chneut  1
+symdynmat   1
