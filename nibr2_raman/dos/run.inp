@@ -1,0 +1,50 @@
+
+### general
+ndtset      2
+# autoparal   1
+
+### file I/O
+prtwf       0
+prtden      1
+getwfk      0
+getden      0
+
+### pp's
+#pp_dirpath "/home/tyler/pseudos/abi/paw_pbe_kden/"
+pp_dirpath "/projects/tyst3273/pseudos/abi/paw_pbe_JTH/"
+pseudos    "Ni.GGA_PBE-JTH.xml,Br.GGA_PBE-JTH.xml"
+
+### lattice 
+ntypat      2
+natom       3
+typat       1 2 2
+znucl       28 35
+acell       1.0 1.0 1.0 
+rprim       6.8677859  0.1705556  10.926757
+            3.2769269  6.0379896  10.926757
+            0.2786878  0.1705559  12.902823
+xred        0.000000000000  0.000000000000 0.000000000000
+            0.262015792583  0.262015792583 0.262015792583
+            0.737984207417  0.737984207417 0.737984207417
+
+### scf control
+pawxcdev    0
+nstep       200
+ecut        600 eV
+pawecutdg   1200 eV
+occopt      7
+tsmear      1000 K
+tolvrs      1e-9
+
+### kpoints
+ngkpt       12 12 12
+nshiftk     1
+shiftk      0 0 0
+kptopt      1
+
+tolvrs2     0.0
+tolwfr2     1e-16
+getden2     -1
+ngkpt2      24 24 24
+iscf2       -3
+prtdos2     3
