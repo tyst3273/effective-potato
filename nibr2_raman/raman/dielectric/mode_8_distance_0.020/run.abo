@@ -1,0 +1,116 @@
+
+.Version 10.4.7-d of ANADDB, released Sep 2025.
+.(MPI version, prepared for a x86_64_linux_intel2021.5 computer) 
+
+.Copyright (C) 1998-2025 ABINIT group . 
+ ANADDB comes with ABSOLUTELY NO WARRANTY.
+ It is free software, and you are welcome to redistribute it
+ under certain conditions (GNU General Public License,
+ see ~abinit/COPYING or http://www.gnu.org/copyleft/gpl.txt).
+
+ ABINIT is a project of the Universite Catholique de Louvain,
+ Corning Inc. and other collaborators, see ~abinit/doc/developers/contributors.txt .
+ Please read https://docs.abinit.org/theory/acknowledgments for suggested
+ acknowledgments of the ABINIT effort.
+ For more information, see https://www.abinit.org .
+
+.Starting date : Mon 20 Apr 2026.
+- ( at 14h28 )
+  
+
+================================================================================
+
+ -outvars_anaddb: echo values of input variables ----------------------
+
+ Flags :
+     dieflag         1
+ Miscellaneous information :
+         asr         1
+ Frequency information :
+       nfreq         1
+       frmin         0.00000000E+00
+       frmax         1.00000000E+01
+
+================================================================================
+
+ read the DDB information and perform some checks
+ 
+ 
+  ==== Info on the Cryst% object ====
+ Real(R)+Recip(G) space primitive vectors, cartesian coordinates (Bohr,Bohr^-1):
+ R(1)=  6.8677860  0.1705556 10.9267570  G(1)=  0.1510962 -0.0779617 -0.0022330
+ R(2)=  3.2769269  6.0379896 10.9267572  G(2)= -0.0006697  0.1700224 -0.0022330
+ R(3)=  0.2786878  0.1705559 12.9028228  G(3)= -0.1273887 -0.0779617  0.0812844
+ Unit cell volume ucvol=  5.0327875E+02 bohr^3
+ Angles (23,13,12)=  3.09104570E+01  3.09104570E+01  3.09104570E+01 degrees
+ Time-reversal symmetry is present
+ Reduced atomic positions [iatom, xred, symbol]:
+    1)    0.0005429  0.0005429  0.0005429  Ni
+    2)    0.2618165  0.2618165  0.2618165  Br
+    3)    0.7377849  0.7377849  0.7377849  Br
+ 
+ DDB file with 3 blocks has been read.
+ 
+================================================================================
+ 
+  
+ Mode effective charges 
+ Mode number.    x            y            z            length 
+-     1          0.000000     0.000000     0.000000     0.000000
+-     2          0.000000     0.000000     0.000000     0.000000
+-     3          0.000000     0.000000     0.000000     0.000000
+-     4          0.000000     0.000000     0.000000     0.000000
+-     5          0.000000     0.000000     0.000000     0.000000
+-     6          0.000000     0.000000     0.000000     0.000000
+-     7          0.000000     0.000000     0.000000     0.000000
+-     8          0.000000     0.000000     0.000000     0.000000
+-     9          0.000000     0.000000     0.000000     0.000000
+  
+ Oscillator strengths (in a.u. ; 1 a.u.=253.2638413 m3/s2). Set to zero if abs()<tol14.
+ Mode number.       xx          yy          zz          xy          xz          yz          trace
+-   1     Real    0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00
+-         Imag    0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00
+-   2     Real    0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00
+-         Imag    0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00
+-   3     Real    0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00
+-         Imag    0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00
+-   4     Real    0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00
+-         Imag    0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00
+-   5     Real    0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00
+-         Imag    0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00
+-   6     Real    0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00
+-         Imag    0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00
+-   7     Real    0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00
+-         Imag    0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00
+-   8     Real    0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00
+-         Imag    0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00
+-   9     Real    0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00
+-         Imag    0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00
+ 
+ Electronic dielectric tensor
+    959.96076670    -38.74622358   -211.10761269
+    -38.74622358    999.55917447   -129.19745254
+   -211.10761269   -129.19745254    319.34342486
+ 
+ 
+ Relaxed ion dielectric tensor
+             NaN             NaN             NaN
+             NaN             NaN             NaN
+             NaN             NaN             NaN
+ 
+ 
+ Frequency dependent dielectric constant:
+ 
+ Full dielectric tensor at frequency  0.0000E+00 Hartree
+             NaN             NaN             NaN
+             NaN             NaN             NaN
+             NaN             NaN             NaN
+ 
+-
+- Proc.   0 individual time (sec): cpu=          0.0  wall=          0.0
+ 
+================================================================================
+ 
++Total cpu time      0.033  and wall time      0.040 sec
+ 
+ anaddb : the run completed succesfully.

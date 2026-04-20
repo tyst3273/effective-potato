@@ -2,8 +2,8 @@
 import numpy as np
 import netCDF4 as nc
 import h5py
+import os
 import matplotlib.pyplot as plt
-import scipy
 
 ang2bohr = 1.88973
 bohr2ang = 1/ang2bohr
@@ -31,18 +31,19 @@ class c_raman:
 
     # ----------------------------------------------------------------------------------------------
 
-    def __init__(self,phbst_file='run_PHBST.nc'):
+    def __init__(self,phbst_file=None):
 
         """
         ...
         """
 
-        self.phbst_file = phbst_file
+        if phbst_file is not None:
+            self.phbst_file = phbst_file
 
-        self._parse_phbst_file()
-        self._convert_displacements_to_eigenvectors()
+            self._parse_phbst_file()
+            self._convert_displacements_to_eigenvectors()
 
-        self._get_cartesian_positions()
+            self._get_cartesian_positions()
 
     # ----------------------------------------------------------------------------------------------
 
@@ -67,13 +68,7 @@ class c_raman:
 
     # ----------------------------------------------------------------------------------------------
 
-    def get_raman_tensors(self,distance=0.02,template=None):
-
-        if template is not None:
-            with open(template,'r') as f:
-                _template_text = f.read()
-        else:
-            _template_text = None
+    def get_raman_tensors(self,distance=0.02,path='dielectric'):
 
         self.raman_tensor = np.zeros((self.num_modes,3,3),dtype=float)
 
@@ -83,12 +78,33 @@ class c_raman:
             if _f < 1e-5:
                 continue
 
-            _filename = f'mode_{vv}_distance_{distance:.3f}.inp'
-            _die_p = self._parse_dielectric_file()
+            _dir = f'mode_{vv}_distance_{distance:.3f}'
+            _file = os.path.join(path,_dir)
+            _file = os.path.join(_file,'run_anaddb.nc')
+            _die_p = self._parse_dielectric_file(_file)
 
-            # _, _m = self.get_displaced_positions(vv,-distance)
-            # _filename = f'mode_{vv}_distance_{-distance:.3f}.inp'
-            # self._write_positions(_filename,_m,_template_text)
+            _dir = f'mode_{vv}_distance_{-distance:.3f}'
+            _file = os.path.join(path,_dir)
+            _file = os.path.join(_file,'run_anaddb.nc')
+            _die_m = self._parse_dielectric_file(_file) 
+
+            self.raman_tensor[vv,...] = (_die_p - _die_m) / 2 * distance
+
+        R = self.raman_tensor
+        asq = ( np.trace(R,axis1=1,axis2=2) / 3 )**2
+        gsq = ( (R[:,0,0]-R[:,1,1])**2 + (R[:,1,1]-R[:,2,2])**2 + (R[:,2,2]-R[:,0,0])**2 +
+                6 * (R[:,0,1]**2 + R[:,0,2]**2 + R[:,1,2]**2) ) / 2
+        I_parallel = 45 * asq + 4 * gsq        
+        I_perp = 3 * gsq        
+        I_avg = I_parallel + I_perp
+
+        with h5py.File('raman_tensor.hdf5','w') as db:
+            db.create_dataset('raman_tensor',data=self.raman_tensor)
+            db.create_dataset('I_parallel',data=I_parallel)
+            db.create_dataset('I_perp',data=I_perp)
+            db.create_dataset('I_avg',data=I_avg)
+
+        return R, I_parallel, I_perp, I_avg
 
     # ----------------------------------------------------------------------------------------------
 
@@ -204,31 +220,11 @@ class c_raman:
             
         """
 
+        self.die_file = die_file
         with nc.Dataset(self.die_file,'r') as ds:
+            self.dielectric_tensor = ds['emacro_cart'][...] 
 
-            print(ds.variables)
-
-            # self.types = ds['atom_species'][...]
-            # self.num_atoms = self.types.size
-            # self.num_modes = self.num_atoms*3
-            # self.num_basis = self.num_atoms*3 
-            
-            # self.masses = ds['atomic_mass_units'][...][self.types-1] #* amu2me
-
-            # self.reduced_pos = ds['reduced_atom_positions'][...] 
-
-            # # column vectors in bohr, i.e. (a, b, c) with a, b, c column vectors
-            # self.lattice_vectors = ds['primitive_vectors'][:,:].T 
-            # self.inv_lattice_vectors = np.linalg.inv(self.lattice_vectors)
-
-            # # shape = [num_qpts, num_modes, xyz] (its a 3d vector)
-            # self.phonon_angmom = ds['phangmom'][...] # units of hbar
-
-            # # shape = [num_qpts, num_modes, num_basis]. 
-            # self.displacements = ds['phdispl_cart'][...,0] + 1j*ds['phdispl_cart'][...,1] 
-            # self.displacements *= ang2bohr # now in Bohr
-            # self.freqs = ds['phfreqs'][...] * ev2ha # now in Ha
-            # self.num_qpts = self.freqs.shape[0
+        return self.dielectric_tensor
 
     # ----------------------------------------------------------------------------------------------
 
@@ -272,10 +268,42 @@ class c_raman:
 
 if __name__ == '__main__':
 
-    raman = c_raman('abinit/anaddb/run_PHBST.nc')
+    raman = c_raman('raman/anaddb/run_PHBST.nc')
     # raman.get_displacements_for_raman_calc(template='template')
 
-    raman.get_raman_tensors()
+    R, I_par, I_perp, I_avg = raman.get_raman_tensors()
+    freqs = raman.freqs * ha2meV * meV2invcm
+
+    E = np.linspace(0,250,1000)
+    arr = np.zeros(E.size)
+    fwhm = 5 
+    sigma = fwhm / 2.35482
+
+    n = I_avg.size
+    for ii in range(n):
+        
+        f = freqs[0,ii]
+        i = I_avg[ii]
+
+        plt.axvline(f,c='k',lw=0.5,ls=(0,(2,1)))
+        arr += np.exp(-0.5 * (E-f)**2/sigma**2 ) * i
+
+    plt.plot(E,arr,marker='o',ms=0,lw=1,ls='-',c='k',label='my calc',zorder=100)
+
+    ref = np.loadtxt('ref.csv',delimiter=',')
+    plt.plot(ref[:,0],(ref[:,1]-0.18)*1.2,c='r',lw=1,ms=1,marker='o',label='ref',zorder=0)
+
+    tomke = np.loadtxt('tomke_295.csv',delimiter=',')
+    plt.plot(tomke[:,0],(tomke[:,1]-0.15)*0.5,c='b',lw=1,ms=1,marker='o',label='Tomke 295 K')
+
+    plt.legend()
+
+    plt.xlabel('Raman shift [cm$^{-1}$]')
+    plt.ylabel('Intensity [arb. units]')
+
+    plt.savefig('nibr2_raman.png',dpi=200,bbox_inches='tight')
+    plt.show()
+
 
 
 

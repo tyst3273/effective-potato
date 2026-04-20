@@ -31,18 +31,19 @@ class c_raman:
 
     # ----------------------------------------------------------------------------------------------
 
-    def __init__(self,phbst_file='run_PHBST.nc'):
+    def __init__(self,phbst_file=None):
 
         """
         ...
         """
 
-        self.phbst_file = phbst_file
+        if phbst_file is not None:
+            self.phbst_file = phbst_file
 
-        self._parse_phbst_file()
-        self._convert_displacements_to_eigenvectors()
+            self._parse_phbst_file()
+            self._convert_displacements_to_eigenvectors()
 
-        self._get_cartesian_positions()
+            self._get_cartesian_positions()
 
     # ----------------------------------------------------------------------------------------------
 
@@ -64,6 +65,32 @@ class c_raman:
             for ii in range(1,self.num_atoms):
                 _s = f'            {_pos[ii,0]: 16.12f} {_pos[ii,1]: 16.12f} {_pos[ii,2]: 16.12f}\n'
                 f.write(_s)
+
+    # ----------------------------------------------------------------------------------------------
+
+    def get_raman_tensors(self,distance=0.02,template=None):
+
+        if template is not None:
+            with open(template,'r') as f:
+                _template_text = f.read()
+        else:
+            _template_text = None
+
+        self.raman_tensor = np.zeros((self.num_modes,3,3),dtype=float)
+
+        for vv in range(self.num_modes):
+            
+            _f = self.freqs[0,vv]
+            if _f < 1e-5:
+                continue
+
+            _filename = f'mode_{vv}_distance_{distance:.3f}'
+            print(_filename)
+            _die_p = self._parse_dielectric_file()
+
+            # _, _m = self.get_displaced_positions(vv,-distance)
+            # _filename = f'mode_{vv}_distance_{-distance:.3f}.inp'
+            # self._write_positions(_filename,_m,_template_text)
 
     # ----------------------------------------------------------------------------------------------
 
@@ -167,6 +194,46 @@ class c_raman:
 
     # ----------------------------------------------------------------------------------------------
 
+    def _parse_dielectric_file(self,die_file):
+
+        """
+        parse the anaddb PHBST file
+
+        from m_phonons.F90 in abinit:
+            !!  Input data is in a.u, whereas the netcdf files saves data in eV for frequencies
+            !!  and Angstrom for the displacements
+            !!  The angular momentum is output in units of hbar
+            
+        """
+
+        with nc.Dataset(self.die_file,'r') as ds:
+
+            print(ds.variables)
+
+            # self.types = ds['atom_species'][...]
+            # self.num_atoms = self.types.size
+            # self.num_modes = self.num_atoms*3
+            # self.num_basis = self.num_atoms*3 
+            
+            # self.masses = ds['atomic_mass_units'][...][self.types-1] #* amu2me
+
+            # self.reduced_pos = ds['reduced_atom_positions'][...] 
+
+            # # column vectors in bohr, i.e. (a, b, c) with a, b, c column vectors
+            # self.lattice_vectors = ds['primitive_vectors'][:,:].T 
+            # self.inv_lattice_vectors = np.linalg.inv(self.lattice_vectors)
+
+            # # shape = [num_qpts, num_modes, xyz] (its a 3d vector)
+            # self.phonon_angmom = ds['phangmom'][...] # units of hbar
+
+            # # shape = [num_qpts, num_modes, num_basis]. 
+            # self.displacements = ds['phdispl_cart'][...,0] + 1j*ds['phdispl_cart'][...,1] 
+            # self.displacements *= ang2bohr # now in Bohr
+            # self.freqs = ds['phfreqs'][...] * ev2ha # now in Ha
+            # self.num_qpts = self.freqs.shape[0
+
+    # ----------------------------------------------------------------------------------------------
+
     def _convert_displacements_to_eigenvectors(self):
         
         """
@@ -208,7 +275,9 @@ class c_raman:
 if __name__ == '__main__':
 
     raman = c_raman('abinit/anaddb/run_PHBST.nc')
-    raman.get_displacements_for_raman_calc(template='template')
+    # raman.get_displacements_for_raman_calc(template='template')
+
+    raman.get_raman_tensors()
 
 
 
